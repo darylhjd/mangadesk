@@ -1,7 +1,5 @@
-github.com/darylhjd/mangodex v0.0.0-20210509093512-f40b6042f257 h1:pPf83zK+wk1MkMGYoVW+0ckmA4h8SZl1rE3UGFqzjHY=
-github.com/darylhjd/mangodex v0.0.0-20210509093512-f40b6042f257/go.mod h1:RApCWGRbVd11wQMLhiZ1ejybkf1C4CS6rMANQlog8B0=
-github.com/darylhjd/mangodex v0.0.0-20210509094550-20e1ecd53157 h1:GmTXc+zUXSbNrkPq7fWgnmlM4k+/Z/fJnyd+bgyHz40=
-github.com/darylhjd/mangodex v0.0.0-20210509094550-20e1ecd53157/go.mod h1:RApCWGRbVd11wQMLhiZ1ejybkf1C4CS6rMANQlog8B0=
+github.com/darylhjd/mangodex v0.0.0-20210510033611-54a632fff3bf h1:4khh7erhPhxvfz38MLoUti6iBrcxKyOlyaC7y3wO7mk=
+github.com/darylhjd/mangodex v0.0.0-20210510033611-54a632fff3bf/go.mod h1:RApCWGRbVd11wQMLhiZ1ejybkf1C4CS6rMANQlog8B0=
 github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdko=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.2.1 h1:Gt8wk0jd5pIK2CyXNo/fqwxNWf726j1lQjEDdfbnqTc=
