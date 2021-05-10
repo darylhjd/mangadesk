@@ -1,5 +1,5 @@
-github.com/darylhjd/mangodex v0.0.0-20210510115337-7961bb603d9a h1:0FUZSg4xCHO3kLvYPMVO+SQZftXo+F5IwbZ3UY608pk=
-github.com/darylhjd/mangodex v0.0.0-20210510115337-7961bb603d9a/go.mod h1:RApCWGRbVd11wQMLhiZ1ejybkf1C4CS6rMANQlog8B0=
+github.com/darylhjd/mangodex v0.0.0-20210510151931-a6a9a84ac7b2 h1:KzSqeweOOjfcu1yQQhAE9rY4oQPT+5xq3VzcdAEkyzY=
+github.com/darylhjd/mangodex v0.0.0-20210510151931-a6a9a84ac7b2/go.mod h1:RApCWGRbVd11wQMLhiZ1ejybkf1C4CS6rMANQlog8B0=
 github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdko=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.2.1 h1:Gt8wk0jd5pIK2CyXNo/fqwxNWf726j1lQjEDdfbnqTc=

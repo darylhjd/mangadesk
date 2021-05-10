@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// SetInputCaptures : Set input handlers for the app.
 func SetInputCaptures(pages *tview.Pages) {
 	// Enable mouse.
 	app.EnableMouse(true)
@@ -20,6 +21,7 @@ func SetInputCaptures(pages *tview.Pages) {
 	})
 }
 
+// ctrlDInput : Handler for Ctrl+D input.
 func ctrlDInput(pages *tview.Pages) {
 	// Create the modal to prompt user confirmation.
 	var (

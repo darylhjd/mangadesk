@@ -43,7 +43,7 @@ func ShowLoginPage(pages *tview.Pages) {
 
 // createMainPage : Creates the basic template for the main page.
 // Works for both Guest and Logged account.
-func createMainPage(user string, c tcell.Color, chaps []mangodex.ChapterResponse) *tview.Grid {
+func createMainPage(title, user string, c tcell.Color, chaps []mangodex.ChapterResponse) *tview.Grid {
 	// Create main page grid.
 	grid := tview.NewGrid()
 	// 15x15 grid.
@@ -67,7 +67,7 @@ func createMainPage(user string, c tcell.Color, chaps []mangodex.ChapterResponse
 
 	// Show chapters.
 	list := tview.NewList()
-	list.SetTitle("Your Manga Feed!").SetTitleColor(tcell.ColorBlue).SetBorder(true)
+	list.SetTitle(title).SetTitleColor(tcell.ColorBlue).SetBorder(true)
 	for _, c := range chaps {
 		list.InsertItem(-1, fmt.Sprintf("%s, Chapter %s", c.Data.Attributes.Title, c.Data.Attributes.Chapter),
 			"", 0, nil)
@@ -80,6 +80,7 @@ func createMainPage(user string, c tcell.Color, chaps []mangodex.ChapterResponse
 	return grid
 }
 
+// ShowMainPage : Create and show the main page.
 func ShowMainPage(pages *tview.Pages) {
 	var page *tview.Grid
 	if dex.IsLoggedIn() {
@@ -92,7 +93,7 @@ func ShowMainPage(pages *tview.Pages) {
 	pages.SwitchToPage(MainPageID)
 }
 
-// ShowLoggedMainPage : Convenience wrapper for createMainPage but for a logged in user.
+// createLoggedMainPage : Convenience wrapper for createMainPage but for a logged in user.
 func createLoggedMainPage() *tview.Grid {
 	// Get user info.
 	u, err := dex.GetLoggedUser()
@@ -109,10 +110,11 @@ func createLoggedMainPage() *tview.Grid {
 		panic(err)
 	}
 
-	return createMainPage(u.Data.Attributes.Username, tcell.ColorMediumSpringGreen, chapters.Results)
+	return createMainPage("Your Manga Feed",
+		u.Data.Attributes.Username, tcell.ColorMediumSpringGreen, chapters.Results)
 }
 
-// ShowGuestMainPage : Convenience wrapper for createMainPage but for a guest user.
+// createGuestMainPage : Convenience wrapper for createMainPage but for a guest user.
 func createGuestMainPage() *tview.Grid {
 	// Get recently uploaded chapters.
 	params := url.Values{}
@@ -123,7 +125,8 @@ func createGuestMainPage() *tview.Grid {
 		panic(err)
 	}
 
-	return createMainPage("Guest", tcell.ColorSaddleBrown, chapters.Results)
+	return createMainPage("Recently Updated Manga",
+		"Guest", tcell.ColorSaddleBrown, chapters.Results)
 }
 
 // CreateModal : Convenience function to create a modal.

@@ -12,6 +12,7 @@ import (
 
 const credFile = "MangaDesk_CredFile"
 
+// attemptLoginAndShowMainPage : Attempts to login to MangaDex API and show corresponding main page.
 func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
 	// Get username and password input.
 	u := form.GetFormItemByLabel("Username").(*tview.InputField).GetText()

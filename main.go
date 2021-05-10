@@ -10,7 +10,7 @@ var (
 	dex = mangodex.NewDexClient()
 )
 
-// Start the prog			ram.
+// Start the program.
 func main() {
 	// Create new pages holder.
 	pages := tview.NewPages()
