@@ -1,10 +1,11 @@
 package main
 
 /*
-This file contains functions that deal with MangaDex's API.
+This file contain helper functions that would otherwise be too large to fit into main sections of code.
 */
 
 import (
+	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,12 @@ import (
 
 const credFile = "MangaDesk_CredFile"
 
+// downloadPages : Attempt to download pages
+func downloadPages(pages *tview.Pages, table *tview.Table, chaps *mangodex.ChapterList) {
+	// Get selected rows and columns (we can ignore columns since we only set the table to select rows)
+}
+
+// attemptLoginAndShowMainPage : Attempts to login to MangaDex API and show corresponding main page.
 func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
 	// Get username and password input.
 	u := form.GetFormItemByLabel("Username").(*tview.InputField).GetText()
@@ -22,9 +29,7 @@ func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
 	if err := dex.Login(u, p); err != nil {
 		// If there was error during login, we create a Modal to tell the user that the login failed.
 		errorModal := CreateModal("Authentication failed\nTry again!", []string{"OK"}, func(i int, l string) {
-			if l == "OK" {
-				pages.RemovePage(LoginFailureModalID) // Remove the modal once user acknowledge.
-			}
+			pages.RemovePage(LoginFailureModalID) // Remove the modal once user acknowledge.
 		})
 		pages.AddPage(LoginFailureModalID, errorModal, true, false)
 		pages.ShowPage(LoginFailureModalID) // Show the modal to the user.
@@ -35,10 +40,8 @@ func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
 	if remember {
 		storeLoginDetails()
 	}
-
-	// NOTE: If you remove the page, then the focus will not move to the main page for some reason!
 	// Remove the login page as we no longer need it.
-	// pages.RemovePage(LoginPageID)
+	pages.RemovePage(LoginPageID)
 
 	// Then create and switch to main page.
 	ShowMainPage(pages)
