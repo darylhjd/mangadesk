@@ -10,22 +10,19 @@ var (
 	dex = mangodex.NewDexClient()
 )
 
-// Start the program.
+// Start the prog			ram.
 func main() {
-	app.EnableMouse(true)
+	// Create new pages holder.
 	pages := tview.NewPages()
+	SetInputCaptures(pages) // Set required input captures.
 
 	// Check whether the user is remembered. If they are, then load credentials into the client and refresh token.
-	if err := CheckStoredAuth(); err != nil {
-		// If error retrieving stored credentials,
-		loginPage := LoginPage(pages)
-		pages.AddPage(LoginPageID, loginPage, true, true)
-		pages.SwitchToPage(LoginPageID)
+	if err := checkAuth(); err != nil {
+		// If error retrieving stored credentials.
+		ShowLoginPage(pages)
 	} else {
 		// If can log in using stored refresh token, then straight away go to logged main page.
-		mainPage := LoggedMainPage(pages)
-		pages.AddPage(MainPageID, mainPage, true, true)
-		pages.SwitchToPage(MainPageID)
+		ShowMainPage(pages)
 	}
 
 	// Run the app.
