@@ -37,16 +37,43 @@ func LoginToMangaDex(pages *tview.Pages, f *tview.Form) {
 
 	// Then create and switch to main page.
 	mainPage := LoggedMainPage(pages)
-	pages.AddPage(MainPageID, mainPage, true, true)
-	pages.SwitchToPage(MainPageID)
+	pages.AddPage(LoggedMainPageID, mainPage, true, true)
+	pages.SwitchToPage(LoggedMainPageID)
+}
+
+// LogoutOfMangaDex : Function to handle logging out and transition.
+func LogoutOfMangaDex(pages *tview.Pages) {
+	// Create a modal to ask if the user is sure they want to logout
+	sureModal := tview.NewModal()
+	sureModal.SetBorder(true).SetTitle("Logout")
+	sureModal.SetText("Are you sure?")
+	sureModal.AddButtons([]string{"Yes", "No"})
+	sureModal.SetDoneFunc(func(i int, label string) {
+		if label == "Yes" {
+			err := dex.Logout()
+			if err != nil {
+				panic(err)
+			}
+			// We redirect the user to the guest main page and also remove the logged in main page.
+			pages.RemovePage(LoggedMainPageID)
+			pages.AddPage(GuestMainPageID, GuestMainPage(pages), true, true)
+			pages.SwitchToPage(GuestMainPageID)
+		}
+		// Regardless of what is pressed, we remove the modal from the page.
+		pages.RemovePage(LogoutModalID)
+	})
+
+	// We show the modal on top of the screen.
+	pages.AddPage(LogoutModalID, sureModal, true, true)
+	pages.ShowPage(LogoutModalID)
 }
 
 // GuestToMangaDex : Do not attempt logging in to API and just show the guest main page.
 func GuestToMangaDex(pages *tview.Pages) {
 	mainPage := GuestMainPage(pages)
 
-	pages.AddPage(MainPageID, mainPage, true, true)
-	pages.SwitchToPage(MainPageID)
+	pages.AddPage(GuestMainPageID, mainPage, true, true)
+	pages.SwitchToPage(GuestMainPageID)
 }
 
 // CheckStoredAuth : Check if the user's credentials have been stored before.

@@ -24,8 +24,8 @@ func main() {
 	} else {
 		// If can log in using stored refresh token, then straight away go to logged main page.
 		mainPage := LoggedMainPage(pages)
-		pages.AddPage(MainPageID, mainPage, true, true)
-		pages.SwitchToPage(MainPageID)
+		pages.AddPage(LoggedMainPageID, mainPage, true, true)
+		pages.SwitchToPage(LoggedMainPageID)
 	}
 
 	// Run the app.
