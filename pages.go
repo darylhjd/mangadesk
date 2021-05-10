@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/rivo/tview"
 	"net/url"
-	"strconv"
 )
 
 const (
@@ -20,6 +19,7 @@ func LoginPage(pages *tview.Pages) *tview.Grid {
 	form := tview.NewForm()
 	form.AddInputField("Username", "", 0, nil, nil)
 	form.AddPasswordField("Password", "", 0, '*', nil)
+	form.AddCheckbox("Remember Me", false, nil)
 	form.AddButton("Login", func() {
 		LoginToMangaDex(pages, form) // Try logging in.
 	})
@@ -37,7 +37,8 @@ func LoginPage(pages *tview.Pages) *tview.Grid {
 	return grid
 }
 
-// MainPage : Page to show main page. Works for both Guest and Logged account.
+// MainPage : Page to show main page. Creates the basic view for the main page.
+// Works for both Guest and Logged account.
 func MainPage(pages *tview.Pages) *tview.Grid {
 	// Create main page grid.
 	grid := tview.NewGrid().SetColumns(-2, -1)
@@ -50,17 +51,34 @@ func MainPage(pages *tview.Pages) *tview.Grid {
 func LoggedMainPage(pages *tview.Pages) *tview.Grid {
 	mGrid := MainPage(pages)
 
-	// Get list of
+	// Populate first column with user's followed manga chapter feed.
+	params := url.Values{}
+	params.Add("limit", "50")
+	chapters, err := dex.GetUserFollowedMangaChapterFeed(params)
+	if err != nil {
+		panic(err)
+	}
+
+	list := tview.NewList()
+	list.SetBorder(true)
+	for _, c := range chapters.Results {
+		list.InsertItem(-1, c.Data.Attributes.Title, fmt.Sprintf("Chapter %s", c.Data.Attributes.Chapter), 0, nil)
+	}
+	list.SetWrapAround(false)
+	list.SetTitle("Your Manga Feed")
+
+	mGrid.AddItem(list, 0, 0, 1, 1, 0, 0, true)
+	return mGrid
 }
 
 // GuestMainPage : Convenience wrapper for MainPage but for a guest user.
 func GuestMainPage(pages *tview.Pages) *tview.Grid {
-	mainGrid := MainPage(pages)
+	mGrid := MainPage(pages)
 
-	// Get list of recently updated manga.
+	// Populate first column with recently created chapters.
 	params := url.Values{}
-	params.Add("limit", strconv.Itoa(50))
-	params.Add("order[createdAt]", "asc")
+	params.Add("limit", "50")
+	params.Add("order[createdAt]", "desc")
 	chapters, err := dex.ChapterList(params)
 	if err != nil {
 		panic(err)
@@ -72,10 +90,10 @@ func GuestMainPage(pages *tview.Pages) *tview.Grid {
 		list.InsertItem(-1, c.Data.Attributes.Title, fmt.Sprintf("Chapter %s", c.Data.Attributes.Chapter), 0, nil)
 	}
 	list.SetWrapAround(false)
-	list.SetTitle("Recently uploaded chapters")
+	list.SetTitle("New chapters")
 
-	mainGrid.AddItem(list, 0, 0, 1, 1, 0, 0, true)
-	return mainGrid
+	mGrid.AddItem(list, 0, 0, 1, 1, 0, 0, true)
+	return mGrid
 }
 
 // ErrorModal : Show a modal to the user if there is an error.
