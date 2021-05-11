@@ -25,7 +25,7 @@ func main() {
 		ShowMainPage(pages)
 	}
 
-	// Run the app.
+	// Run the app. SetRoot also calls SetFocus on the primitive.
 	if err := app.SetRoot(pages, true).Run(); err != nil {
 		panic(err)
 	}

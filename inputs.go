@@ -15,20 +15,26 @@ func SetInputCaptures(pages *tview.Pages) {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
-			ctrlDInput(pages)
+			ctrlLInput(pages)
 		}
 		return event
 	})
 }
 
-// ctrlDInput : Handler for Ctrl+D input.
-func ctrlDInput(pages *tview.Pages) {
+// ctrlLInput : Handler for Ctrl+D input.
+func ctrlLInput(pages *tview.Pages) {
+	// Do not allow pop up when on login screen.
+	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+		return
+	}
+
 	// Create the modal to prompt user confirmation.
 	var (
 		buttonFn func()
 		title    string
 	)
 
+	// This will decide the function of the modal.
 	switch dex.IsLoggedIn() {
 	case true: // User wants to logout.
 		title = "Logout\n"
@@ -49,6 +55,7 @@ func ctrlDInput(pages *tview.Pages) {
 		}
 	}
 
+	// Create the modal for the user.
 	lModal := CreateModal(title+"Are you sure?", []string{"Yes", "No"}, func(i int, label string) {
 		// If user confirms the modal.
 		if label == "Yes" {
