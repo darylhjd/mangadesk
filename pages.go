@@ -16,9 +16,9 @@ const (
 	LoginPageID = "login_page"
 	MainPageID  = "main_page"
 
-	LoginFailureModalID   = "login_failure_modal"
-	LoginLogoutCfmModalID = "logout_modal"
-	LoadChapterModalID    = "load_chapter_modal"
+	LoginFailureModalID     = "login_failure_modal"
+	LoginLogoutCfmModalID   = "logout_modal"
+	DownloadChaptersModalID = "download_chapters_modal"
 )
 
 // ShowLoginPage : Page to show login form.
@@ -94,7 +94,7 @@ func ShowMainPage(pages *tview.Pages) {
 	// Create main page grid.
 	// 15x15 grid.
 	var g []int
-	for i := 0; i < 15; i++ {
+	for i := 0; i < 15; i++ { // This is to create 15 grids.
 		g = append(g, -1)
 	}
 	grid := tview.NewGrid().SetColumns(g...).SetRows(g...)
@@ -128,17 +128,14 @@ func ShowMainPage(pages *tview.Pages) {
 		SetTitle(tableTitle).
 		SetTitleColor(tcell.ColorLightSkyBlue).
 		SetBorder(true)
+
+	// Set custom input handlers for the table.
+	var selected = map[int]struct{}{}
+	setMainPageTableInputCaptures(table, &selected)
 	table.SetSelectedFunc(func(row, col int) {
-		// Function for when the user enters the selection.
-		modal := CreateModal("Load chapter?", []string{"Yes", "No"}, func(i int, label string) {
-			if label == "Yes" {
-				downloadPages(pages, table, chaps)
-			}
-			pages.RemovePage(LoadChapterModalID)
-		})
-		pages.AddPage(LoadChapterModalID, modal, true, false)
-		pages.ShowPage(LoadChapterModalID)
+		mainPageTableSelectedFunc(pages, table, row, &selected, chaps)
 	})
+
 	// Add the rows of data into the table.
 	for index, chapR := range chaps.Results {
 		titleCell := tview.NewTableCell(fmt.Sprintf("%-50s", chapR.Data.Attributes.Title)).
@@ -155,8 +152,8 @@ func ShowMainPage(pages *tview.Pages) {
 	pages.SwitchToPage(MainPageID)
 }
 
-// CreateModal : Convenience function to create a modal.
-func CreateModal(text string, buttons []string, f func(buttonIndex int, buttonLabel string)) *tview.Modal {
+// ShowModal : Convenience function to create a modal.
+func ShowModal(pages *tview.Pages, label, text string, buttons []string, f func(buttonIndex int, buttonLabel string)) {
 	m := tview.NewModal()
 	// Set modal attributes
 	m.SetText(text).
@@ -164,5 +161,7 @@ func CreateModal(text string, buttons []string, f func(buttonIndex int, buttonLa
 		SetDoneFunc(f).
 		SetFocus(0).
 		SetBackgroundColor(tcell.ColorDarkSlateGrey)
-	return m
+
+	pages.AddPage(label, m, true, false)
+	pages.ShowPage(label)
 }

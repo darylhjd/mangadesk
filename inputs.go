@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-// SetInputCaptures : Set input handlers for the app.
-func SetInputCaptures(pages *tview.Pages) {
+// setUniversalInputCaptures : Set input handlers for the app.
+func setUniversalInputCaptures(pages *tview.Pages) {
 	// Enable mouse.
 	app.EnableMouse(true)
 
@@ -21,7 +21,24 @@ func SetInputCaptures(pages *tview.Pages) {
 	})
 }
 
-// ctrlLInput : Handler for Ctrl+D input.
+// setMainPageTableInputCaptures : Set input handlers for the main page table.
+func setMainPageTableInputCaptures(table *tview.Table, sRows *map[int]struct{}) {
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyCtrlE:
+			ctrlEInput(table, sRows)
+		}
+		return event
+	})
+}
+
+/*
+It should be good design (based on what I know anyway) to not have overlapping input handlers for
+different screens. As such, we try to only have one action for each input.
+*/
+
+// ctrlLInput : Handler for Ctrl+L input.
+// This input enables user to toggle login/logout.
 func ctrlLInput(pages *tview.Pages) {
 	// Do not allow pop up when on login screen.
 	if page, _ := pages.GetFrontPage(); page == LoginPageID {
@@ -56,16 +73,29 @@ func ctrlLInput(pages *tview.Pages) {
 	}
 
 	// Create the modal for the user.
-	lModal := CreateModal(title+"Are you sure?", []string{"Yes", "No"}, func(i int, label string) {
-		// If user confirms the modal.
-		if label == "Yes" {
-			buttonFn()
-		}
-		// We remove the modal from the page.
-		pages.RemovePage(LoginLogoutCfmModalID)
-	})
+	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
+		func(i int, label string) {
+			// If user confirms the modal.
+			if label == "Yes" {
+				buttonFn()
+			}
+			// We remove the modal from the page.
+			pages.RemovePage(LoginLogoutCfmModalID)
+		})
+}
 
-	// Add and show the modal on top of the current screen.
-	pages.AddPage(LoginLogoutCfmModalID, lModal, true, false)
-	pages.ShowPage(LoginLogoutCfmModalID)
+// ctrlEInput() : Handler for Ctrl+E input.
+// This input enables user to select a main page table row without activating the select action.
+// This is done by using a int array to keep track of the selected row indexes.
+func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
+	// Get the current row (and col, but we do not need that)
+	row, _ := table.GetSelection()
+	// If the row already exists in the map, then we remove it!
+	if _, ok := (*sRows)[row]; ok {
+		markChapterUnselected(table, row, tcell.ColorBlack, tcell.ColorWhite)
+		delete(*sRows, row)
+	} else { // Else, we add the row into the map.
+		markChapterSelected(table, row, tcell.ColorLightSkyBlue, tcell.ColorBlack)
+		(*sRows)[row] = struct{}{}
+	}
 }
