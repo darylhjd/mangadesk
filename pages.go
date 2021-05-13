@@ -35,9 +35,6 @@ func ShowLoginPage(pages *tview.Pages) {
 	// Set form attributes.
 	form.SetButtonsAlign(tview.AlignCenter).
 		SetLabelColor(tcell.ColorWhite).
-		SetFieldBackgroundColor(tcell.ColorDarkSlateGrey).
-		SetFieldTextColor(tcell.ColorFloralWhite).
-		SetButtonBackgroundColor(tcell.ColorDodgerBlue).
 		SetTitle("Login to MangaDex").
 		SetTitleColor(tcell.ColorOrange).
 		SetBorder(true).
@@ -382,8 +379,6 @@ func ShowSearchPage(pages *tview.Pages) {
 	// Set form attributes
 	search.SetButtonsAlign(tview.AlignLeft).
 		SetLabelColor(tcell.ColorWhite).
-		SetFieldBackgroundColor(tcell.ColorDarkSlateGrey).
-		SetFieldTextColor(tcell.ColorFloralWhite).
 		SetButtonBackgroundColor(tcell.ColorDodgerBlue)
 	// Add form fields
 	search.AddInputField("Search Manga:", "", 0, nil, nil).
