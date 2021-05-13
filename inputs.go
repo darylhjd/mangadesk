@@ -78,7 +78,8 @@ func ctrlLInput(pages *tview.Pages) {
 		title = "Logout\nStored credentials will be deleted.\n\n"
 		buttonFn = func() {
 			// Attempt logout
-			if err := dex.Logout(); err != nil {
+			err := dex.Logout()
+			if err != nil {
 				ShowModal(pages, LoginLogoutFailureModalID, "Error logging out!", []string{"OK"},
 					func(i int, label string) {
 						pages.RemovePage(LoginLogoutFailureModalID)

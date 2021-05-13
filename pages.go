@@ -129,10 +129,12 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 		// Get the manga list.
 		mangaList, err := dex.GetUserFollowedMangaList(50, 0)
 		if err != nil {
-			ShowModal(pages, GenericAPIErrorModalID, "Error getting followed manga.", []string{"OK"},
-				func(i int, label string) {
-					pages.RemovePage(GenericAPIErrorModalID)
-				})
+			app.QueueUpdateDraw(func() {
+				ShowModal(pages, GenericAPIErrorModalID, "Error getting followed manga.", []string{"OK"},
+					func(i int, label string) {
+						pages.RemovePage(GenericAPIErrorModalID)
+					})
+			})
 			return
 		}
 
@@ -157,11 +159,10 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 				SetMaxWidth(15)
 			sCell.Color = statusColor
 
-			app.QueueUpdateDraw(
-				func() {
-					table.SetCell(i+1, 0, mtCell).
-						SetCell(i+1, 1, sCell)
-				})
+			app.QueueUpdateDraw(func() {
+				table.SetCell(i+1, 0, mtCell).
+					SetCell(i+1, 1, sCell)
+			})
 		}
 	}()
 }
@@ -200,10 +201,12 @@ func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table
 		params.Set("limit", "50")
 		mangaList, err := dex.MangaList(params)
 		if err != nil {
-			ShowModal(pages, GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
-				func(i int, label string) {
-					pages.RemovePage(GenericAPIErrorModalID)
-				})
+			app.QueueUpdateDraw(func() {
+				ShowModal(pages, GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
+					func(i int, label string) {
+						pages.RemovePage(GenericAPIErrorModalID)
+					})
+			})
 			return
 		}
 
@@ -233,12 +236,11 @@ func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table
 			tagCell := tview.NewTableCell(strings.Join(tags, ", "))
 			tagCell.Color = tagColor
 
-			app.QueueUpdateDraw(
-				func() {
-					table.SetCell(i+1, 0, mtCell).
-						SetCell(i+1, 1, descCell).
-						SetCell(i+1, 2, tagCell)
-				})
+			app.QueueUpdateDraw(func() {
+				table.SetCell(i+1, 0, mtCell).
+					SetCell(i+1, 1, descCell).
+					SetCell(i+1, 2, tagCell)
+			})
 		}
 	}()
 }

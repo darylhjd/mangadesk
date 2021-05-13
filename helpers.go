@@ -169,10 +169,12 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	params.Set("order[chapter]", "desc")
 	cl, err := dex.MangaFeed(mr.Data.ID, params)
 	if err != nil {
-		ShowModal(pages, GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
-			func(i int, label string) {
-				pages.RemovePage(GenericAPIErrorModalID)
-			})
+		app.QueueUpdateDraw(func() {
+			ShowModal(pages, GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
+				func(i int, label string) {
+					pages.RemovePage(GenericAPIErrorModalID)
+				})
+		})
 		return
 	}
 
