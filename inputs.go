@@ -20,6 +20,8 @@ func setUniversalInputCaptures(pages *tview.Pages) {
 			ctrlLInput(pages)
 		case tcell.KeyCtrlH:
 			ctrlHInput(pages)
+		case tcell.KeyCtrlS:
+			ctrlSInput(pages)
 		}
 		return event
 	})
@@ -129,4 +131,13 @@ func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
 // This shows the help page to the user.
 func ctrlHInput(pages *tview.Pages) {
 	ShowHelpPage(pages)
+}
+
+// ctrlSInput : Handler for Ctrl+S input.
+// THis shows search page to the user.
+func ctrlSInput(pages *tview.Pages) {
+	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+		return
+	}
+	ShowSearchPage(pages)
 }

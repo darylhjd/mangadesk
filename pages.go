@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	LoginPageID = "login_page"
-	MainPageID  = "main_page"
-	MangaPageID = "manga_page"
-	HelpPageID  = "help_page"
+	LoginPageID  = "login_page"
+	MainPageID   = "main_page"
+	MangaPageID  = "manga_page"
+	HelpPageID   = "help_page"
+	SearchPageID = "search_page"
 
 	LoginLogoutFailureModalID   = "login_failure_modal"
 	LoginLogoutCfmModalID       = "logout_modal"
@@ -90,7 +91,9 @@ func ShowMainPage(pages *tview.Pages) {
 	if dex.IsLoggedIn() {
 		setUpLoggedMainPage(pages, grid, table)
 	} else {
-		setUpGuestMainPage(pages, grid, table)
+		params := url.Values{}
+		params.Add("limit", "75")
+		setUpGuestMainPage(pages, grid, table, params)
 	}
 
 	pages.AddPage(MainPageID, grid, true, false)
@@ -168,7 +171,7 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 }
 
 // setUpGuestMainPage : Set up the main page for a guest user.
-func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table) {
+func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, params url.Values) {
 	// For guest users, we fill the table with recently updated manga.
 	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
 	table.SetTitle("Recently updated manga")
@@ -197,8 +200,6 @@ func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table
 
 	go func() {
 		// Get recently updated manga.
-		params := url.Values{}
-		params.Set("limit", "50")
 		mangaList, err := dex.MangaList(params)
 		if err != nil {
 			app.QueueUpdateDraw(func() {
@@ -343,6 +344,74 @@ func ShowHelpPage(pages *tview.Pages) {
 	pages.AddPage(HelpPageID, grid, true, false)
 	app.SetFocus(grid)
 	pages.SwitchToPage(HelpPageID)
+}
+
+func ShowSearchPage(pages *tview.Pages) {
+	// Create the base main grid.
+	// 15x15 grid.
+	var g []int
+	for i := 0; i < 15; i++ { // This is to create 15 grids.
+		g = append(g, -1)
+	}
+	grid := tview.NewGrid().SetColumns(g...).SetRows(g...)
+	// Set grid attributes
+	grid.SetTitleColor(tcell.ColorOrange).
+		SetBorderColor(tcell.ColorLightGrey).
+		SetBorder(true)
+
+	// Set input handlers for this case
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc:
+			pages.RemovePage(SearchPageID)
+		}
+		return event
+	})
+
+	// Create table to show manga list.
+	table := tview.NewTable()
+	table.SetSelectable(true, false). // Sets only the rows to be selectable
+						SetSeparator('|').
+						SetBordersColor(tcell.ColorGrey).
+						SetTitleColor(tcell.ColorLightSkyBlue).
+						SetBorder(true)
+
+	// Create a form for the searching
+	search := tview.NewForm()
+	// Set form attributes
+	search.SetButtonsAlign(tview.AlignLeft).
+		SetLabelColor(tcell.ColorWhite).
+		SetFieldBackgroundColor(tcell.ColorDarkSlateGrey).
+		SetFieldTextColor(tcell.ColorFloralWhite).
+		SetButtonBackgroundColor(tcell.ColorDodgerBlue)
+	// Add form fields
+	search.AddInputField("Search Manga:", "", 0, nil, nil).
+		AddButton("Search", func() {
+			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
+
+			params := url.Values{}
+			params.Add("limit", "75")
+			params.Add("title", searchTerm)
+			setUpGuestMainPage(pages, grid, table, params)
+
+			grid.SetTitle("Search for Manga")
+			table.SetTitle("Search Results. [grey]Press Tab to go back to search bar.")
+			app.SetFocus(table)
+		})
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyTab:
+			app.SetFocus(search)
+		}
+		return event
+	})
+
+	grid.AddItem(search, 0, 0, 3, 15, 0, 0, true).
+		AddItem(table, 3, 0, 12, 15, 0, 0, false)
+
+	pages.AddPage(SearchPageID, grid, true, false)
+	app.SetFocus(grid)
+	pages.ShowPage(SearchPageID)
 }
 
 // ShowModal : Convenience function to create a modal.
