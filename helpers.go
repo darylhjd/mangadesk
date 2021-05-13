@@ -5,12 +5,15 @@ This file contain helper functions that would otherwise be too large to fit into
 */
 
 import (
+	"fmt"
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -18,9 +21,9 @@ const (
 	DownloadFolder = "downloads"
 )
 
-// mainPageTableSelectedFunc : Function for handling when the user press enter on the table.
-func mainPageTableSelectedFunc(pages *tview.Pages, table *tview.Table,
-	row int, selected *map[int]struct{}, chaps *mangodex.ChapterList) {
+// confirmChapterDownloads : Function for handling when the user press enter on the table.
+func confirmChapterDownloads(pages *tview.Pages, table *tview.Table,
+	selected *map[int]struct{}, row int, mr *mangodex.MangaResponse, chaps *mangodex.ChapterList) {
 	// We add the current selection if the there are no selected rows currently.
 	if len(*selected) == 0 {
 		(*selected)[row] = struct{}{}
@@ -30,14 +33,15 @@ func mainPageTableSelectedFunc(pages *tview.Pages, table *tview.Table,
 	ShowModal(pages, DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
 		func(i int, label string) {
 			if label == "Yes" {
-				downloadPages(pages, table, selected, chaps)
+				downloadChapters(pages, table, selected, mr, chaps)
 			}
 			pages.RemovePage(DownloadChaptersModalID)
 		})
 }
 
-// downloadPages : Attempt to download pages
-func downloadPages(pages *tview.Pages, table *tview.Table, sRows *map[int]struct{}, chaps *mangodex.ChapterList) {
+// downloadChapters : Attempt to download pages
+func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]struct{},
+	mr *mangodex.MangaResponse, chaps *mangodex.ChapterList) {
 	// Download each chapter.
 	go func(rows map[int]struct{}, list mangodex.ChapterList) {
 		// For each chapter.
@@ -46,69 +50,161 @@ func downloadPages(pages *tview.Pages, table *tview.Table, sRows *map[int]struct
 			// We -1 since the first row is the header.
 			chapR := list.Results[r-1]
 
+			// Create folder to store manga.
+			chapter := "-"
+			if chapR.Data.Attributes.Chapter != nil {
+				chapter = *(chapR.Data.Attributes.Chapter)
+			}
+
 			// Create the downloader for the chapter.
 			downloader, err := dex.NewMDHomeClient(chapR.Data.ID, "data", chapR.Data.Attributes.Hash, false)
 			if err != nil {
-				return
+				app.QueueUpdateDraw(func() {
+					ShowModal(pages, DownloadErrorModalID,
+						fmt.Sprintf("Could not get server to download Chapter %s", chapter),
+						[]string{"OK"}, func(i int, label string) {
+							pages.RemovePage(DownloadErrorModalID)
+						})
+				})
+				continue
 			}
 
-			// Get the name of the manga.
-			var mangaName string
-			for _, relationship := range chapR.Relationships {
-				if relationship.Type == "manga" {
-					if m, err := dex.ViewManga(relationship.ID); err != nil {
-						return
-					} else {
-						mangaName = m.Data.Attributes.Title["en"]
-					}
-					break
-				}
-			}
-
-			// Create folder to store manga.
-			chapFolder := filepath.Join(DownloadFolder, mangaName, chapR.Data.Attributes.Chapter)
+			chapFolder := filepath.Join(DownloadFolder, mr.Data.Attributes.Title["en"], chapter)
 			if err = os.MkdirAll(chapFolder, os.ModePerm); err != nil {
 				return
 			}
 
 			// Get each page and save it.
-			for _, file := range chapR.Data.Attributes.Data {
+			var errored []int
+			for pageNum, file := range chapR.Data.Attributes.Data {
 				image, err := downloader.GetChapterPage(file)
 				if err != nil {
-					return
+					errored = append(errored, pageNum+1)
+					continue
 				}
 				err = ioutil.WriteFile(filepath.Join(chapFolder, file), image, os.ModePerm)
 				if err != nil {
-					return
+					errored = append(errored, pageNum+1)
+					continue
 				}
 			}
+
+			if len(errored) != 0 {
+				app.QueueUpdateDraw(func() {
+					ShowModal(pages, DownloadErrorModalID,
+						fmt.Sprintf("Errors downloading pages: %v", errored), []string{"OK"},
+						func(i int, label string) {
+							pages.RemovePage(DownloadErrorModalID)
+						})
+				})
+			}
 		}
-	}(*sRows, *chaps)
+	}(*selected, *chaps)
 
 	// Clear the stored rows and unmark all chapters
-	for r := range *sRows {
-		markChapterUnselected(table, r, tcell.ColorBlack, tcell.ColorWhite)
+	for k := range *selected {
+		markChapterUnselected(table, k)
 	}
-	*sRows = map[int]struct{}{} // Empty the map
+	*selected = map[int]struct{}{} // Empty the map
 }
 
 // markChapterSelected : Mark a chapter as being selected by the user on the main page table.
-func markChapterSelected(table *tview.Table, row int, background, text tcell.Color) {
-	mangaNameCell := table.GetCell(row, 0)
-	chapterCell := table.GetCell(row, 1)
+func markChapterSelected(table *tview.Table, row int) {
+	chapterCell := table.GetCell(row, 0)
+	chapterCell.SetBackgroundColor(tcell.ColorLimeGreen).SetTextColor(tcell.ColorBlack)
 
-	mangaNameCell.SetBackgroundColor(background).SetTextColor(text)
-	chapterCell.SetBackgroundColor(background).SetTextColor(text)
+	titleCell := table.GetCell(row, 1)
+	titleCell.SetBackgroundColor(tcell.ColorLimeGreen).SetTextColor(tcell.ColorBlack)
 }
 
 // markChapterUnselected : Mark a chapter as being unselected by the user on the main page table.
-func markChapterUnselected(table *tview.Table, row int, background, text tcell.Color) {
-	mangaNameCell := table.GetCell(row, 0)
-	chapterCell := table.GetCell(row, 1)
+func markChapterUnselected(table *tview.Table, row int) {
+	cCell := table.GetCell(row, 0)
+	cCell.SetTextColor(tcell.ColorLightYellow).SetBackgroundColor(tcell.ColorBlack)
 
-	mangaNameCell.SetBackgroundColor(background).SetTextColor(text)
-	chapterCell.SetBackgroundColor(background).SetTextColor(text)
+	tCell := table.GetCell(row, 1)
+	tCell.SetTextColor(tcell.ColorLightSkyBlue).SetBackgroundColor(tcell.ColorBlack)
 }
+
+// setMangaInfo : Populate the manga page about section,
+func setMangaInfo(info *tview.TextView, mr *mangodex.MangaResponse) {
+	// Get author and artist information
+	authorId := ""
+	for _, r := range mr.Relationships {
+		if r.Type == "author" {
+			authorId = r.ID
+			break
+		}
+	}
+	var author string
+	if authorId == "" {
+		author = "-"
+	} else {
+		a, err := dex.GetAuthor(authorId)
+		if err != nil {
+			author = "-"
+		} else {
+			author = a.Data.Attributes.Name
+		}
+	}
+
+	status := "-"
+	if mr.Data.Attributes.Status != nil {
+		status = strings.Title(*mr.Data.Attributes.Status)
+	}
+
+	infoText := fmt.Sprintf("Title: %s\n\nAuthor: %s\nStatus: %s\n\nDescription:\n%s",
+		mr.Data.Attributes.Title["en"], author, status,
+		strings.SplitN(tview.Escape(mr.Data.Attributes.Description["en"]), "\n", 2)[0])
+	info.SetText(infoText)
+	app.Draw()
+}
+
+// setMangaChaptersTable : Populate the manga page chapter table.
+func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.MangaResponse) {
+	// Get chapter feed for this manga.
+	params := url.Values{}
+	params.Set("limit", "500")
+	params.Set("locales[]", "en")
+	params.Set("order[chapter]", "desc")
+	cl, err := dex.MangaFeed(mr.Data.ID, params)
+	if err != nil {
+		app.QueueUpdateDraw(func() {
+			ShowModal(pages, GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
+				func(i int, label string) {
+					pages.RemovePage(GenericAPIErrorModalID)
+				})
+		})
+		return
+	}
+
+	// Set input handlers for the table
+	selected := map[int]struct{}{}
+	setMangaPageTableHandlers(pages, table, &selected, mr, cl)
+
+	for i, cr := range cl.Results {
+		app.QueueUpdateDraw(func() {
+			// Chapter cell
+			c := "-"
+			if cr.Data.Attributes.Chapter != nil {
+				c = *cr.Data.Attributes.Chapter
+			}
+			cCell := tview.NewTableCell(fmt.Sprintf("%-5s", c)).SetMaxWidth(5).
+				SetTextColor(tcell.ColorLightYellow)
+
+			// Title cell
+			tCell := tview.NewTableCell(cr.Data.Attributes.Title).
+				SetTextColor(tcell.ColorLightSkyBlue)
+
+			table.SetCell(i+1, 0, cCell)
+			table.SetCell(i+1, 1, tCell)
+		})
+	}
+}
+
+/*
+Confirmed functions
+*/
 
 // attemptLoginAndShowMainPage : Attempts to login to MangaDex API and show corresponding main page.
 func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
@@ -120,16 +216,16 @@ func attemptLoginAndShowMainPage(pages *tview.Pages, form *tview.Form) {
 	// Attempt to login to MangaDex API.
 	if err := dex.Login(u, p); err != nil {
 		// If there was error during login, we create a Modal to tell the user that the login failed.
-		ShowModal(pages, LoginFailureModalID, "Authentication failed\nTry again!", []string{"OK"},
+		ShowModal(pages, LoginLogoutFailureModalID, "Authentication failed\nTry again!", []string{"OK"},
 			func(i int, l string) {
-				pages.RemovePage(LoginFailureModalID) // Remove the modal once user acknowledge.
+				pages.RemovePage(LoginLogoutFailureModalID) // Remove the modal once user acknowledge.
 			})
 		return
 	}
 	// If successful login.
 	// Remember the user's login credentials if user wants it.
 	if remember {
-		storeLoginDetails()
+		storeLoginDetails(pages)
 	}
 	// Remove the login page as we no longer need it.
 	pages.RemovePage(LoginPageID)
@@ -158,17 +254,17 @@ func checkAuth() error {
 }
 
 // storeLoginDetails : Store the refresh token after logging in.
-func storeLoginDetails() {
+func storeLoginDetails(pages *tview.Pages) {
 	// Store the refresh tokens into a credential file.
 	f, err := os.Create(credFile)
 	if err != nil {
-		panic(err)
+		ShowModal(pages, StoreCredentialErrorModalID, "Error storing credentials.", []string{"OK"},
+			func(i int, l string) {
+				pages.RemovePage(StoreCredentialErrorModalID)
+			})
 	}
 	defer func() {
-		err := f.Close()
-		if err != nil {
-			panic(err)
-		}
+		_ = f.Close()
 	}()
 
 	// Write refresh token to the file.

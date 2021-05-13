@@ -3,7 +3,7 @@ module main
 go 1.16
 
 require (
-	github.com/darylhjd/mangodex v0.0.0-20210512061456-c89043884741
+	github.com/darylhjd/mangodex v0.0.0-20210513021603-94ad6a051399
 	github.com/gdamore/tcell/v2 v2.2.1
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/rivo/tview v0.0.0-20210427112837-09cec83b1732
