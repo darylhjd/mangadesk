@@ -4,6 +4,8 @@
 
 <img src="assets/demo.gif" alt="">
 
+<p align="center">This client retrieves information straight from MangaDex's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
+
 ## Features
 
 - Read chapters straight on your computer.
