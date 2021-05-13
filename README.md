@@ -1,4 +1,4 @@
-# mangadesk - Desktop client for MangaDex
+# mangadesk - Desktop client for MangaDex 📖
 
 <p align="center">Read and download manga directly from your Desktop!</p>
 
