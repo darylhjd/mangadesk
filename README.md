@@ -1,6 +1,6 @@
-# mangadesk - Desktop client for MangaDex 📖
+# mangadesk - Terminal client for MangaDex 📖
 
-<p align="center">Read and download manga directly from your Desktop!</p>
+<p align="center">Read and download manga directly from your terminal!</p>
 
 <img src="assets/demo.gif" alt="">
 
@@ -12,7 +12,7 @@
 - Searching!
 - Responsive UI (kind of)
 
-Works for Windows/Linux/MacOS.
+Works for Windows/Linux. Not yet tested on MacOS.
 
 ## Installation & Usage
 
