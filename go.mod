@@ -1,4 +1,4 @@
-module main
+module github.com/darylhjd/mangadesk
 
 go 1.16
 
