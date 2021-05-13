@@ -93,7 +93,9 @@ func ShowMainPage(pages *tview.Pages) {
 	} else {
 		params := url.Values{}
 		params.Add("limit", "75")
-		setUpGuestMainPage(pages, grid, table, params)
+		grid.SetTitle("Welcome to MangaDex, [red]Guest!")
+		table.SetTitle("Recently updated manga")
+		setUpGuestMainPage(pages, table, params)
 	}
 
 	pages.AddPage(MainPageID, grid, true, false)
@@ -171,11 +173,8 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 }
 
 // setUpGuestMainPage : Set up the main page for a guest user.
-func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, params url.Values) {
+func setUpGuestMainPage(pages *tview.Pages, table *tview.Table, params url.Values) {
 	// For guest users, we fill the table with recently updated manga.
-	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
-	table.SetTitle("Recently updated manga")
-
 	titleColor := tcell.ColorOrange
 	descColor := tcell.ColorLightGrey
 	tagColor := tcell.ColorLightSteelBlue
@@ -356,6 +355,7 @@ func ShowSearchPage(pages *tview.Pages) {
 	grid := tview.NewGrid().SetColumns(g...).SetRows(g...)
 	// Set grid attributes
 	grid.SetTitleColor(tcell.ColorOrange).
+		SetTitle("Search for Manga").
 		SetBorderColor(tcell.ColorLightGrey).
 		SetBorder(true)
 
@@ -374,6 +374,7 @@ func ShowSearchPage(pages *tview.Pages) {
 						SetSeparator('|').
 						SetBordersColor(tcell.ColorGrey).
 						SetTitleColor(tcell.ColorLightSkyBlue).
+						SetTitle("Search Results. [grey]Press Tab to go back to search bar.").
 						SetBorder(true)
 
 	// Create a form for the searching
@@ -392,12 +393,10 @@ func ShowSearchPage(pages *tview.Pages) {
 			params := url.Values{}
 			params.Add("limit", "75")
 			params.Add("title", searchTerm)
-			setUpGuestMainPage(pages, grid, table, params)
-
-			grid.SetTitle("Search for Manga")
-			table.SetTitle("Search Results. [grey]Press Tab to go back to search bar.")
+			setUpGuestMainPage(pages, table, params)
 			app.SetFocus(table)
 		})
+
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
