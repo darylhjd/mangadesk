@@ -33,6 +33,8 @@ func setMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 		switch event.Key() {
 		case tcell.KeyEsc:
 			pages.RemovePage(MangaPageID)
+			name, _ := pages.GetFrontPage()
+			pages.SwitchToPage(name)
 		}
 		return event
 	})
