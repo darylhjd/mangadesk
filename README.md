@@ -1,8 +1,8 @@
 # mangadesk - Desktop client for MangaDex
 
-<img src="assets/demo.gif">
+<img src="assets/demo.gif" alt="">
 
-<p align="center">Desktop client for MangaDex</p>
+<p style="text-align:center">Desktop client for MangaDex</p>
 
 ## Features
 
