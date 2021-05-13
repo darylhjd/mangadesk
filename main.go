@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/darylhjd/mangodex"
-	"github.com/rivo/tview"
-)
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
-var (
-	app = tview.NewApplication()
-	dex = mangodex.NewDexClient()
+	"github.com/rivo/tview"
+
+	g "github.com/darylhjd/mangadesk/globals"
+	p "github.com/darylhjd/mangadesk/pages"
 )
 
 // Start the program.
@@ -16,19 +17,41 @@ func main() {
 	pages := tview.NewPages()
 
 	// Set required input captures that are valid for the whole app.
-	setUniversalInputCaptures(pages)
+	p.SetUniversalInputCaptures(pages)
 
 	// Check whether the user is remembered. If they are, then load credentials into the client and refresh token.
 	if err := checkAuth(); err != nil {
 		// If error retrieving stored credentials.
-		ShowLoginPage(pages)
+		p.ShowLoginPage(pages)
 	} else {
 		// If can log in using stored refresh token, then straight away go to logged main page.
-		ShowMainPage(pages)
+		p.ShowMainPage(pages)
 	}
 
 	// Run the app. SetRoot also calls SetFocus on the primitive.
-	if err := app.SetRoot(pages, true).Run(); err != nil {
+	if err := g.App.SetRoot(pages, true).Run(); err != nil {
 		panic(err)
 	}
+}
+
+// checkAuth : Check if the user's credentials have been stored before.
+// If they are, then read it, and attempt to refresh the token.
+// Will return error if any steps fail (authentication failed).
+func checkAuth() error {
+	// Location of the credentials file.
+	credFilePath := filepath.Join(g.UsrDir, g.CredFileName)
+	if _, err := os.Stat(credFilePath); os.IsNotExist(err) {
+		return err
+	}
+
+	// If the file exists, then we read it.
+	content, err := ioutil.ReadFile(g.CredFileName)
+	if err != nil {
+		return err
+	}
+
+	g.Dex.RefreshToken = string(content) // We set the stored refresh token.
+
+	// Do a refresh of the token to keep it up to date.
+	return g.Dex.RefreshSessionToken()
 }

@@ -1,25 +1,41 @@
-# mangadesk - Desktop client for MangaDex
+# mangadesk - Terminal client for MangaDex 📖
+
+<p align="center">Download manga directly from your terminal to read!</p>
 
 <img src="assets/demo.gif" alt="">
 
-<p style="text-align:center">Desktop client for MangaDex</p>
+<p align="center">This client retrieves information straight from MangaDex's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
 
-## Features
+## Features ✨
 
----
-- Read chapters straight on your computer.
-- Keep track of your followed manga.
+- Read chapters straight on your computer after downloading them.
+- Login to keep track of your followed manga.
 - Download multiple chapters together.
 - Searching!
+- Responsive UI (kind of)
+- Written in Golang :)
 
 Works for Windows/Linux/MacOS.
 
-## Installation & Usage
+## Usage
 
----
+Simply choose the chapters you want to read to download.
+
+All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you run the application.
+
+### Keybindings
+
+- Ctrl + L : Login/Logout
+- Ctrl + H : Help
+- Ctrl + S : Search
+- Ctrl + E : Select multiple chapters
+- Esc      : Going back
+
+## Installation
+
 Check out the releases page for relevant files.
 
-To compile from source,
+If you want, you may compile from source,
 
 ```
 git clone https://github.com/darylhjd/mangadesk.git
@@ -28,7 +44,15 @@ go get -d ./...
 go build
 ```
 
+## Issues ☠
+
+Check out the Issues page for current issues. 
+
+## Planning... maybe?
+
+- Config files for personal settings (download folder, language selection etc...)
+- More download information (notify user when download finished, show downloaded chapters etc...)
+
 ## Contributing
 
----
-Appreciated :)
+Always welcome and appreciated :)
