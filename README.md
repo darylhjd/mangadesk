@@ -46,9 +46,14 @@ go get -d ./...
 go build
 ```
 
-## Issues
+## Issues ☠
 
 - Search table does not clear itself for a new search. For now, you may do Ctrl+S to re-open the search page.
+
+## Planning... maybe?
+
+- Config files for personal settings (download folder, language selection etc...)
+- More download information (notify user when download finished, show downloaded chapters etc...)
 
 ## Contributing
 
