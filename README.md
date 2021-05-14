@@ -21,8 +21,7 @@ Works for Windows/Linux/MacOS.
 
 Simply choose the chapters you want to read to download.
 
-All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you ran this
-application.
+All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you run the application.
 
 ### Keybindings
 
@@ -47,7 +46,7 @@ go build
 
 ## Issues ☠
 
-- [FIXED] Search table does not clear itself for a new search. For now, you may do Ctrl+S to re-open the search page.
+Check out the Issues page for current issues. 
 
 ## Planning... maybe?
 
