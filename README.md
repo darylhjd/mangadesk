@@ -15,9 +15,7 @@
 - Responsive UI (kind of)
 - Written in Golang :)
 
-Works for Windows/Linux.
-
-Not yet tested on MacOS. If you have compiled this on Mac and it works for you, do tell me so I can update this.
+Works for Windows/Linux/MacOS.
 
 ## Usage
 
@@ -49,7 +47,7 @@ go build
 
 ## Issues ☠
 
-- Search table does not clear itself for a new search. For now, you may do Ctrl+S to re-open the search page.
+- [FIXED] Search table does not clear itself for a new search. For now, you may do Ctrl+S to re-open the search page.
 
 ## Planning... maybe?
 
