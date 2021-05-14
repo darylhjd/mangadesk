@@ -15,7 +15,7 @@
 - Responsive UI (kind of)
 - Written in Golang :)
 
-Works for Windows/Linux. 
+Works for Windows/Linux.
 
 Not yet tested on MacOS. If you have compiled this on Mac and it works for you, do tell me so I can update this.
 
@@ -23,7 +23,8 @@ Not yet tested on MacOS. If you have compiled this on Mac and it works for you, 
 
 Simply choose the chapters you want to read to download.
 
-All downloads are stored in a folder titled`downloads`, which you will find in the same directory as where you ran this application.
+All downloads are stored in a folder titled`downloads`, which you will find in the same directory as where you ran this
+application.
 
 ### Keybindings
 

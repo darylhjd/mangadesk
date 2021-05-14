@@ -1,56 +1,53 @@
-package main
+package pages
 
 import (
-	"github.com/darylhjd/mangodex"
+	"os"
+	"path/filepath"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"os"
+
+	g "github.com/darylhjd/mangadesk/globals"
 )
 
-// setUniversalInputCaptures : Set input handlers for the app.
+// SetUniversalInputCaptures : Set input handlers for the app.
 // List of input captures: Ctrl+L
-func setUniversalInputCaptures(pages *tview.Pages) {
+func SetUniversalInputCaptures(pages *tview.Pages) {
 	// Enable mouse.
-	app.EnableMouse(true)
+	g.App.EnableMouse(true)
 
 	// Set keyboard captures
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	g.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput(pages)
-		case tcell.KeyCtrlH:
+		case tcell.KeyCtrlH: // Help page.
 			ctrlHInput(pages)
-		case tcell.KeyCtrlS:
+		case tcell.KeyCtrlS: // Search page.
 			ctrlSInput(pages)
 		}
 		return event
 	})
 }
 
-// setMangaPageHandlers : Set input handlers for the manga page.
-func setMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
+// SetMangaPageHandlers : Set input handlers for the manga page.
+// List of input captures : ESC
+func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyEsc:
-			pages.RemovePage(MangaPageID)
-			name, _ := pages.GetFrontPage()
-			pages.SwitchToPage(name)
+		case tcell.KeyEsc: // User wants to go back.
+			pages.RemovePage(g.MangaPageID)
 		}
 		return event
 	})
 }
 
-// setMangaPageTableHandlers : Set input handlers for the manga page table.
-func setMangaPageTableHandlers(pages *tview.Pages, table *tview.Table,
-	selected *map[int]struct{}, mr *mangodex.MangaResponse, cl *mangodex.ChapterList) {
-	// When user presses enter to confirm selected
-	table.SetSelectedFunc(func(row, column int) {
-		confirmChapterDownloads(pages, table, selected, row, mr, cl)
-	})
-
+// SetMangaPageTableHandlers : Set input handlers for the manga page table.
+// List of input captures : Ctrl+E
+func SetMangaPageTableHandlers(table *tview.Table, selected *map[int]struct{}) {
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyCtrlE:
+		case tcell.KeyCtrlE: // User selects this manga row.
 			ctrlEInput(table, selected) // Check for updates for each manga.
 		}
 		return event
@@ -66,7 +63,7 @@ different screens. As such, we try to only have one action for each input.
 // This input enables user to toggle login/logout.
 func ctrlLInput(pages *tview.Pages) {
 	// Do not allow pop up when on login screen.
-	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
 		return
 	}
 
@@ -76,22 +73,22 @@ func ctrlLInput(pages *tview.Pages) {
 		title    string
 	)
 
-	// This will decide the function of the modal.
-	switch dex.IsLoggedIn() {
+	// This will decide the function of the modal by checking whether user is logged in or out.
+	switch g.Dex.IsLoggedIn() {
 	case true: // User wants to logout.
 		title = "Logout\nStored credentials will be deleted.\n\n"
-		buttonFn = func() {
+		buttonFn = func() { // Set the function.
 			// Attempt logout
-			err := dex.Logout()
+			err := g.Dex.Logout()
 			if err != nil {
-				ShowModal(pages, LoginLogoutFailureModalID, "Error logging out!", []string{"OK"},
+				ShowModal(pages, g.LoginLogoutFailureModalID, "Error logging out!", []string{"OK"},
 					func(i int, label string) {
-						pages.RemovePage(LoginLogoutFailureModalID)
+						pages.RemovePage(g.LoginLogoutFailureModalID)
 					})
 				return
 			}
-			// Remove the credentials file
-			_ = os.Remove(credFile)
+			// Remove the credentials file, but we ignore errors.
+			_ = os.Remove(filepath.Join(g.UsrDir, g.CredFileName))
 			// Then we redirect the user to the guest main page
 			ShowMainPage(pages)
 		}
@@ -103,14 +100,14 @@ func ctrlLInput(pages *tview.Pages) {
 	}
 
 	// Create the modal for the user.
-	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
+	ShowModal(pages, g.LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
 		func(i int, label string) {
 			// If user confirms the modal.
 			if label == "Yes" {
 				buttonFn()
 			}
 			// We remove the modal from the page.
-			pages.RemovePage(LoginLogoutCfmModalID)
+			pages.RemovePage(g.LoginLogoutCfmModalID)
 		})
 }
 
@@ -138,7 +135,7 @@ func ctrlHInput(pages *tview.Pages) {
 // ctrlSInput : Handler for Ctrl+S input.
 // THis shows search page to the user.
 func ctrlSInput(pages *tview.Pages) {
-	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
 		return
 	}
 	ShowSearchPage(pages)
