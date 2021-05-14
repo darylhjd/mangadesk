@@ -21,7 +21,7 @@ Works for Windows/Linux/MacOS.
 
 Simply choose the chapters you want to read to download.
 
-All downloads are stored in a folder titled`downloads`, which you will find in the same directory as where you ran this
+All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you ran this
 application.
 
 ### Keybindings
