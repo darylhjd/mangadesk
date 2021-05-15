@@ -22,8 +22,10 @@ Works for Windows/Linux/macOS.
 
 Simply choose the chapters you want to read to download.
 
-All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you run the
-application.
+By default, all downloads are stored in a folder titled `./downloads`, relative to where you run the application.
+
+However, you can change this by changing the `downloadDir` field in the `./usr/usr_config.json` file (this file only
+appears after running the application at least once!)
 
 ### Keybindings
 
