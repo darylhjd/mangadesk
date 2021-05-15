@@ -10,6 +10,7 @@
 
 - Read chapters straight on your computer after downloading them.
 - Login to keep track of your followed manga.
+- Keep track of already downloaded manga.
 - Download multiple chapters together.
 - Searching!
 - Responsive UI (kind of)
