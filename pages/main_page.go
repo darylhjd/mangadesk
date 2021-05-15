@@ -169,7 +169,9 @@ func setUpMangaListTable(pages *tview.Pages, table *tview.Table, params *url.Val
 
 		// When user presses ENTER on a manga row, they are redirected to the manga page.
 		table.SetSelectedFunc(func(row, column int) {
-			ShowMangaPage(pages, &(mangaList.Results[row-1]))
+			if len(mangaList.Results) != 0 {
+				ShowMangaPage(pages, &(mangaList.Results[row-1]))
+			}
 		})
 
 		// Add each entry to the table.
