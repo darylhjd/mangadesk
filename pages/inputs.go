@@ -11,7 +11,7 @@ import (
 )
 
 // SetUniversalInputCaptures : Set input handlers for the app.
-// List of input captures: Ctrl+L
+// List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
 func SetUniversalInputCaptures(pages *tview.Pages) {
 	// Enable mouse.
 	g.App.EnableMouse(true)
@@ -21,8 +21,8 @@ func SetUniversalInputCaptures(pages *tview.Pages) {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput(pages)
-		case tcell.KeyCtrlH: // Help page.
-			ctrlHInput(pages)
+		case tcell.KeyCtrlK: // Help page.
+			ctrlKInput(pages)
 		case tcell.KeyCtrlS: // Search page.
 			ctrlSInput(pages)
 		}
@@ -126,9 +126,9 @@ func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
 	}
 }
 
-// ctrlHInput : Handler for Ctrl+H input.
+// ctrlKInput : Handler for Ctrl+K input.
 // This shows the help page to the user.
-func ctrlHInput(pages *tview.Pages) {
+func ctrlKInput(pages *tview.Pages) {
 	ShowHelpPage(pages)
 }
 

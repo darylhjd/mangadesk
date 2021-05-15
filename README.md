@@ -15,18 +15,19 @@
 - Responsive UI (kind of)
 - Written in Golang :)
 
-Works for Windows/Linux/MacOS.
+Works for Windows/Linux/macOS.
 
 ## Usage
 
 Simply choose the chapters you want to read to download.
 
-All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you run the application.
+All downloads are stored in a folder titled `downloads`, which you will find in the same directory as where you run the
+application.
 
 ### Keybindings
 
 - Ctrl + L : Login/Logout
-- Ctrl + H : Help
+- Ctrl + K : Keybindings/Help
 - Ctrl + S : Search
 - Ctrl + E : Select multiple chapters
 - Esc      : Going back
@@ -46,7 +47,7 @@ go build
 
 ## Issues ☠
 
-Check out the Issues page for current issues. 
+Check out the Issues page for current issues.
 
 ## Planning... maybe?
 
