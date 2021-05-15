@@ -88,10 +88,10 @@ func ShowSearchPage(pages *tview.Pages) {
 	})
 
 	// Add search bar and result table to the grid. Search bar will have focus.
-	grid.AddItem(search, 0, 0, 4, 15, 0, 0, true).
-		AddItem(table, 4, 0, 11, 15, 0, 0, false)
+	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).
+		AddItem(table, 4, 0, 11, 15, 0, 0, true)
 
 	pages.AddPage(g.SearchPageID, grid, true, false)
-	g.App.SetFocus(grid)
+	g.App.SetFocus(search)
 	pages.ShowPage(g.SearchPageID)
 }
