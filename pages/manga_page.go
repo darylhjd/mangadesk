@@ -56,8 +56,12 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	titleHeader := tview.NewTableCell("Name").
 		SetTextColor(tcell.ColorLightSkyBlue).
 		SetSelectable(false)
+	downloadHeader := tview.NewTableCell("Download Status").
+		SetTextColor(tcell.ColorPowderBlue).
+		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
+		SetCell(0, 2, downloadHeader).
 		SetFixed(1, 0)
 	// Set up chapter info on the table.
 	go func() {
@@ -158,11 +162,23 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 				SetTextColor(tcell.ColorLightYellow)
 
 			// Create title cell and put title.
-			tCell := tview.NewTableCell(cr.Data.Attributes.Title).
-				SetTextColor(tcell.ColorLightSkyBlue)
+			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", cr.Data.Attributes.Title)).
+				SetTextColor(tcell.ColorLightSkyBlue).SetMaxWidth(30)
+
+			// Create the downloaded status cell and put the status inside.
+			// Get chapter folder name.
+			chapter := generateChapterFolderName(&cr)
+			chapFolder := filepath.Join(g.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
+			stat := ""
+			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
+			if _, err = os.Stat(chapFolder); err == nil {
+				stat = "Yup!"
+			}
+			dCell := tview.NewTableCell(stat).SetTextColor(tcell.ColorPowderBlue)
 
 			table.SetCell(i+1, 0, cCell)
 			table.SetCell(i+1, 1, tCell)
+			table.SetCell(i+1, 2, dCell)
 		})
 	}
 }
@@ -198,12 +214,7 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 			chapR := chaps.Results[r-1] // We -1 since the first row is the header.
 
 			// Get chapter folder name.
-			chapterNum := "?"
-			if chapR.Data.Attributes.Chapter != nil {
-				chapterNum = *(chapR.Data.Attributes.Chapter)
-			}
-			// Use compound name to try to avoid collisions.
-			chapter := fmt.Sprintf("%s - %s", chapterNum, chapR.Data.Attributes.Title)
+			chapter := generateChapterFolderName(&chapR)
 
 			// Get MangaDex@Home downloader for the chapter.
 			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, "data", chapR.Data.Attributes.Hash, false)
@@ -242,6 +253,11 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 					continue // Continue on to the next page.
 				}
 			}
+			// Tell user that the chapter has been downloaded
+			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+				dCell := tview.NewTableCell("Yup!").SetTextColor(tcell.ColorPowderBlue)
+				table.SetCell(r, 2, dCell)
+			})
 		}
 
 		// Finished downloading all chapters. Now inform user.
@@ -271,6 +287,16 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 		markChapterUnselected(table, k)
 	}
 	*selected = map[int]struct{}{} // Empty the map
+}
+
+// generateChapterFolderName : Generate a folder name for the chapter.
+func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
+	chapterNum := "?"
+	if cr.Data.Attributes.Chapter != nil {
+		chapterNum = *(cr.Data.Attributes.Chapter)
+	}
+	// Use compound name to try to avoid collisions.
+	return fmt.Sprintf("%s - %s", chapterNum, cr.Data.Attributes.Title)
 }
 
 // MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.
