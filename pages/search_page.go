@@ -40,7 +40,7 @@ func ShowSearchPage(pages *tview.Pages) {
 						SetSeparator('|').
 						SetBordersColor(tcell.ColorGrey).
 						SetTitleColor(tcell.ColorLightSkyBlue).
-						SetTitle("[grey]Press ↓ on search bar to switch to table. Press Tab on table to switch to search bar.").
+						SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Tab on table to switch to search bar.").
 						SetBorder(true)
 
 	// Create a form for the searching

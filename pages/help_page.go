@@ -16,7 +16,7 @@ func ShowHelpPage(pages *tview.Pages) {
 		"-----------------------------\n\n" +
 		"Universal\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + L", "Login/Logout") +
-		fmt.Sprintf("%-15s:%15s\n", "Ctrl + H", "Show Help") +
+		fmt.Sprintf("%-15s:%15s\n", "Ctrl + K", "Keybinds/Help") +
 		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + S", "Search") +
 		"Manga Page\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + E", "Select mult.") +
@@ -35,7 +35,7 @@ func ShowHelpPage(pages *tview.Pages) {
 	// Create a new grid for the text view so we can align it to the center.
 	grid := tview.NewGrid().SetColumns(0, 0, 0, 0).SetRows(0, 0, 0, 0).
 		AddItem(help, 0, 0, 4, 4, 0, 0, false).
-		AddItem(help, 1, 1, 2, 2, 30, 100, false)
+		AddItem(help, 1, 1, 2, 2, 35, 100, false)
 
 	// Set up input capture for the help page.
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
