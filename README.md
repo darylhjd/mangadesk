@@ -56,3 +56,5 @@ Check out the Issues page for current issues.
 ## Contributing
 
 Always welcome and appreciated :)
+
+Please take some time to familiarise yourself with the [contributing guidelines](.github/CONTRIBUTING.md).
