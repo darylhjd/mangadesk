@@ -52,7 +52,7 @@ func checkAuth() error {
 	}
 
 	// If the file exists, then we read it.
-	content, err := ioutil.ReadFile(g.CredFileName)
+	content, err := ioutil.ReadFile(credFilePath)
 	if err != nil {
 		return err
 	}
