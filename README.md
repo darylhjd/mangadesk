@@ -4,11 +4,11 @@
 
 <img src="assets/demo.gif" alt="">
 
-<p align="center">This client retrieves information straight from MangaDex's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
+<p align="center">This client retrieves information straight from MangaDex v5's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
 
 ## Features ✨
 
-- Read chapters straight on your computer after downloading them.
+- Download chapters straight to your computer.
 - Login to keep track of your followed manga.
 - Keep track of already downloaded manga.
 - Download multiple chapters together.
@@ -18,16 +18,16 @@
 
 Works for Windows/Linux/macOS.
 
-## Usage
+## Usage ✍
 
 Simply choose the chapters you want to read to download.
 
-By default, all downloads are stored in a folder titled `./downloads`, relative to where you run the application.
+By default, all downloads are stored in a folder titled `downloads`, relative to where you run the application.
 
-However, you can change this by changing the `downloadDir` field in the `./usr/usr_config.json` file (this file only
+However, you can change this by changing the `downloadDir` field in the `usr/usr_config.json` file (this file only
 appears after running the application at least once!)
 
-### Keybindings
+### Keybindings ⌨
 
 - Ctrl + L : Login/Logout
 - Ctrl + K : Keybindings/Help
@@ -35,11 +35,11 @@ appears after running the application at least once!)
 - Ctrl + E : Select multiple chapters
 - Esc      : Going back
 
-## Installation
+## Installation 🔧
 
 Check out the releases page for relevant files.
 
-If you want, you may compile from source,
+For bleeding edge 🗡 updates, you may compile from source:
 
 ```
 git clone https://github.com/darylhjd/mangadesk.git
@@ -50,14 +50,9 @@ go build
 
 ## Issues ☠
 
-Check out the Issues page for current issues.
+Check out the Issues page for current issues/feature requests.
 
-## Planning... maybe?
-
-- Config files for personal settings (download folder, language selection etc...)
-- More download information (notify user when download finished, show downloaded chapters etc...)
-
-## Contributing
+## Contributing 🤝
 
 Always welcome and appreciated :)
 
