@@ -57,3 +57,10 @@ Check out the Issues page for current issues/feature requests.
 Always welcome and appreciated :)
 
 Please take some time to familiarise yourself with the [contributing guidelines](.github/CONTRIBUTING.md).
+
+### Learning points 🧠
+
+- Creating TUIs with tview/tcell.
+- Working with the filesystem in Golang.
+- Goroutines.
+- Go Project structure.
