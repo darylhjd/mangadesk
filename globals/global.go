@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	App = tview.NewApplication()
-	Dex = mangodex.NewDexClient()
+	App  = tview.NewApplication()
+	Dex  = mangodex.NewDexClient()
+	Conf UserConfig
 )
 
 const (

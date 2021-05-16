@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,6 +14,12 @@ import (
 
 // Start the program.
 func main() {
+	// Load user configuration.
+	if err := g.LoadUserConfiguration(); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1) // Exit program on error.
+	}
+
 	// Create new pages holder.
 	pages := tview.NewPages()
 

@@ -168,7 +168,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			// Create the downloaded status cell and put the status inside.
 			// Get chapter folder name.
 			chapter := generateChapterFolderName(&cr)
-			chapFolder := filepath.Join(g.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
+			chapFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
 			stat := ""
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
 			if _, err = os.Stat(chapFolder); err == nil {
@@ -226,7 +226,7 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 
 			// Create directory to store the downloaded chapters.
 			// It is stored in DOWNLOAD_FOLDER/MANGA_NAME/CHAPTER_FOLDER
-			chapterFolder := filepath.Join(g.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
+			chapterFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
 			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
 				// If error creating folder to store this chapter, we add this chapter to errorPages chapters list.
 				errorChaps[chapter] = []int{}
