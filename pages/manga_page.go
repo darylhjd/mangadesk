@@ -202,14 +202,29 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	readStatus := ""
 	crmr, err := g.Dex.MangaReadMarkers(mr.Data.ID)
 	if err != nil { // If error getting read markers, just put a error message on the column.
-		readStatus := "API Error!"
+		readStatus = "API Error!"
 		g.App.QueueUpdateDraw(func() {
 			rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
 			table.SetCell(1, 3, rSCell)
 		})
 		return
 	}
-	// TODO: CHECK EACH CHAPTER.
+	// If no error, we can go ahead and check each chapter.
+	// Use a map to store the read chapter IDs to avoid iterating through every turn.
+	read := map[string]struct{}{}
+	for _, chapID := range crmr.Data {
+		read[chapID] = struct{}
+	}
+	// For every chapter
+	for i, cr := range cl.Results {
+		if _, ok := read[cr.Data.ID]; !ok { // If chapter ID is in map of read markers.
+			readStatus = "R"
+		}
+		rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			table.SetCell(i+1, 3, rSCell)
+		})
+	}
 }
 
 // confirmChapterDownloads : Function for handling when the user press enter on the table.
