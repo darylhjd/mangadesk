@@ -59,9 +59,13 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	downloadHeader := tview.NewTableCell("Download Status").
 		SetTextColor(tcell.ColorPowderBlue).
 		SetSelectable(false)
+	readMarkerHeader := tview.NewTableCell("Read Marker Status").
+		SetTextColor(tcell.ColorOrange).
+		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
 		SetCell(0, 2, downloadHeader).
+		SetCell(0, 3, readMarkerHeader).
 		SetFixed(1, 0)
 	// Set up chapter info on the table.
 	go func() {
@@ -143,6 +147,18 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		return // We end immediately. No need to continue.
 	}
 
+	crmr, err2 := g.Dex.MangaReadMarkers(mr.Data.ID)
+	if err2 != nil {
+		// If error getting read markers for the manga, we tell the user so through a modal.
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			ShowModal(pages, g.GenericAPIErrorModalID, "Error getting manga readmarkers", []string{"OK"},
+				func(i int, label string) {
+					pages.RemovePage(g.GenericAPIErrorModalID)
+				})
+		})
+		return // We end immediately. No need to continue.
+	}
+
 	// Set input handlers for the table
 	selected := map[int]struct{}{}                // We use this map to keep track of which chapters have been selected by user.
 	table.SetSelectedFunc(func(row, column int) { // When user presses ENTER to confirm selected.
@@ -176,9 +192,19 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			}
 			dCell := tview.NewTableCell(stat).SetTextColor(tcell.ColorPowderBlue)
 
+			mCell := tview.NewTableCell(fmt.Sprintf("%-5s", "_")).SetMaxWidth(5).
+				SetTextColor(tcell.ColorOrange)
+			for _, cm := range crmr.Data {
+				if cm == cr.Data.ID {
+					mCell = tview.NewTableCell(fmt.Sprintf("%-5s", "R")).SetMaxWidth(5).
+				SetTextColor(tcell.ColorOrange)
+				}
+			} 
+
 			table.SetCell(i+1, 0, cCell)
 			table.SetCell(i+1, 1, tCell)
 			table.SetCell(i+1, 2, dCell)
+			table.SetCell(i+1, 3, mCell)
 		})
 	}
 }
