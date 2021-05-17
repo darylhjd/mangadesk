@@ -2,6 +2,7 @@ package globals
 
 import (
 	"github.com/darylhjd/mangodex"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -24,4 +25,13 @@ const (
 	DownloadChaptersModalID     = "download_chapters_modal"
 	DownloadFinishedModalID     = "download_error_modal"
 	GenericAPIErrorModalID      = "api_error_modal"
+)
+
+const (
+	LoggedMainPageTitleColor  = tcell.ColorLightGoldenrodYellow
+	LoggedMainPageStatusColor = tcell.ColorSaddleBrown
+
+	GuestMainPageTitleColor = tcell.ColorOrange
+	GuestMainPageDescColor  = tcell.ColorLightGrey
+	GuestMainPageTagColor   = tcell.ColorLightSteelBlue
 )

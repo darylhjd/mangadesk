@@ -162,8 +162,8 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 				SetTextColor(tcell.ColorLightYellow)
 
 			// Create title cell and put title.
-			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", cr.Data.Attributes.Title)).
-				SetTextColor(tcell.ColorLightSkyBlue).SetMaxWidth(30)
+			tCell := tview.NewTableCell(fmt.Sprintf("%-40s", cr.Data.Attributes.Title)).
+				SetTextColor(tcell.ColorLightSkyBlue).SetMaxWidth(40)
 
 			// Create the downloaded status cell and put the status inside.
 			// Get chapter folder name.

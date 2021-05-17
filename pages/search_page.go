@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"github.com/darylhjd/mangodex"
 	"net/url"
 
 	"github.com/gdamore/tcell/v2"
@@ -55,16 +56,35 @@ func ShowSearchPage(pages *tview.Pages) {
 								AddButton("Search", func() { // Search button.
 			// Remove all current search results
 			table.Clear()
+			mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
+										SetAlign(tview.AlignCenter).
+										SetTextColor(g.GuestMainPageTitleColor).
+										SetSelectable(false)
+			descHeader := tview.NewTableCell("Description"). // Description header
+										SetAlign(tview.AlignCenter).
+										SetTextColor(g.GuestMainPageDescColor).
+										SetSelectable(false)
+			tagHeader := tview.NewTableCell("Tags"). // Tag header
+									SetAlign(tview.AlignCenter).
+									SetTextColor(g.GuestMainPageTagColor).
+									SetSelectable(false)
+			table.SetCell(0, 0, mangaTitleHeader). // Add headers to the table
+								SetCell(0, 1, descHeader).
+								SetCell(0, 2, tagHeader).
+								SetFixed(1, 0) // This allows the table to show the header at all times.
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
 
 			// Set up query parameters for the search.
 			params := url.Values{}
-			params.Add("limit", "75")
+			params.Add("limit", "100")
 			params.Add("title", searchTerm)
-			setUpMangaListTable(pages, table, &params)
-
+			go func() {
+				setUpMangaListTable(pages, table, true, func() (*mangodex.MangaList, error) {
+					return g.Dex.MangaList(params)
+				})
+			}()
 			// Send focus to the search result table.
 			g.App.SetFocus(table)
 		}).SetFocus(0) // Set focus to the title field.
@@ -93,5 +113,5 @@ func ShowSearchPage(pages *tview.Pages) {
 
 	pages.AddPage(g.SearchPageID, grid, true, false)
 	g.App.SetFocus(search)
-	pages.ShowPage(g.SearchPageID)
+	pages.SwitchToPage(g.SearchPageID)
 }

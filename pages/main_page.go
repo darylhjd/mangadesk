@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -41,13 +42,7 @@ func ShowMainPage(pages *tview.Pages) {
 	if g.Dex.IsLoggedIn() {
 		setUpLoggedMainPage(pages, grid, table)
 	} else {
-		// Set up query parameters for the search.
-		params := url.Values{}
-		params.Add("limit", "75")
-		setUpMangaListTable(pages, table, &params) // This will not set the titles, so we do it below.
-
-		grid.SetTitle("Welcome to MangaDex, [red]Guest!")
-		table.SetTitle("Recently updated manga")
+		setUpGuestMainPage(pages, grid, table)
 	}
 
 	pages.AddPage(g.MainPageID, grid, true, false)
@@ -64,51 +59,98 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 		username = u.Data.Attributes.Username
 	}
 	grid.SetTitle(fmt.Sprintf("Welcome to MangaDex, [lightgreen]%s!", username))
-	table.SetTitle("Your followed manga")
-
-	// Colors for the table.
-	titleColor := tcell.ColorLightGoldenrodYellow
-	statusColor := tcell.ColorSaddleBrown
+	table.SetTitle("Your followed manga. Page 1")
 
 	// Set up table
 	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
 								SetAlign(tview.AlignCenter).
-								SetTextColor(titleColor).
+								SetTextColor(g.LoggedMainPageTitleColor).
 								SetSelectable(false)
 	statusHeader := tview.NewTableCell("Status"). // Status header
 							SetAlign(tview.AlignCenter).
-							SetTextColor(statusColor).
+							SetTextColor(g.LoggedMainPageStatusColor).
 							SetSelectable(false)
 	table.SetCell(0, 0, mangaTitleHeader). // Add the headers to the table
 						SetCell(0, 1, statusHeader).
 						SetFixed(1, 0) // This allows the table to show the header at all times.
 
-	// GOROUTINE
 	go func() {
-		// Get user's followed manga.
-		followedManga, err := g.Dex.GetUserFollowedMangaList(50, 0)
-		if err != nil {
-			// If error getting user's followed manga, we show a modal to the user indicating so.
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				ShowModal(pages, g.GenericAPIErrorModalID, "Error getting followed manga.", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.GenericAPIErrorModalID)
-					})
-			})
-			return // We end immediately. No need to continue.
-		}
-
-		// When user presses ENTER on a manga row, they are redirected to the manga page.
-		table.SetSelectedFunc(func(row, column int) {
-			ShowMangaPage(pages, &(followedManga.Results[row-1]))
+		setUpMangaListTable(pages, table, false, func() (*mangodex.MangaList, error) {
+			return g.Dex.GetUserFollowedMangaList(100, 0)
 		})
+	}()
+}
 
-		// Add each entry to the table.
-		for i, mr := range followedManga.Results {
+// setUpGuestMainPage : Set up a main page for a guest user.
+func setUpGuestMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table) {
+	// For guest users, we fill the table with recently updated manga.
+	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
+	table.SetTitle("Recently updated manga")
+
+	// Set up the table.
+	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
+								SetAlign(tview.AlignCenter).
+								SetTextColor(g.GuestMainPageTitleColor).
+								SetSelectable(false)
+	descHeader := tview.NewTableCell("Description"). // Description header
+								SetAlign(tview.AlignCenter).
+								SetTextColor(g.GuestMainPageDescColor).
+								SetSelectable(false)
+	tagHeader := tview.NewTableCell("Tags"). // Tag header
+							SetAlign(tview.AlignCenter).
+							SetTextColor(g.GuestMainPageTagColor).
+							SetSelectable(false)
+	table.SetCell(0, 0, mangaTitleHeader). // Add headers to the table
+						SetCell(0, 1, descHeader).
+						SetCell(0, 2, tagHeader).
+						SetFixed(1, 0) // This allows the table to show the header at all times.
+	// Set up query parameters for the search.
+	params := url.Values{}
+	params.Add("limit", "50")
+	go func() {
+		setUpMangaListTable(pages, table, true, func() (*mangodex.MangaList, error) {
+			return g.Dex.MangaList(params)
+		})
+	}()
+}
+
+// setUpMangaListTable : Set up the table for the manga list. Also used for the search page!
+func setUpMangaListTable(pages *tview.Pages, table *tview.Table, full bool, f func() (*mangodex.MangaList, error)) {
+	// Perform required search function for required manga list.
+	mangaList, err := f()
+	if err != nil {
+		// If error getting the manga list, we show a modal to the user indicating so.
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			ShowModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
+				func(i int, label string) {
+					pages.RemovePage(g.GenericAPIErrorModalID)
+				})
+		})
+		return // We end immediately. No need to continue.
+	}
+
+	// If no results, then tell user.
+	if len(mangaList.Results) == 0 {
+		noResCell := tview.NewTableCell("No results!").SetSelectable(false)
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			table.SetCell(1, 0, noResCell)
+		})
+		return
+	}
+
+	// When user presses ENTER on a manga row, they are redirected to the manga page.
+	table.SetSelectedFunc(func(row, column int) {
+		// We do not need to worry about index out-of-range as we checked results earlier.
+		ShowMangaPage(pages, &(mangaList.Results[row-1]))
+	})
+
+	// Add each entry to the table.
+	if !full { // If not filling full information. This is usually for logged in main page.
+		for i, mr := range mangaList.Results {
 			// Create the manga title cell and fill it with the name of the manga.
 			mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", mr.Data.Attributes.Title["en"])).
 				SetMaxWidth(50)
-			mtCell.Color = titleColor
+			mtCell.Color = g.LoggedMainPageTitleColor
 
 			// Create status cell and fill lit with the manga's current status.
 			status := "-"
@@ -117,76 +159,25 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 			}
 			sCell := tview.NewTableCell(fmt.Sprintf("%-15s", status)).
 				SetMaxWidth(15)
-			sCell.Color = statusColor
+			sCell.Color = g.LoggedMainPageStatusColor
 
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				table.SetCell(i+1, 0, mtCell).
 					SetCell(i+1, 1, sCell)
 			})
 		}
-	}()
-}
-
-// setUpMangaListTable : Set up table to show list of manga information.
-func setUpMangaListTable(pages *tview.Pages, table *tview.Table, params *url.Values) {
-	// For guest users, we fill the table with recently updated manga.
-	titleColor := tcell.ColorOrange
-	descColor := tcell.ColorLightGrey
-	tagColor := tcell.ColorLightSteelBlue
-
-	// Set up the table.
-	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
-								SetAlign(tview.AlignCenter).
-								SetTextColor(titleColor).
-								SetSelectable(false)
-	descHeader := tview.NewTableCell("Description"). // Description header
-								SetAlign(tview.AlignCenter).
-								SetTextColor(descColor).
-								SetSelectable(false)
-	tagHeader := tview.NewTableCell("Tags"). // Tag header
-							SetAlign(tview.AlignCenter).
-							SetTextColor(tagColor).
-							SetSelectable(false)
-	table.SetCell(0, 0, mangaTitleHeader). // Add headers to the table
-						SetCell(0, 1, descHeader).
-						SetCell(0, 2, tagHeader).
-						SetFixed(1, 0) // This allows the table to show the header at all times.
-
-	// GOROUTINE
-	go func() {
-		// Get manga list based on required query parameters.
-		mangaList, err := g.Dex.MangaList(*params)
-		if err != nil {
-			// If error getting the manga list, we show a modal to the user indicating so.
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				ShowModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.GenericAPIErrorModalID)
-					})
-			})
-			return // We end immediately. No need to continue.
-		}
-
-		// When user presses ENTER on a manga row, they are redirected to the manga page.
-		table.SetSelectedFunc(func(row, column int) {
-			// This prevents index out-of-range error when there are no results.
-			if len(mangaList.Results) != 0 {
-				ShowMangaPage(pages, &(mangaList.Results[row-1]))
-			}
-		})
-
-		// Add each entry to the table.
+	} else { // If showing full info, including tags and description.
 		for i, mr := range mangaList.Results {
 			// Create the manga title cell and fill it with the name of the manga.
 			mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Data.Attributes.Title["en"])).
 				SetMaxWidth(40)
-			mtCell.Color = titleColor
+			mtCell.Color = g.GuestMainPageTitleColor
 
 			// Create the description cell and fill it with the manga description.
 			desc := tview.Escape(fmt.Sprintf("%-70s", mr.Data.Attributes.Description["en"]))
 			descCell := tview.NewTableCell(desc).
 				SetMaxWidth(70)
-			descCell.Color = descColor
+			descCell.Color = g.GuestMainPageDescColor
 
 			// Create the tag cell and fill it with the manga tags.
 			tags := make([]string, len(mr.Data.Attributes.Tags))
@@ -194,7 +185,7 @@ func setUpMangaListTable(pages *tview.Pages, table *tview.Table, params *url.Val
 				tags[ti] = tag.Attributes.Name["en"]
 			}
 			tagCell := tview.NewTableCell(strings.Join(tags, ", "))
-			tagCell.Color = tagColor
+			tagCell.Color = g.GuestMainPageTagColor
 
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				table.SetCell(i+1, 0, mtCell).
@@ -202,5 +193,5 @@ func setUpMangaListTable(pages *tview.Pages, table *tview.Table, params *url.Val
 					SetCell(i+1, 2, tagCell)
 			})
 		}
-	}()
+	}
 }
