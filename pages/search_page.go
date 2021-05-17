@@ -1,8 +1,8 @@
 package pages
 
 import (
-	"github.com/darylhjd/mangodex"
 	"net/url"
+	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -21,18 +21,8 @@ func ShowSearchPage(pages *tview.Pages) {
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes
 	grid.SetTitleColor(tcell.ColorOrange).
-		SetTitle("Search for Manga").
 		SetBorderColor(tcell.ColorLightGrey).
 		SetBorder(true)
-
-	// Set input handlers for this case
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
-			pages.RemovePage(g.SearchPageID)
-		}
-		return event
-	})
 
 	// Create table to show manga list.
 	table := tview.NewTable()
@@ -41,7 +31,6 @@ func ShowSearchPage(pages *tview.Pages) {
 						SetSeparator('|').
 						SetBordersColor(tcell.ColorGrey).
 						SetTitleColor(tcell.ColorLightSkyBlue).
-						SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Tab on table to switch to search bar.").
 						SetBorder(true)
 
 	// Create a form for the searching
@@ -56,43 +45,31 @@ func ShowSearchPage(pages *tview.Pages) {
 								AddButton("Search", func() { // Search button.
 			// Remove all current search results
 			table.Clear()
-			mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
-										SetAlign(tview.AlignCenter).
-										SetTextColor(g.GuestMainPageTitleColor).
-										SetSelectable(false)
-			descHeader := tview.NewTableCell("Description"). // Description header
-										SetAlign(tview.AlignCenter).
-										SetTextColor(g.GuestMainPageDescColor).
-										SetSelectable(false)
-			tagHeader := tview.NewTableCell("Tags"). // Tag header
-									SetAlign(tview.AlignCenter).
-									SetTextColor(g.GuestMainPageTagColor).
-									SetSelectable(false)
-			table.SetCell(0, 0, mangaTitleHeader). // Add headers to the table
-								SetCell(0, 1, descHeader).
-								SetCell(0, 2, tagHeader).
-								SetFixed(1, 0) // This allows the table to show the header at all times.
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
 
 			// Set up query parameters for the search.
 			params := url.Values{}
-			params.Add("limit", "100")
+			params.Add("limit", strconv.Itoa(g.OffsetRange))
 			params.Add("title", searchTerm)
-			go func() {
-				setUpMangaListTable(pages, table, true, func() (*mangodex.MangaList, error) {
-					return g.Dex.MangaList(params)
-				})
-			}()
+			title := "Search Results."
+			setUpGenericMainPage(pages, grid, table, &params, title)
+
+			// Set the correct titles, since the function sets the titles for the guest main page and not search.
+			grid.SetTitle("Search Manga.")
+			// table.SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")
+
 			// Send focus to the search result table.
 			g.App.SetFocus(table)
 		}).SetFocus(0) // Set focus to the title field.
 
-	// Set up input capture for the table.
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	// Set up input capture for the grid.
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyTab: // When user presses TAB, they are sent back to the search form.
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
+			pages.RemovePage(g.SearchPageID)
+		case tcell.KeyCtrlSpace: // When user presses TAB, they are sent back to the search form.
 			g.App.SetFocus(search)
 		}
 		return event

@@ -25,6 +25,7 @@ const (
 	DownloadChaptersModalID     = "download_chapters_modal"
 	DownloadFinishedModalID     = "download_error_modal"
 	GenericAPIErrorModalID      = "api_error_modal"
+	OffsetErrorModalID          = "offset_error_modal"
 )
 
 const (
@@ -34,4 +35,8 @@ const (
 	GuestMainPageTitleColor = tcell.ColorOrange
 	GuestMainPageDescColor  = tcell.ColorLightGrey
 	GuestMainPageTagColor   = tcell.ColorLightSteelBlue
+)
+
+const (
+	OffsetRange = 100
 )
