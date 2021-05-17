@@ -147,18 +147,6 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		return // We end immediately. No need to continue.
 	}
 
-	crmr, err2 := g.Dex.MangaReadMarkers(mr.Data.ID)
-	if err2 != nil {
-		// If error getting read markers for the manga, we tell the user so through a modal.
-		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			ShowModal(pages, g.GenericAPIErrorModalID, "Error getting manga readmarkers", []string{"OK"},
-				func(i int, label string) {
-					pages.RemovePage(g.GenericAPIErrorModalID)
-				})
-		})
-		return // We end immediately. No need to continue.
-	}
-
 	// Set input handlers for the table
 	selected := map[int]struct{}{}                // We use this map to keep track of which chapters have been selected by user.
 	table.SetSelectedFunc(func(row, column int) { // When user presses ENTER to confirm selected.
@@ -192,21 +180,36 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			}
 			dCell := tview.NewTableCell(stat).SetTextColor(tcell.ColorPowderBlue)
 
-			mCell := tview.NewTableCell(fmt.Sprintf("%-5s", "_")).SetMaxWidth(5).
-				SetTextColor(tcell.ColorOrange)
-			for _, cm := range crmr.Data {
-				if cm == cr.Data.ID {
-					mCell = tview.NewTableCell(fmt.Sprintf("%-5s", "R")).SetMaxWidth(5).
-				SetTextColor(tcell.ColorOrange)
-				}
-			} 
-
 			table.SetCell(i+1, 0, cCell)
 			table.SetCell(i+1, 1, tCell)
 			table.SetCell(i+1, 2, dCell)
-			table.SetCell(i+1, 3, mCell)
 		})
 	}
+	
+	// Check for manga read markers.
+	if !g.Dex.IsLoggedIn() { // If user is not logged in.
+		// We inform user to log in to track read status.
+		// Split the message into 2 rows.
+		rSCell1 := tview.NewTableCell("Log in to").SetTextColor(tcell.ColorOrange)
+		rSCell2 := tview.NewTableCell("track read status!").SetTextColor(tcell.ColorOrange)
+		
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			table.SetCell(1, 3, rSCell1)
+			table.SetCell(2, 3, rsCell2)
+		})
+		return
+	}
+	readStatus := ""
+	crmr, err := g.Dex.MangaReadMarkers(mr.Data.ID)
+	if err != nil { // If error getting read markers, just put a error message on the column.
+		readStatus := "API Error!"
+		g.App.QueueUpdateDraw(func() {
+			rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
+			table.SetCell(1, 3, rSCell)
+		})
+		return
+	}
+	// TODO: CHECK EACH CHAPTER.
 }
 
 // confirmChapterDownloads : Function for handling when the user press enter on the table.
