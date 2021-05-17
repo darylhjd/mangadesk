@@ -195,7 +195,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 			table.SetCell(1, 3, rSCell1)
-			table.SetCell(2, 3, rsCell2)
+			table.SetCell(2, 3, rSCell2)
 		})
 		return
 	}
@@ -213,11 +213,11 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	// Use a map to store the read chapter IDs to avoid iterating through every turn.
 	read := map[string]struct{}{}
 	for _, chapID := range crmr.Data {
-		read[chapID] = struct{}
+		read[chapID] = struct{}{}
 	}
 	// For every chapter
 	for i, cr := range cl.Results {
-		if _, ok := read[cr.Data.ID]; !ok { // If chapter ID is in map of read markers.
+		if _, ok := read[cr.Data.ID]; ok { // If chapter ID is in map of read markers.
 			readStatus = "R"
 		}
 		rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
