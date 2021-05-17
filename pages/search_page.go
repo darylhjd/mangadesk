@@ -2,6 +2,7 @@ package pages
 
 import (
 	"net/url"
+	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -20,18 +21,8 @@ func ShowSearchPage(pages *tview.Pages) {
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes
 	grid.SetTitleColor(tcell.ColorOrange).
-		SetTitle("Search for Manga").
 		SetBorderColor(tcell.ColorLightGrey).
 		SetBorder(true)
-
-	// Set input handlers for this case
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
-			pages.RemovePage(g.SearchPageID)
-		}
-		return event
-	})
 
 	// Create table to show manga list.
 	table := tview.NewTable()
@@ -40,7 +31,6 @@ func ShowSearchPage(pages *tview.Pages) {
 						SetSeparator('|').
 						SetBordersColor(tcell.ColorGrey).
 						SetTitleColor(tcell.ColorLightSkyBlue).
-						SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Tab on table to switch to search bar.").
 						SetBorder(true)
 
 	// Create a form for the searching
@@ -61,18 +51,25 @@ func ShowSearchPage(pages *tview.Pages) {
 
 			// Set up query parameters for the search.
 			params := url.Values{}
-			params.Add("limit", "75")
+			params.Add("limit", strconv.Itoa(g.OffsetRange))
 			params.Add("title", searchTerm)
-			setUpMangaListTable(pages, table, &params)
+			title := "Search Results."
+			setUpGenericMainPage(pages, grid, table, &params, title)
+
+			// Set the correct titles, since the function sets the titles for the guest main page and not search.
+			grid.SetTitle("Search Manga.")
+			// table.SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")
 
 			// Send focus to the search result table.
 			g.App.SetFocus(table)
 		}).SetFocus(0) // Set focus to the title field.
 
-	// Set up input capture for the table.
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	// Set up input capture for the grid.
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyTab: // When user presses TAB, they are sent back to the search form.
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
+			pages.RemovePage(g.SearchPageID)
+		case tcell.KeyCtrlSpace: // When user presses TAB, they are sent back to the search form.
 			g.App.SetFocus(search)
 		}
 		return event
@@ -93,5 +90,5 @@ func ShowSearchPage(pages *tview.Pages) {
 
 	pages.AddPage(g.SearchPageID, grid, true, false)
 	g.App.SetFocus(search)
-	pages.ShowPage(g.SearchPageID)
+	pages.SwitchToPage(g.SearchPageID)
 }
