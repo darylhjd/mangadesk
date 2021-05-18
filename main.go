@@ -24,7 +24,7 @@ func main() {
 	pages := tview.NewPages()
 
 	// Set required input captures that are valid for the whole app.
-	p.SetUniversalInputCaptures(pages)
+	p.SetUniversalHandlers(pages)
 
 	// Check whether the user is remembered. If they are, then load credentials into the client and refresh token.
 	if err := checkAuth(); err != nil {

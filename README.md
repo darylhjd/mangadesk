@@ -29,11 +29,12 @@ appears after running the application at least once!)
 
 ### Keybindings ⌨
 
-- Ctrl + L : Login/Logout
-- Ctrl + K : Keybindings/Help
-- Ctrl + S : Search
-- Ctrl + E : Select multiple chapters
-- Esc      : Going back
+- Ctrl + L   : Login/Logout
+- Ctrl + K   : Keybindings/Help
+- Ctrl + S   : Search
+- Ctrl + E   : Select multiple chapters
+- Ctrl + F/B : Next/Prev Page
+- Esc        : Going back
 
 ## Installation 🔧
 

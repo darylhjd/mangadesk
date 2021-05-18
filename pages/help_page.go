@@ -17,7 +17,8 @@ func ShowHelpPage(pages *tview.Pages) {
 		"Universal\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + L", "Login/Logout") +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + K", "Keybinds/Help") +
-		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + S", "Search") +
+		fmt.Sprintf("%-15s:%15s\n", "Ctrl + S", "Search") +
+		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + F/B", "Next/Prev Page") +
 		"Manga Page\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + E", "Select mult.") +
 		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Start download") +
