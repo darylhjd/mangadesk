@@ -2,6 +2,7 @@ package pages
 
 import (
 	"fmt"
+	"math/rand"
 	"net/url"
 	"strconv"
 	"strings"
@@ -65,11 +66,12 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 	if u, err := g.Dex.GetLoggedUser(); err == nil {
 		username = u.Data.Attributes.Username
 	}
-	grid.SetTitle(fmt.Sprintf("Welcome to MangaDex, [lightgreen]%s!", username))
 
-	page := *offset/g.OffsetRange + 1
-	table.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d)."+
-		" [yellow]Press Tab to advance page, [green]Ctrl+B to backtrack.", page, (page-1)*g.OffsetRange+1, page*g.OffsetRange))
+	welcome := "Welcome to MangaDex"
+	if rand.Intn(10000) <= 20 {
+		welcome = "All according to keikaku (keikaku means plan)"
+	}
+	grid.SetTitle(fmt.Sprintf("%s, [lightgreen]%s!", welcome, username))
 
 	// Set up table
 	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
@@ -98,29 +100,39 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 			return // We end immediately. No need to continue.
 		}
 
+		// Set the title of the table.
+		page := *offset/g.OffsetRange + 1
+		firstEntry := *offset + 1
+		lastEntry := page * g.OffsetRange
+		if lastEntry > mangaList.Total {
+			lastEntry = mangaList.Total
+		}
+		table.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d)."+
+			" [yellow]Press Ctrl+F to advance page, [green]Ctrl+B to backtrack.", page, firstEntry, lastEntry))
+
 		// If no results, then tell user.
 		if len(mangaList.Results) == 0 {
 			noResCell := tview.NewTableCell("No results!").SetSelectable(false)
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				table.SetCell(1, 0, noResCell)
 			})
-			return
+			return // We end immediately. No need to continue.
 		}
 
 		// Set up input capture for the table. This allows for pagination logic.
 		// NOTE: Potentially confusing. I am also confused.
 		table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			switch event.Key() {
-			case tcell.KeyTab: // User wants to go to next offset page.
-				*offset += g.OffsetRange        // Add new offset.
-				if *offset >= mangaList.Total { // If the offset is higher than the total, inform user.
+			case tcell.KeyCtrlF: // User wants to go to next offset page.
+				*offset += g.OffsetRange
+				if *offset >= mangaList.Total {
 					ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
 						pages.RemovePage(g.OffsetErrorModalID)
 					})
 					*offset -= g.OffsetRange // Reverse addition.
 					break                    // No need to load anymore. Break.
 				}
-				table.Clear()                                   // Clear current table.
+				table.Clear()
 				setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
 			case tcell.KeyCtrlB: // User wants to go back to previous offset page.
 				if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
@@ -129,11 +141,11 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 					})
 					break // No need to load anymore. Break.
 				}
-				*offset -= g.OffsetRange // Decrease the offset.
-				if *offset < 0 {         // Make sure non negative.
+				*offset -= g.OffsetRange
+				if *offset < 0 { // Make sure non negative.
 					*offset = 0
 				}
-				table.Clear()                                   // Clear current table.
+				table.Clear()
 				setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
 			}
 			return event
@@ -173,12 +185,6 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 	// For guest users, we fill the table with recently updated manga.
 	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
 
-	offset, _ := strconv.Atoi(params.Get("offset"))
-	page := offset/g.OffsetRange + 1
-	table.SetTitle(
-		fmt.Sprintf("%s Page %d (%d-%d). [yellow]Press Tab to advance page, [green]Ctrl+B to backtrack.",
-			title, page, (page-1)*g.OffsetRange+1, page*g.OffsetRange))
-
 	// Set up the table.
 	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
 								SetAlign(tview.AlignCenter).
@@ -210,13 +216,25 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 			return // We end immediately. No need to continue.
 		}
 
+		// Set the title of the table.
+		offset, _ := strconv.Atoi(params.Get("offset"))
+		page := offset/g.OffsetRange + 1
+		firstEntry := offset + 1
+		lastEntry := page * g.OffsetRange
+		if lastEntry > mangaList.Total {
+			lastEntry = mangaList.Total
+		}
+		table.SetTitle(
+			fmt.Sprintf("%s Page %d (%d-%d). [yellow]Press Ctrl+F to advance page, [green]Ctrl+B to backtrack.",
+				title, page, firstEntry, lastEntry))
+
 		// If no results, then tell user.
 		if len(mangaList.Results) == 0 {
 			noResCell := tview.NewTableCell("No results!").SetSelectable(false)
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				table.SetCell(1, 0, noResCell)
 			})
-			return
+			return // We end immediately. No need to continue.
 		}
 
 		// Set up input capture for the table. Allows for pagination logic.
@@ -224,7 +242,7 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 		table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			currOffset, _ := strconv.Atoi(params.Get("offset"))
 			switch event.Key() {
-			case tcell.KeyTab: // User wants to go to next offset page.
+			case tcell.KeyCtrlF: // User wants to go to next offset page.
 				currOffset += g.OffsetRange        // Add the next offset.
 				if currOffset >= mangaList.Total { // If the offset is more than total results, inform user.
 					ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
@@ -258,6 +276,7 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 			// We do not need to worry about index out-of-range as we checked results earlier.
 			ShowMangaPage(pages, &(mangaList.Results[row-1]))
 		})
+
 		for i, mr := range mangaList.Results {
 			// Create the manga title cell and fill it with the name of the manga.
 			mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Data.Attributes.Title["en"])).
