@@ -35,6 +35,7 @@ func ShowLoginPage(pages *tview.Pages) {
 			}
 		}).
 		AddButton("Guest", func() { // Guest button
+			pages.RemovePage(g.LoginPageID)
 			ShowMainPage(pages)
 		})
 

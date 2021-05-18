@@ -120,36 +120,7 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 		}
 
 		// Set up input capture for the table. This allows for pagination logic.
-		// NOTE: Potentially confusing. I am also confused.
-		table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			switch event.Key() {
-			case tcell.KeyCtrlF: // User wants to go to next offset page.
-				*offset += g.OffsetRange
-				if *offset >= mangaList.Total {
-					ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-						pages.RemovePage(g.OffsetErrorModalID)
-					})
-					*offset -= g.OffsetRange // Reverse addition.
-					break                    // No need to load anymore. Break.
-				}
-				table.Clear()
-				setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
-			case tcell.KeyCtrlB: // User wants to go back to previous offset page.
-				if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
-					ShowModal(pages, g.OffsetErrorModalID, "First Page!", []string{"OK"}, func(i int, label string) {
-						pages.RemovePage(g.OffsetErrorModalID)
-					})
-					break // No need to load anymore. Break.
-				}
-				*offset -= g.OffsetRange
-				if *offset < 0 { // Make sure non negative.
-					*offset = 0
-				}
-				table.Clear()
-				setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
-			}
-			return event
-		})
+		SetLoggedMainPageHandlers(pages, grid, table, mangaList, offset)
 
 		// When user presses ENTER on a manga row, they are redirected to the manga page.
 		table.SetSelectedFunc(func(row, column int) {
@@ -238,38 +209,7 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 		}
 
 		// Set up input capture for the table. Allows for pagination logic.
-		// NOTE: Like above. Also potentially confusing. *Cries*
-		table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			currOffset, _ := strconv.Atoi(params.Get("offset"))
-			switch event.Key() {
-			case tcell.KeyCtrlF: // User wants to go to next offset page.
-				currOffset += g.OffsetRange        // Add the next offset.
-				if currOffset >= mangaList.Total { // If the offset is more than total results, inform user.
-					ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-						pages.RemovePage(g.OffsetErrorModalID)
-					})
-					break // No need to load anymore. Break.
-				}
-				table.Clear()                                           // Clear current table.
-				params.Set("offset", strconv.Itoa(currOffset))          // Set new offset.
-				setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
-			case tcell.KeyCtrlB: // User wants to go to previous offset page.
-				if currOffset == 0 { // If offset already zero, cannot go to previous page. Inform user.
-					ShowModal(pages, g.OffsetErrorModalID, "First page!", []string{"OK"}, func(i int, label string) {
-						pages.RemovePage(g.OffsetErrorModalID)
-					})
-					break // No need to load anymore. Break.
-				}
-				currOffset -= g.OffsetRange // Decrease the offset.
-				if currOffset < 0 {         // Make sure not less than zero.
-					currOffset = 0
-				}
-				table.Clear()                                           // Clear current table.
-				params.Set("offset", strconv.Itoa(currOffset))          // Set new offset.
-				setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
-			}
-			return event
-		})
+		SetGuestMainPageHandlers(pages, grid, table, mangaList, params, title)
 
 		// When user presses ENTER on a manga row, they are redirected to the manga page.
 		table.SetSelectedFunc(func(row, column int) {

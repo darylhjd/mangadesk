@@ -1,18 +1,21 @@
 package pages
 
 import (
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 
+	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	g "github.com/darylhjd/mangadesk/globals"
 )
 
-// SetUniversalInputCaptures : Set input handlers for the app.
+// SetUniversalHandlers : Set input handlers for the app.
 // List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
-func SetUniversalInputCaptures(pages *tview.Pages) {
+func SetUniversalHandlers(pages *tview.Pages) {
 	// Enable mouse.
 	g.App.EnableMouse(true)
 
@@ -25,6 +28,78 @@ func SetUniversalInputCaptures(pages *tview.Pages) {
 			ctrlKInput(pages)
 		case tcell.KeyCtrlS: // Search page.
 			ctrlSInput(pages)
+		}
+		return event
+	})
+}
+
+// SetLoggedMainPageHandlers : Set input handlers for the logged main page.
+// List of input captures : Ctrl+F, Ctrl+B
+func SetLoggedMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, offset *int) {
+	// NOTE: Potentially confusing. I am also confused.
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyCtrlF: // User wants to go to next offset page.
+			*offset += g.OffsetRange
+			if *offset >= ml.Total {
+				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
+					pages.RemovePage(g.OffsetErrorModalID)
+				})
+				*offset -= g.OffsetRange
+				break // No need to load anymore. Break.
+			}
+			table.Clear()
+			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
+			if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
+				ShowModal(pages, g.OffsetErrorModalID, "First Page!", []string{"OK"}, func(i int, label string) {
+					pages.RemovePage(g.OffsetErrorModalID)
+				})
+				break // No need to load anymore. Break.
+			}
+			*offset -= g.OffsetRange
+			if *offset < 0 { // Make sure non negative.
+				*offset = 0
+			}
+			table.Clear()
+			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+		}
+		return event
+	})
+}
+
+// SetGuestMainPageHandlers : Set input handlers for the guest main page. Also used by search page.
+// List of input captures : Ctrl+F, Ctrl+B
+func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, params *url.Values, title string) {
+	// NOTE: Like above. Also potentially confusing. *Cries*
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		currOffset, _ := strconv.Atoi(params.Get("offset"))
+		switch event.Key() {
+		case tcell.KeyCtrlF: // User wants to go to next offset page.
+			currOffset += g.OffsetRange // Add the next offset.
+			if currOffset >= ml.Total { // If the offset is more than total results, inform user.
+				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
+					pages.RemovePage(g.OffsetErrorModalID)
+				})
+				break // No need to load anymore. Break.
+			}
+			table.Clear()
+			params.Set("offset", strconv.Itoa(currOffset))
+			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
+		case tcell.KeyCtrlB: // User wants to go to previous offset page.
+			if currOffset == 0 { // If offset already zero, cannot go to previous page. Inform user.
+				ShowModal(pages, g.OffsetErrorModalID, "First page!", []string{"OK"}, func(i int, label string) {
+					pages.RemovePage(g.OffsetErrorModalID)
+				})
+				break // No need to load anymore. Break.
+			}
+			currOffset -= g.OffsetRange
+			if currOffset < 0 { // Make sure not less than zero.
+				currOffset = 0
+			}
+			table.Clear()
+			params.Set("offset", strconv.Itoa(currOffset))
+			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
 		}
 		return event
 	})

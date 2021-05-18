@@ -183,14 +183,14 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			table.SetCell(i+1, 2, dCell)
 		})
 	}
-	
+
 	// Check for manga read markers.
 	if !g.Dex.IsLoggedIn() { // If user is not logged in.
 		// We inform user to log in to track read status.
 		// Split the message into 2 rows.
 		rSCell1 := tview.NewTableCell("Log in to").SetTextColor(tcell.ColorOrange)
 		rSCell2 := tview.NewTableCell("see read status!").SetTextColor(tcell.ColorOrange)
-		
+
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 			table.SetCell(1, 3, rSCell1)
 			table.SetCell(2, 3, rSCell2)
