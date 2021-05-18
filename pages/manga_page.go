@@ -57,9 +57,13 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	downloadHeader := tview.NewTableCell("Download Status").
 		SetTextColor(tcell.ColorPowderBlue).
 		SetSelectable(false)
+	readMarkerHeader := tview.NewTableCell("Read Status").
+		SetTextColor(tcell.ColorOrange).
+		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
 		SetCell(0, 2, downloadHeader).
+		SetCell(0, 3, readMarkerHeader).
 		SetFixed(1, 0)
 	// Set up chapter info on the table.
 	go func() {
@@ -69,7 +73,7 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	table.SetSelectable(true, false).
 		SetSeparator('|').
 		SetBordersColor(tcell.ColorGrey).
-		SetTitle("Read").
+		SetTitle("Chapters").
 		SetTitleColor(tcell.ColorLightSkyBlue).
 		SetBorder(true)
 
@@ -177,6 +181,46 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			table.SetCell(i+1, 0, cCell)
 			table.SetCell(i+1, 1, tCell)
 			table.SetCell(i+1, 2, dCell)
+		})
+	}
+	
+	// Check for manga read markers.
+	if !g.Dex.IsLoggedIn() { // If user is not logged in.
+		// We inform user to log in to track read status.
+		// Split the message into 2 rows.
+		rSCell1 := tview.NewTableCell("Log in to").SetTextColor(tcell.ColorOrange)
+		rSCell2 := tview.NewTableCell("see read status!").SetTextColor(tcell.ColorOrange)
+		
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			table.SetCell(1, 3, rSCell1)
+			table.SetCell(2, 3, rSCell2)
+		})
+		return // We return immediately. No need to continue.
+	}
+	readStatus := ""
+	crmr, err := g.Dex.MangaReadMarkers(mr.Data.ID)
+	if err != nil { // If error getting read markers, just put a error message on the column.
+		readStatus = "API Error!"
+		g.App.QueueUpdateDraw(func() {
+			rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
+			table.SetCell(1, 3, rSCell)
+		})
+		return // We return immediately. No need to continue.
+	}
+	// If no error, we can go ahead and check each chapter.
+	// Use a map to store the read chapter IDs to avoid iterating through every turn.
+	read := map[string]struct{}{}
+	for _, chapID := range crmr.Data {
+		read[chapID] = struct{}{}
+	}
+	// For every chapter
+	for i, cr := range cl.Results {
+		if _, ok := read[cr.Data.ID]; ok { // If chapter ID is in map of read markers.
+			readStatus = "R"
+		}
+		rSCell := tview.NewTableCell(readStatus).SetTextColor(tcell.ColorOrange)
+		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			table.SetCell(i+1, 3, rSCell)
 		})
 	}
 }
