@@ -17,7 +17,7 @@ import (
 
 // confirmChapterDownloads : Function for handling when the user press enter on the table.
 func confirmChapterDownloads(pages *tview.Pages, table *tview.Table,
-	selected *map[int]struct{}, row int, mr *mangodex.MangaResponse, chaps *mangodex.ChapterList) {
+	selected *map[int]struct{}, row int, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
 	// We add the current selection if the there are no selected rows currently.
 	if len(*selected) == 0 {
 		(*selected)[row] = struct{}{}
@@ -35,7 +35,7 @@ func confirmChapterDownloads(pages *tview.Pages, table *tview.Table,
 }
 
 // downloadChapters : Attempt to download pages
-func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]struct{}, mr *mangodex.MangaResponse, chaps *mangodex.ChapterList) {
+func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]struct{}, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
 	// Download each chapter.
 	// NOTE : Run as a GOROUTINE. Require QueueUpdateDraw
 	go func(rows map[int]struct{}) {
@@ -43,7 +43,7 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 		errorChaps := map[string][]int{}
 		for r := range rows {
 			// Get the corresponding ChapterResponse object.
-			chapR := chaps.Results[r-1] // We -1 since the first row is the header.
+			chapR := (*chaps)[r-1] // We -1 since the first row is the header.
 
 			// Get chapter folder name.
 			chapter := generateChapterFolderName(&chapR)

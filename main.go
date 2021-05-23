@@ -16,6 +16,8 @@ import (
 func main() {
 	// Load user configuration.
 	if err := g.LoadUserConfiguration(); err != nil {
+		fmt.Println("Unable to read configuration file. Is it set correctly?")
+		fmt.Println("If in doubt, delete the configuration file to start over!\n\nDetails:")
 		fmt.Println(err.Error())
 		os.Exit(1) // Exit program on error.
 	}
