@@ -22,6 +22,7 @@ func ShowSearchPage(pages *tview.Pages) {
 	// Set grid attributes
 	grid.SetTitleColor(tcell.ColorOrange).
 		SetBorderColor(tcell.ColorLightGrey).
+		SetTitle("Search Manga. [yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.").
 		SetBorder(true)
 
 	// Create table to show manga list.
@@ -57,8 +58,7 @@ func ShowSearchPage(pages *tview.Pages) {
 			setUpGenericMainPage(pages, grid, table, &params, title)
 
 			// Set the correct titles, since the function sets the titles for the guest main page and not search.
-			grid.SetTitle("Search Manga.")
-			// table.SetTitle("[yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")
+			grid.SetTitle("Search Manga. [yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")
 
 			// Send focus to the search result table.
 			g.App.SetFocus(table)

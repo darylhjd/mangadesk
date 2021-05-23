@@ -107,8 +107,7 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 		if lastEntry > mangaList.Total {
 			lastEntry = mangaList.Total
 		}
-		table.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d)."+
-			" [yellow]Press Ctrl+F to advance page, [green]Ctrl+B to backtrack.", page, firstEntry, lastEntry))
+		table.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, firstEntry, lastEntry))
 
 		// If no results, then tell user.
 		if len(mangaList.Results) == 0 {
@@ -195,9 +194,7 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 		if lastEntry > mangaList.Total {
 			lastEntry = mangaList.Total
 		}
-		table.SetTitle(
-			fmt.Sprintf("%s Page %d (%d-%d). [yellow]Press Ctrl+F to advance page, [green]Ctrl+B to backtrack.",
-				title, page, firstEntry, lastEntry))
+		table.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", title, page, firstEntry, lastEntry))
 
 		// If no results, then tell user.
 		if len(mangaList.Results) == 0 {

@@ -148,7 +148,9 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	// Set input handlers for the table
 	selected := map[int]struct{}{}                // We use this map to keep track of which chapters have been selected by user.
 	table.SetSelectedFunc(func(row, column int) { // When user presses ENTER to confirm selected.
-		confirmChapterDownloads(pages, table, &selected, row, mr, cl)
+		if len(cl.Results) != 0 { // Check for index out-of-range.
+			confirmChapterDownloads(pages, table, &selected, row, mr, cl)
+		}
 	})
 	SetMangaPageTableHandlers(table, &selected) // For custom input handlers.
 
