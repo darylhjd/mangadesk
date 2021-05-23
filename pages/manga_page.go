@@ -131,7 +131,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	// Set up query parameters to get chapters.
 	params := url.Values{}
 	params.Set("limit", "500")
-	params.Set("locales[]", "en")
+	params.Set("translatedLanguage[]", "en")
 	params.Set("order[chapter]", "desc")
 	cl, err := g.Dex.MangaFeed(mr.Data.ID, params)
 	if err != nil {
@@ -198,7 +198,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		return // We return immediately. No need to continue.
 	}
 	readStatus := ""
-	crmr, err := g.Dex.MangaReadMarkers(mr.Data.ID)
+	chapReadMarkerResp, err := g.Dex.MangaReadMarkers(mr.Data.ID)
 	if err != nil { // If error getting read markers, just put a error message on the column.
 		readStatus = "API Error!"
 		g.App.QueueUpdateDraw(func() {
@@ -210,7 +210,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	// If no error, we can go ahead and check each chapter.
 	// Use a map to store the read chapter IDs to avoid iterating through every turn.
 	read := map[string]struct{}{}
-	for _, chapID := range crmr.Data {
+	for _, chapID := range chapReadMarkerResp.Data {
 		read[chapID] = struct{}{}
 	}
 	// For every chapter
