@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/darylhjd/mangodex"
@@ -130,32 +131,48 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 	// Get chapter feed for this manga.
 	// Set up query parameters to get chapters.
 	params := url.Values{}
+	params.Set("offset", "0")
 	params.Set("limit", "500")
-	params.Set("translatedLanguage[]", "en")
+	// Add user's languages
+	for _, lang := range g.Conf.Languages {
+		params.Add("translatedLanguage[]", lang)
+	}
 	params.Set("order[chapter]", "desc")
-	cl, err := g.Dex.MangaFeed(mr.Data.ID, params)
-	if err != nil {
-		// If error getting chapters for the manga, we tell the user so through a modal.
-		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			ShowModal(pages, g.GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
-				func(i int, label string) {
-					pages.RemovePage(g.GenericAPIErrorModalID)
-				})
-		})
-		return // We end immediately. No need to continue.
+
+	var chapters []mangodex.ChapterResponse
+	for { // This is to get all chapters
+		cl, err := g.Dex.MangaFeed(mr.Data.ID, params)
+		if err != nil {
+			// If error getting chapters for the manga, we tell the user so through a modal.
+			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+				ShowModal(pages, g.GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
+					func(i int, label string) {
+						pages.RemovePage(g.GenericAPIErrorModalID)
+					})
+			})
+			return // We end immediately. No need to continue.
+		}
+		chapters = append(chapters, cl.Results...)
+		// Check if there are still more chapters to load.
+		offset, _ := strconv.Atoi(params.Get("offset"))
+		if offset+500 >= cl.Total {
+			break
+		}
+		params.Set("offset", strconv.Itoa(offset+500))
 	}
 
 	// Set input handlers for the table
-	selected := map[int]struct{}{}                // We use this map to keep track of which chapters have been selected by user.
+	selected := map[int]struct{}{}                // Keep track of which chapters have been selected by user.
+	selectedAll := false                          // Keep track of if the user wants to select all.
 	table.SetSelectedFunc(func(row, column int) { // When user presses ENTER to confirm selected.
-		if len(cl.Results) != 0 { // Check for index out-of-range.
-			confirmChapterDownloads(pages, table, &selected, row, mr, cl)
+		if len(chapters) != 0 { // Check for index out-of-range.
+			confirmChapterDownloads(pages, table, &selected, row, mr, &chapters)
 		}
 	})
-	SetMangaPageTableHandlers(table, &selected) // For custom input handlers.
+	SetMangaPageTableHandlers(table, &selected, len(chapters), &selectedAll) // For custom input handlers.
 
 	// Add each chapter info to the table.
-	for i, cr := range cl.Results {
+	for i, cr := range chapters {
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 			// Create chapter cell and put chapter number.
 			c := "-"
@@ -175,7 +192,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			chapFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
 			stat := ""
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
-			if _, err = os.Stat(chapFolder); err == nil {
+			if _, err := os.Stat(chapFolder); err == nil {
 				stat = "Yup!"
 			}
 			dCell := tview.NewTableCell(stat).SetTextColor(tcell.ColorPowderBlue)
@@ -216,7 +233,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		read[chapID] = struct{}{}
 	}
 	// For every chapter
-	for i, cr := range cl.Results {
+	for i, cr := range chapters {
 		if _, ok := read[cr.Data.ID]; ok { // If chapter ID is in map of read markers.
 			readStatus = "R"
 		}

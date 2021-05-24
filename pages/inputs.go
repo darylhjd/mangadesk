@@ -119,11 +119,13 @@ func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 
 // SetMangaPageTableHandlers : Set input handlers for the manga page table.
 // List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(table *tview.Table, selected *map[int]struct{}) {
+func SetMangaPageTableHandlers(table *tview.Table, selected *map[int]struct{}, numChaps int, selectedAll *bool) {
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlE: // User selects this manga row.
-			ctrlEInput(table, selected) // Check for updates for each manga.
+			ctrlEInput(table, selected)
+		case tcell.KeyCtrlA: // User wants to toggle select all.
+			ctrlAInput(table, selected, numChaps, selectedAll)
 		}
 		return event
 	})
@@ -198,6 +200,25 @@ func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
 	} else { // Else, we add the row into the map.
 		markChapterSelected(table, row)
 		(*sRows)[row] = struct{}{}
+	}
+}
+
+// ctrlAInput : Handler for Ctrl+A.
+// This input enables users to select all chapters in the table.
+func ctrlAInput(table *tview.Table, sRows *map[int]struct{}, numChaps int, selectedAll *bool) {
+	// Note that the row is indexed with respect to the table.
+	if *selectedAll { // If user has already selected all, then pressing again deselects all.
+		*sRows = map[int]struct{}{} // Empty the map
+		*selectedAll = false        // Set to false
+		for r := 0; r < numChaps; r++ {
+			markChapterUnselected(table, r+1)
+		}
+	} else {
+		*selectedAll = true
+		for r := 0; r < numChaps; r++ {
+			(*sRows)[r+1] = struct{}{}
+			markChapterSelected(table, r+1)
+		}
 	}
 }
 
