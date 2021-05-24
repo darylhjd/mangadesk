@@ -33,7 +33,7 @@ appears after running the application at least once!).
 
 By default, English (`en`) is the main language.
 
-You may change your desired language(s) through the `languages` field in the `usr_cofig.json` file.
+You may change your desired language(s) through the `languages` field in the `usr_config.json` file.
 
 Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
 
