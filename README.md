@@ -22,18 +22,34 @@ Works for Windows/Linux/macOS.
 
 Simply choose the chapters you want to read to download.
 
+### Download folder
+
 By default, all downloads are stored in a folder titled `downloads`, relative to where you run the application.
 
 However, you can change this by changing the `downloadDir` field in the `usr/usr_config.json` file (this file only
-appears after running the application at least once!)
+appears after running the application at least once!).
+
+### Languages
+
+By default, English (`en`) is the main language.
+
+You may change your desired language(s) through the `languages` field in the `usr_cofig.json` file.
+
+Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
+
 
 ### Keybindings ⌨
 
 - Ctrl + L   : Login/Logout
 - Ctrl + K   : Keybindings/Help
 - Ctrl + S   : Search
-- Ctrl + E   : Select multiple chapters
 - Ctrl + F/B : Next/Prev Page
+
+
+- Ctrl + E   : Select multiple chapters
+- Ctrl + A   : Toggle select all
+
+
 - Esc        : Going back
 
 ## Installation 🔧
