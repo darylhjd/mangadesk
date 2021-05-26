@@ -18,12 +18,14 @@ const (
 var (
 	DownloadDir = "downloads"
 	Languages   = []string{"en"}
+	exportType  = 0
 )
 
 // UserConfig : This struct contains information for user configurable settings.
 type UserConfig struct {
 	DownloadDir string   `json:"downloadDir"`
 	Languages   []string `json:"languages"`
+	ExportType  int      `json:"exportType"`
 }
 
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
