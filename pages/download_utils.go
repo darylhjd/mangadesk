@@ -127,7 +127,7 @@ func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
 	if cr.Data.Attributes.Chapter != nil {
 		chapterNum = *(cr.Data.Attributes.Chapter)
 	}
-	//Remove all invalid folder characters from folder name
+	// Remove all invalid folder characters from folder name
 	chapterName := cr.Data.Attributes.Title
 	reschar := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
 	for s := range reschar {
