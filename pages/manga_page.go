@@ -195,6 +195,12 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 			if _, err := os.Stat(chapFolder); err == nil {
 				stat = "Yup!"
 			}
+			if _, err := os.Stat(chapFolder + ".zip"); err == nil {
+				stat = "Yup!"
+			}
+			if _, err := os.Stat(chapFolder + ".cbz"); err == nil {
+				stat = "Yup!"
+			}
 			dCell := tview.NewTableCell(stat).SetTextColor(tcell.ColorPowderBlue)
 
 			table.SetCell(i+1, 0, cCell)
