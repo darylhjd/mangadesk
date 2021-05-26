@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"archive/zip"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -56,35 +57,80 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 				continue // Continue on to the next chapter to download.
 			}
 
-			// Create directory to store the downloaded chapters.
+			// Create directory to store the downloaded chapters. If export mode is set to folder
 			// It is stored in DOWNLOAD_FOLDER/MANGA_NAME/CHAPTER_FOLDER
 			chapterFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
-			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
-				// If error creating folder to store this chapter, we add this chapter to errorPages chapters list.
-				errorChaps[chapter] = []int{}
-				continue // Continue on to the next chapter to download.
+			mangaFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"])
+
+			if g.Conf.ExportType == 0 {
+				if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
+					// If error creating folder to store this chapter, we add this chapter to errorPages chapters list.
+					errorChaps[chapter] = []int{}
+					continue // Continue on to the next chapter to download.
+				}
+			} else if g.Conf.ExportType == 1 || g.Conf.ExportType == 2 {
+				if err = os.MkdirAll(mangaFolder, os.ModePerm); err != nil {
+					// If error creating folder to store this chapter, we add this chapter to errorPages chapters list.
+					errorChaps[chapter] = []int{}
+					continue // Continue on to the next chapter to download.
+				}
 			}
 
 			// Get each page and save it.
 			var errorPages []int
-			for pageNum, file := range chapR.Data.Attributes.Data {
-				// Get page data.
-				image, err := downloader.GetChapterPage(file)
-				if err != nil {
-					// If error downloading page data.
-					errorPages = append(errorPages, pageNum+1)
-					continue // Continue on to the next page.
+			if g.Conf.ExportType == 0 {
+				for pageNum, file := range chapR.Data.Attributes.Data {
+					// Get page data.
+					image, err := downloader.GetChapterPage(file)
+					if err != nil {
+						// If error downloading page data.
+						errorPages = append(errorPages, pageNum+1)
+						continue // Continue on to the next page.
+					}
+
+					// Attempt to write page data into file.
+					filename := fmt.Sprintf("%03d%s", pageNum+1, filepath.Ext(file))
+					err = ioutil.WriteFile(filepath.Join(chapterFolder, filename), image, os.ModePerm)
+					if err != nil {
+						// If error storing page data.
+						errorPages = append(errorPages, pageNum+1)
+						continue // Continue on to the next page.
+					}
+				}
+			} else if g.Conf.ExportType == 1 || g.Conf.ExportType == 2 {
+				//Sets Zip File Extension
+				var ext string
+				if g.Conf.ExportType == 1 {
+					ext = ".zip"
+				} else {
+					ext = ".cbz"
 				}
 
-				// Attempt to write page data into file.
-				filename := fmt.Sprintf("%03d%s", pageNum+1, filepath.Ext(file))
-				err = ioutil.WriteFile(filepath.Join(chapterFolder, filename), image, os.ModePerm)
+				//Creates Zip File and Zip Writer
+				zipChap, err := os.Create(mangaFolder + "/" + chapter + ext)
 				if err != nil {
-					// If error storing page data.
-					errorPages = append(errorPages, pageNum+1)
-					continue // Continue on to the next page.
+					errorChaps[chapter] = []int{}
+				}
+				defer zipChap.Close()
+				w := zip.NewWriter(zipChap)
+				defer w.Close()
+
+				for pageNum, file := range chapR.Data.Attributes.Data {
+					// Get page data.
+					image, err := downloader.GetChapterPage(file)
+					if err != nil {
+						// If error downloading page data.
+						errorPages = append(errorPages, pageNum+1)
+						continue // Continue on to the next page.
+					}
+
+					// Attempt to write page data into zip file
+					filename := fmt.Sprintf("%03d%s", pageNum+1, filepath.Ext(file))
+					f, _ := w.Create(filename)
+					_, err = f.Write(image)
 				}
 			}
+
 			// Tell user that the chapter has been downloaded
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				dCell := tview.NewTableCell("Yup!").SetTextColor(tcell.ColorPowderBlue)
