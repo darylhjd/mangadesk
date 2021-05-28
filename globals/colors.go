@@ -11,7 +11,7 @@ const ( // Login page colours
 
 const ( // Main page colors
 	MainPageGridTitleColor   = tcell.ColorOrange
-	MainPageGridBorderColor  = tcell.ColorGrey
+	MainPageGridBorderColor  = tcell.ColorLightGrey
 	MainPageTableTitleColor  = tcell.ColorLightSkyBlue
 	MainPageTableBorderColor = tcell.ColorGrey
 
@@ -37,6 +37,15 @@ const ( // Manga page colors
 	MangaPageDownloadStatColor = tcell.ColorPowderBlue
 	MangaPageReadStatColor     = tcell.ColorOrange
 	MangaPageHighlightColor    = tcell.ColorLimeGreen
+)
+
+const ( // Search page colors
+	SearchPageGridTitleColor   = tcell.ColorOrange
+	SearchPageGridBorderColor  = tcell.ColorLightGrey
+	SearchPageTableTitleColor  = tcell.ColorLightSkyBlue
+	SearchPageTableBorderColor = tcell.ColorGrey
+
+	SearchFormLabelColor = tcell.ColorWhite
 )
 
 const ( // Help page colors

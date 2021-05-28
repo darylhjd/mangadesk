@@ -12,6 +12,11 @@ import (
 
 // TODO: Refactor this.
 
+type SearchPage struct {
+	Grid       *tview.Grid
+	MangaTable *tview.Table
+}
+
 // ShowSearchPage : Show the search page to the user.
 func ShowSearchPage(pages *tview.Pages) {
 	// Create the base main grid.
@@ -22,30 +27,32 @@ func ShowSearchPage(pages *tview.Pages) {
 	}
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes
-	grid.SetTitleColor(tcell.ColorOrange).
-		SetBorderColor(tcell.ColorLightGrey).
-		SetTitle("Search Manga. [yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.").
+	grid.SetTitleColor(g.SearchPageGridTitleColor).
+		SetBorderColor(g.SearchPageGridBorderColor).
+		SetTitle("Search Manga. " +
+			"[yellow]Press ↓ on search bar to switch to table. " +
+			"[green]Press Ctrl+Space on table to switch to search bar.").
 		SetBorder(true)
 
 	// Create table to show manga list.
 	table := tview.NewTable()
 	// Set table attributes
-	table.SetSelectable(true, false). // Sets only the rows to be selectable
-						SetSeparator('|').
-						SetBordersColor(tcell.ColorGrey).
-						SetTitleColor(tcell.ColorLightSkyBlue).
-						SetBorder(true)
+	table.SetSelectable(true, false).
+		SetSeparator('|').
+		SetBordersColor(g.SearchPageTableBorderColor).
+		SetTitleColor(g.SearchPageTableTitleColor).
+		SetTitle("The curious cat peeks into the database...🐈").
+		SetBorder(true)
 
 	// Create a form for the searching
 	search := tview.NewForm()
 	// Set form attributes
 	search.SetButtonsAlign(tview.AlignLeft).
-		SetLabelColor(tcell.ColorWhite).
-		SetButtonBackgroundColor(tcell.ColorDodgerBlue)
+		SetLabelColor(g.SearchFormLabelColor)
 
 	// Add form fields
-	search.AddInputField("Search Manga:", "", 0, nil, nil). // Title field.
-								AddButton("Search", func() { // Search button.
+	search.AddInputField("Search Manga:", "", 0, nil, nil).
+		AddButton("Search", func() { // Search button.
 			// Remove all current search results
 			table.Clear()
 

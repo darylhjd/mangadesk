@@ -92,6 +92,7 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	go func() {
 		mangaPage.SetMangaInfo(ctx, mr)
 		mangaPage.SetChapterTable(ctx, pages, mr)
+		cancel() // Hit off the cancel function if it has not yet been cancelled.
 	}()
 
 	// Add info and table to the grid. Set the focus to the chapter table.
@@ -151,6 +152,12 @@ CheckRelationshipLoop:
 // SetChapterTable : Populate the manga page chapter table.
 // NOTE: This is run as a GOROUTINE. Drawing will require QueueUpdateDraw.
 func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr *mangodex.MangaResponse) {
+	// Show loading status so user knows it's loading.
+	g.App.QueueUpdateDraw(func() {
+		loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
+		mp.ChapterTable.SetCell(1, 1, loadingCell)
+	})
+
 	// Get all chapters for this manga. No pages.
 	chapters, ok := mp.GetAllChapters(ctx, pages, mr.Data.ID)
 	if !ok {
@@ -164,22 +171,7 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 	}
 
 	// Set input handlers for the table
-	mp.ChapterTable.SetSelectedFunc(func(row, column int) { // When user presses ENTER to confirm selected.
-		// We add the current selection if the there are no selected rows currently.
-		if len(*mp.Selected) == 0 {
-			(*mp.Selected)[row] = struct{}{}
-		}
-		// Show modal to confirm download.
-		ShowModal(pages, g.DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
-			func(i int, label string) {
-				if label == "Yes" {
-					// If user confirms to download, then we download the chapters.
-					downloadChapters(pages, mp, mr, chapters)
-				}
-				pages.RemovePage(g.DownloadChaptersModalID)
-			})
-	})
-	SetMangaPageTableHandlers(mp, len(*chapters)) // For custom input handlers.
+	SetMangaPageTableHandlers(pages, mp, mr, chapters) // For custom input handlers.
 
 	// Add each chapter info to the table.
 	for i, cr := range *chapters {
@@ -207,9 +199,9 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
 			stat := ""
 			if _, err := os.Stat(chapFolder); err == nil {
-				stat = "Yup!"
+				stat = "Y"
 			}
-			dCell := tview.NewTableCell(stat).SetTextColor(g.MangaPageReadStatColor)
+			dCell := tview.NewTableCell(stat).SetTextColor(g.MangaPageDownloadStatColor)
 
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				mp.ChapterTable.SetCell(i+1, 0, cCell)

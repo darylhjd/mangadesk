@@ -23,10 +23,10 @@ func ShowLoginPage(pages *tview.Pages) {
 		SetBorderColor(g.LoginFormBorderColor)
 
 	// Add form fields.
-	form.AddInputField("Username", "", 0, nil, nil). // Username field
-								AddPasswordField("Password", "", 0, '*', nil). // Password field
-								AddCheckbox("Remember Me", false, nil).        // Remember Me field.
-								AddButton("Login", func() {                    // Login button
+	form.AddInputField("Username", "", 0, nil, nil).
+		AddPasswordField("Password", "", 0, '*', nil).
+		AddCheckbox("Remember Me", false, nil).
+		AddButton("Login", func() {
 			// Attempt login.
 			if attemptLogin(pages, form) {
 				// If we login successfully

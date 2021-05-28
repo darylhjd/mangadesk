@@ -57,7 +57,7 @@ func SaveConfiguration(path string) error {
 		return err
 	}
 
-	// Make sure to `usr` directory exists. If it already exists, then nothing is done.
+	// Make sure `usr` directory exists. If it already exists, then nothing is done.
 	if err = os.MkdirAll(UsrDir, os.ModePerm); err != nil {
 		return err
 	}

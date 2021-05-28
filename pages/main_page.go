@@ -31,11 +31,11 @@ func ShowMainPage(pages *tview.Pages) {
 	// Create the base main table.
 	table := tview.NewTable()
 	// Set table attributes
-	table.SetSelectable(true, false). // Sets only the rows to be selectable
-						SetSeparator('|').
-						SetBordersColor(g.MainPageTableBorderColor).
-						SetTitleColor(g.MainPageTableTitleColor).
-						SetBorder(true)
+	table.SetSelectable(true, false).
+		SetSeparator('|').
+		SetBordersColor(g.MainPageTableBorderColor).
+		SetTitleColor(g.MainPageTableTitleColor).
+		SetBorder(true)
 
 	// Add the table to the grid. Table spans the whole page.
 	grid.AddItem(table, 0, 0, 15, 15, 0, 0, true)
@@ -68,23 +68,23 @@ func SetUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 		username = u.Data.Attributes.Username
 	}
 	welcome := "Welcome to MangaDex"
-	if rand.Intn(100) <= 2 { // 2% chance!
+	if rand.Intn(100) < 3 { // 3% chance!
 		welcome = "All according to keikaku (keikaku means plan)"
 	}
 	grid.SetTitle(fmt.Sprintf("%s, [lightgreen]%s!", welcome, username))
 
 	// Set up table
-	mangaTitleHeader := tview.NewTableCell("Title"). // Manga header
-								SetAlign(tview.AlignCenter).
-								SetTextColor(g.LoggedMainPageTitleColor).
-								SetSelectable(false)
-	pubStatusHeader := tview.NewTableCell("Pub. Status"). // Status header
-								SetAlign(tview.AlignLeft).
-								SetTextColor(g.LoggedMainPagePubStatusColor).
-								SetSelectable(false)
-	table.SetCell(0, 0, mangaTitleHeader). // Add the headers to the table
-						SetCell(0, 1, pubStatusHeader).
-						SetFixed(1, 0) // This allows the table to show the header at all times.
+	mangaTitleHeader := tview.NewTableCell("Title").
+		SetAlign(tview.AlignCenter).
+		SetTextColor(g.LoggedMainPageTitleColor).
+		SetSelectable(false)
+	pubStatusHeader := tview.NewTableCell("Pub. Status").
+		SetAlign(tview.AlignLeft).
+		SetTextColor(g.LoggedMainPagePubStatusColor).
+		SetSelectable(false)
+	table.SetCell(0, 0, mangaTitleHeader).
+		SetCell(0, 1, pubStatusHeader).
+		SetFixed(1, 0)
 
 	go func() {
 		// Perform required search function for required manga list.
@@ -149,22 +149,22 @@ func SetUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
 
 	// Set up the table.
-	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
-								SetAlign(tview.AlignCenter).
-								SetTextColor(g.GuestMainPageTitleColor).
-								SetSelectable(false)
-	descHeader := tview.NewTableCell("Description"). // Description header
-								SetAlign(tview.AlignCenter).
-								SetTextColor(g.GuestMainPageDescColor).
-								SetSelectable(false)
-	tagHeader := tview.NewTableCell("Tags"). // Tag header
-							SetAlign(tview.AlignCenter).
-							SetTextColor(g.GuestMainPageTagColor).
-							SetSelectable(false)
-	table.SetCell(0, 0, mangaTitleHeader). // Add headers to the table
-						SetCell(0, 1, descHeader).
-						SetCell(0, 2, tagHeader).
-						SetFixed(1, 0) // This allows the table to show the header at all times.
+	mangaTitleHeader := tview.NewTableCell("Manga").
+		SetAlign(tview.AlignCenter).
+		SetTextColor(g.GuestMainPageTitleColor).
+		SetSelectable(false)
+	descHeader := tview.NewTableCell("Description").
+		SetAlign(tview.AlignCenter).
+		SetTextColor(g.GuestMainPageDescColor).
+		SetSelectable(false)
+	tagHeader := tview.NewTableCell("Tags").
+		SetAlign(tview.AlignCenter).
+		SetTextColor(g.GuestMainPageTagColor).
+		SetSelectable(false)
+	table.SetCell(0, 0, mangaTitleHeader).
+		SetCell(0, 1, descHeader).
+		SetCell(0, 2, tagHeader).
+		SetFixed(1, 0)
 
 	go func() { // Create the manga list table for a guest user.
 		mangaList, err := g.Dex.MangaList(*params)

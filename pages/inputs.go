@@ -113,13 +113,43 @@ func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *t
 
 // SetMangaPageTableHandlers : Set input handlers for the manga page table.
 // List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(mangaPage *MangaPage, numChaps int) {
+func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
+	// When user presses ENTER to confirm selected.
+	mangaPage.ChapterTable.SetSelectedFunc(func(row, column int) {
+		// We add the current selection if the there are no selected rows currently.
+		if len(*mangaPage.Selected) == 0 {
+			(*mangaPage.Selected)[row] = struct{}{}
+		}
+		// Show modal to confirm download.
+		ShowModal(pages, g.DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
+			func(i int, label string) {
+				if label == "Yes" {
+					// If user confirms to download, then we download the chapters.
+					downloadChapters(pages, mangaPage, mr, chaps)
+				}
+				pages.RemovePage(g.DownloadChaptersModalID)
+			})
+	})
+
+	// For custom input.
 	mangaPage.ChapterTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlE: // User selects this manga row.
 			ctrlEInput(mangaPage)
 		case tcell.KeyCtrlA: // User wants to toggle select all.
-			ctrlAInput(mangaPage, numChaps)
+			ctrlAInput(mangaPage, len(*chaps))
+		}
+		return event
+	})
+}
+
+// SetHelpPageHandlers : Set input handlers for the help page.
+// List of input captures : ESC
+func SetHelpPageHandlers(pages *tview.Pages, grid *tview.Grid) {
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Help Page.
+			pages.RemovePage(g.HelpPageID)
 		}
 		return event
 	})

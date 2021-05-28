@@ -3,7 +3,6 @@ package pages
 import (
 	"fmt"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	g "github.com/darylhjd/mangadesk/globals"
@@ -40,13 +39,7 @@ func ShowHelpPage(pages *tview.Pages) {
 		AddItem(help, 1, 1, 2, 2, 45, 100, false)
 
 	// Set up input capture for the help page.
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc: // When user presses ESC, then we remove the Help Page.
-			pages.RemovePage(g.HelpPageID)
-		}
-		return event
-	})
+	SetHelpPageHandlers(pages, grid)
 
 	pages.AddPage(g.HelpPageID, grid, true, false)
 	g.App.SetFocus(grid)
