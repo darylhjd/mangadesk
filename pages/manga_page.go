@@ -145,10 +145,7 @@ func setMangaChaptersTable(pages *tview.Pages, table *tview.Table, mr *mangodex.
 		if err != nil {
 			// If error getting chapters for the manga, we tell the user so through a modal.
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				ShowModal(pages, g.GenericAPIErrorModalID, "Error getting manga feed", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.GenericAPIErrorModalID)
-					})
+				OKModal(pages, g.GenericAPIErrorModalID, "Error getting manga feed.")
 			})
 			return // We end immediately. No need to continue.
 		}

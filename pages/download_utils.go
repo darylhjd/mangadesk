@@ -107,11 +107,8 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 			}
 		}
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			ShowModal(pages, g.DownloadFinishedModalID, builder.String(), []string{"OK"}, func(i int, label string) {
-				pages.RemovePage(g.DownloadFinishedModalID)
-			})
+			OKModal(pages, g.DownloadFinishedModalID, builder.String())
 		})
-
 	}(*selected) // We pass the whole map as a value as we need to clear it.
 
 	// Clear the stored rows and unmark all chapters
@@ -123,16 +120,18 @@ func downloadChapters(pages *tview.Pages, table *tview.Table, selected *map[int]
 
 // generateChapterFolderName : Generate a folder name for the chapter.
 func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
-	chapterNum := "?"
+	chapterNum := "unknown"
 	if cr.Data.Attributes.Chapter != nil {
 		chapterNum = *(cr.Data.Attributes.Chapter)
 	}
+
 	// Remove all invalid folder characters from folder name
 	chapterName := cr.Data.Attributes.Title
-	reschar := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
-	for s := range reschar {
-		chapterName = strings.ReplaceAll(chapterName, reschar[s], "")
+	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
+	for s := range restrictedChars {
+		chapterName = strings.ReplaceAll(chapterName, restrictedChars[s], "")
 	}
+
 	// Use compound name to try to avoid collisions.
 	return fmt.Sprintf("%s - %s", chapterNum, chapterName)
 }

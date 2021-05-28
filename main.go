@@ -19,7 +19,7 @@ func main() {
 		fmt.Println("Unable to read configuration file. Is it set correctly?")
 		fmt.Println("If in doubt, delete the configuration file to start over!\n\nDetails:")
 		fmt.Println(err.Error())
-		os.Exit(1) // Exit program on error.
+		os.Exit(1)
 	}
 
 	// Create new pages holder.
@@ -29,11 +29,11 @@ func main() {
 	p.SetUniversalHandlers(pages)
 
 	// Check whether the user is remembered. If they are, then load credentials into the client and refresh token.
-	if err := checkAuth(); err != nil {
-		// If error retrieving stored credentials.
+	if err := CheckAuth(); err != nil {
+		// Prompt login if unable to read stored credentials.
 		p.ShowLoginPage(pages)
 	} else {
-		// If can log in using stored refresh token, then straight away go to logged main page.
+		// If able to log in using stored refresh token, go to logged main page.
 		p.ShowMainPage(pages)
 	}
 
@@ -43,19 +43,13 @@ func main() {
 	}
 }
 
-// checkAuth : Check if the user's credentials have been stored before.
+// CheckAuth : Check if the user's credentials have been stored before.
 // If they are, then read it, and attempt to refresh the token.
-// Will return error if any steps fail (authentication failed).
-func checkAuth() error {
-	// Location of the credentials file.
-	credFilePath := filepath.Join(g.UsrDir, g.CredFileName)
-	if _, err := os.Stat(credFilePath); os.IsNotExist(err) {
-		return err
-	}
-
-	// If the file exists, then we read it.
-	content, err := ioutil.ReadFile(credFilePath)
-	if err != nil {
+// Will return error if any steps fail (no stored credentials, authentication failed).
+func CheckAuth() error {
+	// Try to read stored credential file.
+	content, err := ioutil.ReadFile(filepath.Join(g.UsrDir, g.CredFileName))
+	if err != nil { // If error, then file does not exist.
 		return err
 	}
 

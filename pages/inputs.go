@@ -42,19 +42,15 @@ func SetLoggedMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tvie
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
 			*offset += g.OffsetRange
 			if *offset >= ml.Total {
-				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
+				OKModal(pages, g.OffsetErrorModalID, "Last page!")
 				*offset -= g.OffsetRange
 				break // No need to load anymore. Break.
 			}
 			table.Clear()
-			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+			SetUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
 		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
 			if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "First Page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
+				OKModal(pages, g.OffsetErrorModalID, "First page!")
 				break // No need to load anymore. Break.
 			}
 			*offset -= g.OffsetRange
@@ -62,7 +58,7 @@ func SetLoggedMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tvie
 				*offset = 0
 			}
 			table.Clear()
-			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+			SetUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
 		}
 		return event
 	})
@@ -78,19 +74,15 @@ func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
 			currOffset += g.OffsetRange // Add the next offset.
 			if currOffset >= ml.Total { // If the offset is more than total results, inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
+				OKModal(pages, g.OffsetErrorModalID, "Last page!")
 				break // No need to load anymore. Break.
 			}
 			table.Clear()
 			params.Set("offset", strconv.Itoa(currOffset))
-			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
+			SetUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
 		case tcell.KeyCtrlB: // User wants to go to previous offset page.
 			if currOffset == 0 { // If offset already zero, cannot go to previous page. Inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "First page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
+				OKModal(pages, g.OffsetErrorModalID, "First page!")
 				break // No need to load anymore. Break.
 			}
 			currOffset -= g.OffsetRange
@@ -99,7 +91,7 @@ func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview
 			}
 			table.Clear()
 			params.Set("offset", strconv.Itoa(currOffset))
-			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
+			SetUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
 		}
 		return event
 	})

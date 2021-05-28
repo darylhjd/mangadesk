@@ -55,7 +55,7 @@ func ShowSearchPage(pages *tview.Pages) {
 			params.Add("limit", strconv.Itoa(g.OffsetRange))
 			params.Add("title", searchTerm)
 			title := "Search Results."
-			setUpGenericMainPage(pages, grid, table, &params, title)
+			SetUpGenericMainPage(pages, grid, table, &params, title)
 
 			// Set the correct titles, since the function sets the titles for the guest main page and not search.
 			grid.SetTitle("Search Manga. [yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")

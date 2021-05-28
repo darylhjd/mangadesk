@@ -7,11 +7,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	g "github.com/darylhjd/mangadesk/globals"
 )
+
+type MainPage struct {
+	Grid  *tview.Grid
+	Table *tview.Table
+}
 
 // ShowMainPage : Show the main page. Can be for logged user or guest user.
 func ShowMainPage(pages *tview.Pages) {
@@ -23,8 +27,8 @@ func ShowMainPage(pages *tview.Pages) {
 	}
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes.
-	grid.SetTitleColor(tcell.ColorOrange).
-		SetBorderColor(tcell.ColorLightGrey).
+	grid.SetTitleColor(g.MainPageGridTitleColor).
+		SetBorderColor(g.MainPageGridBorderColor).
 		SetBorder(true)
 
 	// Create the base main table.
@@ -32,25 +36,27 @@ func ShowMainPage(pages *tview.Pages) {
 	// Set table attributes
 	table.SetSelectable(true, false). // Sets only the rows to be selectable
 						SetSeparator('|').
-						SetBordersColor(tcell.ColorGrey).
-						SetTitleColor(tcell.ColorLightSkyBlue).
+						SetBordersColor(g.MainPageTableBorderColor).
+						SetTitleColor(g.MainPageTableTitleColor).
 						SetBorder(true)
 
 	// Add the table to the grid. Table spans the whole page.
 	grid.AddItem(table, 0, 0, 15, 15, 0, 0, true)
 
+	mPage := MainPage{Grid: grid, Table: table}
+
 	// Check if the user is logged in or not. Then, decide what to show for the main page.
 	if g.Dex.IsLoggedIn() {
 		// If logged in, use the logged main page.
 		offset := 0
-		setUpLoggedMainPage(pages, grid, table, &offset)
+		SetUpLoggedMainPage(pages, grid, table, &offset)
 	} else {
 		// If not logged in, use the generic main page.
 		params := url.Values{}
 		params.Add("limit", strconv.Itoa(g.OffsetRange))
 		params.Add("offset", "0")
 		title := "Recently updated manga."
-		setUpGenericMainPage(pages, grid, table, &params, title)
+		SetUpGenericMainPage(pages, grid, table, &params, title)
 	}
 
 	pages.AddPage(g.MainPageID, grid, true, false)
@@ -58,44 +64,45 @@ func ShowMainPage(pages *tview.Pages) {
 	pages.SwitchToPage(g.MainPageID)
 }
 
-// setUpLoggedMainPage : Set up the main page for a logged user.
-func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, offset *int) {
+// SetUpLoggedMainPage : Set up the main page for a logged user.
+func SetUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, offset *int) {
 	// For logged users, we fill the table with their followed manga.
-	// Get user information
+	// Get user information.
 	username := "?"
 	if u, err := g.Dex.GetLoggedUser(); err == nil {
 		username = u.Data.Attributes.Username
 	}
-
 	welcome := "Welcome to MangaDex"
-	if rand.Intn(10000) <= 20 {
+	if rand.Intn(100) <= 2 { // 2% chance!
 		welcome = "All according to keikaku (keikaku means plan)"
 	}
 	grid.SetTitle(fmt.Sprintf("%s, [lightgreen]%s!", welcome, username))
 
 	// Set up table
-	mangaTitleHeader := tview.NewTableCell("Manga"). // Manga header
+	mangaTitleHeader := tview.NewTableCell("Title"). // Manga header
 								SetAlign(tview.AlignCenter).
 								SetTextColor(g.LoggedMainPageTitleColor).
 								SetSelectable(false)
-	statusHeader := tview.NewTableCell("Status"). // Status header
-							SetAlign(tview.AlignCenter).
-							SetTextColor(g.LoggedMainPageStatusColor).
-							SetSelectable(false)
+	pubStatusHeader := tview.NewTableCell("Pub. Status"). // Status header
+								SetAlign(tview.AlignLeft).
+								SetTextColor(g.LoggedMainPagePubStatusColor).
+								SetSelectable(false)
 	table.SetCell(0, 0, mangaTitleHeader). // Add the headers to the table
-						SetCell(0, 1, statusHeader).
+						SetCell(0, 1, pubStatusHeader).
 						SetFixed(1, 0) // This allows the table to show the header at all times.
 
-	go func() { // Create the manga list table for a logged user.
+	go func() {
 		// Perform required search function for required manga list.
 		mangaList, err := g.Dex.GetUserFollowedMangaList(g.OffsetRange, *offset)
-		if err != nil {
-			// If error getting the manga list, we show a modal to the user indicating so.
+		if err != nil { // If error getting the manga list,
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				ShowModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.GenericAPIErrorModalID)
-					})
+				OKModal(pages, g.GenericAPIErrorModalID, "Error loading your followed manga.")
+			})
+			return // We end immediately. No need to continue.
+		} else if len(mangaList.Results) == 0 { // If no followed manga.
+			noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
+			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+				table.SetCell(1, 0, noResCell)
 			})
 			return // We end immediately. No need to continue.
 		}
@@ -108,15 +115,6 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 			lastEntry = mangaList.Total
 		}
 		table.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, firstEntry, lastEntry))
-
-		// If no results, then tell user.
-		if len(mangaList.Results) == 0 {
-			noResCell := tview.NewTableCell("No results!").SetSelectable(false)
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				table.SetCell(1, 0, noResCell)
-			})
-			return // We end immediately. No need to continue.
-		}
 
 		// Set up input capture for the table. This allows for pagination logic.
 		SetLoggedMainPageHandlers(pages, grid, table, mangaList, offset)
@@ -140,7 +138,7 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 			}
 			sCell := tview.NewTableCell(fmt.Sprintf("%-15s", status)).
 				SetMaxWidth(15)
-			sCell.Color = g.LoggedMainPageStatusColor
+			sCell.Color = g.LoggedMainPagePubStatusColor
 
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				table.SetCell(i+1, 0, mtCell).
@@ -150,8 +148,8 @@ func setUpLoggedMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tabl
 	}()
 }
 
-// setUpGenericMainPage : Set up a main page for a guest user.
-func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, params *url.Values, title string) {
+// SetUpGenericMainPage : Set up a main page for a guest user.
+func SetUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Table, params *url.Values, title string) {
 	// For guest users, we fill the table with recently updated manga.
 	grid.SetTitle("Welcome to MangaDex, [red]Guest!")
 
@@ -178,10 +176,7 @@ func setUpGenericMainPage(pages *tview.Pages, grid *tview.Grid, table *tview.Tab
 		if err != nil {
 			// If error getting the manga list, we show a modal to the user indicating so.
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				ShowModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.GenericAPIErrorModalID)
-					})
+				OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
 			})
 			return // We end immediately. No need to continue.
 		}
