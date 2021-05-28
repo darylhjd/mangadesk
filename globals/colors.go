@@ -23,6 +23,26 @@ const ( // Main page colors
 	GuestMainPageTagColor   = tcell.ColorLightSteelBlue
 )
 
+const ( // Manga page colors
+	MangaPageGridTitleColor   = tcell.ColorOrange
+	MangaPageGridBorderColor  = tcell.ColorLightGrey
+	MangaPageTableTitleColor  = tcell.ColorLightSkyBlue
+	MangaPageTableBorderColor = tcell.ColorGrey
+
+	MangaPageInfoViewTitleColor  = tcell.ColorLightSkyBlue
+	MangaPageInfoViewBorderColor = tcell.ColorLightGrey
+
+	MangaPageChapNumColor      = tcell.ColorLightYellow
+	MangaPageTitleColor        = tcell.ColorLightSkyBlue
+	MangaPageDownloadStatColor = tcell.ColorPowderBlue
+	MangaPageReadStatColor     = tcell.ColorOrange
+	MangaPageHighlightColor    = tcell.ColorLimeGreen
+)
+
+const ( // Help page colors
+	HelpPageBorderColor = tcell.ColorLightGrey
+)
+
 const ( // Modal colors
 	ModalColor = tcell.ColorDarkSlateGrey
 )

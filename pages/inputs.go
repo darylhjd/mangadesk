@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -99,11 +100,12 @@ func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview
 
 // SetMangaPageHandlers : Set input handlers for the manga page.
 // List of input captures : ESC
-func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
+func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *tview.Grid) {
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // User wants to go back.
 			pages.RemovePage(g.MangaPageID)
+			cancel()
 		}
 		return event
 	})
@@ -111,13 +113,13 @@ func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 
 // SetMangaPageTableHandlers : Set input handlers for the manga page table.
 // List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(table *tview.Table, selected *map[int]struct{}, numChaps int, selectedAll *bool) {
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+func SetMangaPageTableHandlers(mangaPage *MangaPage, numChaps int) {
+	mangaPage.ChapterTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlE: // User selects this manga row.
-			ctrlEInput(table, selected)
+			ctrlEInput(mangaPage)
 		case tcell.KeyCtrlA: // User wants to toggle select all.
-			ctrlAInput(table, selected, numChaps, selectedAll)
+			ctrlAInput(mangaPage, numChaps)
 		}
 		return event
 	})
@@ -148,12 +150,8 @@ func ctrlLInput(pages *tview.Pages) {
 		title = "Logout\nStored credentials will be deleted.\n\n"
 		buttonFn = func() { // Set the function.
 			// Attempt logout
-			err := g.Dex.Logout()
-			if err != nil {
-				ShowModal(pages, g.LoginLogoutFailureModalID, "Error logging out!", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.LoginLogoutFailureModalID)
-					})
+			if err := g.Dex.Logout(); err != nil {
+				OKModal(pages, g.LoginLogoutFailureModalID, "Error logging out!")
 				return
 			}
 			// Remove the credentials file, but we ignore errors.
@@ -180,40 +178,6 @@ func ctrlLInput(pages *tview.Pages) {
 		})
 }
 
-// ctrlEInput : Handler for Ctrl+E input.
-// This input enables user to select a chapter table row without activating the select action.
-// This is done by using a int map to keep track of the selected row indexes.
-func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
-	// Get the current row (and col, but we do not need that)
-	row, _ := table.GetSelection()
-	if _, ok := (*sRows)[row]; ok { // If the row already exists in the map, then we remove it!
-		markChapterUnselected(table, row)
-		delete(*sRows, row)
-	} else { // Else, we add the row into the map.
-		markChapterSelected(table, row)
-		(*sRows)[row] = struct{}{}
-	}
-}
-
-// ctrlAInput : Handler for Ctrl+A.
-// This input enables users to select all chapters in the table.
-func ctrlAInput(table *tview.Table, sRows *map[int]struct{}, numChaps int, selectedAll *bool) {
-	// Note that the row is indexed with respect to the table.
-	if *selectedAll { // If user has already selected all, then pressing again deselects all.
-		*sRows = map[int]struct{}{} // Empty the map
-		*selectedAll = false        // Set to false
-		for r := 0; r < numChaps; r++ {
-			markChapterUnselected(table, r+1)
-		}
-	} else {
-		*selectedAll = true
-		for r := 0; r < numChaps; r++ {
-			(*sRows)[r+1] = struct{}{}
-			markChapterSelected(table, r+1)
-		}
-	}
-}
-
 // ctrlKInput : Handler for Ctrl+K input.
 // This shows the help page to the user.
 func ctrlKInput(pages *tview.Pages) {
@@ -223,8 +187,42 @@ func ctrlKInput(pages *tview.Pages) {
 // ctrlSInput : Handler for Ctrl+S input.
 // THis shows search page to the user.
 func ctrlSInput(pages *tview.Pages) {
+	// Do not allow when on login screen.
 	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
 		return
 	}
 	ShowSearchPage(pages)
+}
+
+// ctrlEInput : Handler for Ctrl+E input.
+// This input enables user to select a chapter table row without activating the select action.
+// This is done by using a int map to keep track of the selected row indexes.
+func ctrlEInput(mangaPage *MangaPage) {
+	// Get the current row (and col, but we do not need that)
+	row, _ := mangaPage.ChapterTable.GetSelection()
+	if _, ok := (*mangaPage.Selected)[row]; ok { // If the row already exists in the map, then we remove it!
+		markChapterUnselected(mangaPage.ChapterTable, row)
+		delete(*mangaPage.Selected, row)
+	} else { // Else, we add the row into the map.
+		markChapterSelected(mangaPage.ChapterTable, row)
+		(*mangaPage.Selected)[row] = struct{}{}
+	}
+}
+
+// ctrlAInput : Handler for Ctrl+A.
+// This input enables users to select all chapters in the table.
+func ctrlAInput(mangaPage *MangaPage, numChaps int) {
+	// Note that the row is indexed with respect to the table.
+	if mangaPage.SelectedAll { // If user has already selected all, then pressing again deselects all.
+		mangaPage.Selected = &map[int]struct{}{} // Empty the map
+		for r := 0; r < numChaps; r++ {
+			markChapterUnselected(mangaPage.ChapterTable, r+1)
+		}
+	} else {
+		for r := 0; r < numChaps; r++ {
+			(*mangaPage.Selected)[r+1] = struct{}{}
+			markChapterSelected(mangaPage.ChapterTable, r+1)
+		}
+	}
+	mangaPage.SelectedAll = !mangaPage.SelectedAll
 }

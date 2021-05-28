@@ -12,10 +12,7 @@ import (
 	g "github.com/darylhjd/mangadesk/globals"
 )
 
-type MainPage struct {
-	Grid  *tview.Grid
-	Table *tview.Table
-}
+// TODO: Refactor this.
 
 // ShowMainPage : Show the main page. Can be for logged user or guest user.
 func ShowMainPage(pages *tview.Pages) {
@@ -42,8 +39,6 @@ func ShowMainPage(pages *tview.Pages) {
 
 	// Add the table to the grid. Table spans the whole page.
 	grid.AddItem(table, 0, 0, 15, 15, 0, 0, true)
-
-	mPage := MainPage{Grid: grid, Table: table}
 
 	// Check if the user is logged in or not. Then, decide what to show for the main page.
 	if g.Dex.IsLoggedIn() {

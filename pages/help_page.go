@@ -17,21 +17,21 @@ func ShowHelpPage(pages *tview.Pages) {
 		"Universal\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + L", "Login/Logout") +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + K", "Keybinds/Help") +
-		fmt.Sprintf("%-15s:%15s\n", "Ctrl + S", "Search") +
-		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + F/B", "Next/Prev Page") +
+		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + S", "Search") +
 		"Manga Page\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + E", "Select mult.") +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + A", "Toggle All") +
 		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Start download") +
-		"Works for most pages\n" +
-		fmt.Sprintf("%-15s:%15s\n", "Esc", "Go back")
+		"Others\n" +
+		fmt.Sprintf("%-15s:%15s\n", "Esc", "Go back") +
+		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + F/B", "Next/Prev Page")
 
 	// Create TextView to show the help information.
 	help := tview.NewTextView()
 	// Set TextView attributes.
 	help.SetText(helpText).
 		SetTextAlign(tview.AlignCenter).
-		SetBorderColor(tcell.ColorLightGrey).
+		SetBorderColor(g.HelpPageBorderColor).
 		SetBorder(true)
 
 	// Create a new grid for the text view so we can align it to the center.

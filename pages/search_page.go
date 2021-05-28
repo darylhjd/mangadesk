@@ -10,6 +10,8 @@ import (
 	g "github.com/darylhjd/mangadesk/globals"
 )
 
+// TODO: Refactor this.
+
 // ShowSearchPage : Show the search page to the user.
 func ShowSearchPage(pages *tview.Pages) {
 	// Create the base main grid.
