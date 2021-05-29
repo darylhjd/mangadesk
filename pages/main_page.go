@@ -97,9 +97,10 @@ func (mp *MainPage) SetUpLoggedPage(pages *tview.Pages) {
 // SetUpLoggedTable : Readies the MangaListTable to show information for a logged user.
 // This includes the manga title and the publication status for the manga.
 func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
-	// This function will always clear the table before drawing again.
+	// This function will always clear the table and selected function before drawing again.
 	// Required as this page has pagination ability.
 	mp.MangaListTable.Clear()
+	mp.MangaListTable.SetSelectedFunc(func(row, column int) {})
 
 	mangaTitleHeader := tview.NewTableCell("Title").
 		SetAlign(tview.AlignCenter).
@@ -130,7 +131,14 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer cancel()
+		defer func() {
+			cancel()
+			// Get pagination numbers and fill table title.
+			page, first, last = mp.CalculatePaginationData()
+			g.App.QueueUpdateDraw(func() {
+				mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+			})
+		}()
 
 		// Get list of user's followed manga.
 		var (
@@ -143,11 +151,15 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		default:
 			mangaList, err = g.Dex.GetUserFollowedMangaList(g.OffsetRange, mp.CurrentOffset)
 			if err != nil {
-				OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
+				g.App.QueueUpdateDraw(func() {
+					OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
+				})
 				return
 			} else if len(mangaList.Results) == 0 {
 				noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
-				mp.MangaListTable.SetCell(1, 0, noResCell)
+				g.App.QueueUpdateDraw(func() {
+					mp.MangaListTable.SetCell(1, 0, noResCell)
+				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
@@ -182,12 +194,6 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 				})
 			}
 		}
-
-		// Get pagination numbers and fill table title.
-		page, first, last = mp.CalculatePaginationData()
-		g.App.QueueUpdateDraw(func() {
-			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
-		})
 	}()
 }
 
@@ -203,9 +209,10 @@ func (mp *MainPage) SetUpGenericPage(pages *tview.Pages, gridTitle, tableTitle s
 // SetUpGenericTable : Readies the MangaListTable to show generic manga information for a user.
 // This includes the manga title, description, and tags.
 func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, searchTitle string) {
-	// This function will always clear the table before drawing again.
+	// This function will always clear the table and selected function before drawing again.
 	// Required as this page has pagination ability.
 	mp.MangaListTable.Clear()
+	mp.MangaListTable.SetSelectedFunc(func(row, column int) {})
 
 	// Set up the table.
 	mangaTitleHeader := tview.NewTableCell("Manga").
@@ -242,7 +249,14 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer cancel()
+		defer func() {
+			cancel()
+			// Get pagination numbers and fill table title.
+			page, first, last = mp.CalculatePaginationData()
+			g.App.QueueUpdateDraw(func() {
+				mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+			})
+		}()
 
 		// Get manga list (search).
 		// Set up search parameters
@@ -262,11 +276,15 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		default:
 			mangaList, err = g.Dex.MangaList(params)
 			if err != nil {
-				OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
+				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+					OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
+				})
 				return
 			} else if len(mangaList.Results) == 0 {
 				noResCell := tview.NewTableCell("No results.").SetSelectable(false)
-				mp.MangaListTable.SetCell(1, 0, noResCell)
+				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+					mp.MangaListTable.SetCell(1, 0, noResCell)
+				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
@@ -307,12 +325,6 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 				})
 			}
 		}
-
-		// Get pagination numbers and fill table title.
-		page, first, last = mp.CalculatePaginationData()
-		g.App.QueueUpdateDraw(func() {
-			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
-		})
 	}()
 }
 
