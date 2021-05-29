@@ -1,5 +1,9 @@
 package pages
 
+/*
+Functions used by the application for downloading of chapters.
+ */
+
 import (
 	"fmt"
 	"io/ioutil"

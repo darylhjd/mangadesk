@@ -1,5 +1,11 @@
 package pages
 
+/*
+This file contains the input handlers for the pages.
+
+The 2nd section of this page contains the logic for keybindings.
+ */
+
 import (
 	"context"
 	"os"
@@ -134,7 +140,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	// Set up input capture for the search bar.
 	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyDown:
+		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
 			g.App.SetFocus(searchPage.MangaListTable)
 		}
 		return event

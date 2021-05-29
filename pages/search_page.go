@@ -1,5 +1,9 @@
 package pages
 
+/*
+Search Page shows the interface for searching the MangaDex database.
+ */
+
 import (
 	"github.com/rivo/tview"
 

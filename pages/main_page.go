@@ -1,5 +1,12 @@
 package pages
 
+/*
+Main Page shows the interface when the user first enters the application.
+
+There are 2 main different interfaces - one for logged users and another for non-logged users.
+Take note that the non-logged interface is also used by the Search Page.
+ */
+
 import (
 	"context"
 	"fmt"
