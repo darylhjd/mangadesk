@@ -39,7 +39,8 @@ func SetUniversalHandlers(pages *tview.Pages) {
 	})
 }
 
-// SetMainPageTableHandlers :
+// SetMainPageTableHandlers : Set input handler for main page table.
+// List of input captures : Ctrl+F. Ctrl+B
 func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string) {
 	// Pagination logic.
 	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
