@@ -131,14 +131,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer func() {
-			cancel()
-			// Get pagination numbers and fill table title.
-			page, first, last = mp.CalculatePaginationData()
-			g.App.QueueUpdateDraw(func() {
-				mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
-			})
-		}()
+		defer cancel()
 
 		// Get list of user's followed manga.
 		var (
@@ -159,11 +152,18 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 				noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(1, 0, noResCell)
+					mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
 				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
+
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+		})
 
 		for i, mr := range mangaList.Results {
 			select {
@@ -250,14 +250,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer func() {
-			cancel()
-			// Get pagination numbers and fill table title.
-			page, first, last = mp.CalculatePaginationData()
-			g.App.QueueUpdateDraw(func() {
-				mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
-			})
-		}()
+		defer cancel()
 
 		// Get manga list (search).
 		// Set up search parameters
@@ -285,11 +278,18 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 				noResCell := tview.NewTableCell("No results.").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 					mp.MangaListTable.SetCell(1, 0, noResCell)
+					mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
 				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
+
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+		})
 
 		for i, mr := range mangaList.Results {
 			select {
