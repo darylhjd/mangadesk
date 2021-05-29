@@ -1,13 +1,10 @@
 package pages
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	g "github.com/darylhjd/mangadesk/globals"
 )
-
-// TODO: Refactor this.
 
 type SearchPage struct {
 	MainPage
@@ -53,6 +50,8 @@ func ShowSearchPage(pages *tview.Pages) {
 		MainPage: MainPage{
 			Grid:           grid,
 			MangaListTable: table,
+			CurrentOffset:  0,
+			MaxOffset:      0,
 		},
 		SearchForm: search,
 	}
@@ -61,35 +60,18 @@ func ShowSearchPage(pages *tview.Pages) {
 	search.AddInputField("Search Manga:", "", 0, nil, nil).
 		AddButton("Search", func() { // Search button.
 			// Remove all current search results
-			searchPage.MainPage.MangaListTable.Clear()
+			searchPage.MangaListTable.Clear()
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
-			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", 0, searchTerm)
+			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", searchTerm)
 
 			// Send focus to the search result table.
-			g.App.SetFocus(searchPage.MainPage.MangaListTable)
+			g.App.SetFocus(searchPage.MangaListTable)
 		}).SetFocus(0) // Set focus to the title field.
 
-	// Set up input capture for the grid.
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
-			pages.RemovePage(g.SearchPageID)
-		case tcell.KeyCtrlSpace: // When user presses TAB, they are sent back to the search form.
-			g.App.SetFocus(search)
-		}
-		return event
-	})
-
-	// Set up input capture for the search bar.
-	search.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyDown:
-			g.App.SetFocus(table)
-		}
-		return event
-	})
+	// Set up input capture for the search page.
+	SetSearchPageHandlers(pages, &searchPage)
 
 	// Add search bar and result table to the grid. Search bar will have focus.
 	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).

@@ -36,7 +36,7 @@ const ( // Manga page colors
 	MangaPageTitleColor        = tcell.ColorLightSkyBlue
 	MangaPageDownloadStatColor = tcell.ColorPowderBlue
 	MangaPageReadStatColor     = tcell.ColorOrange
-	MangaPageHighlightColor    = tcell.ColorLimeGreen
+	MangaPageHighlightColor    = tcell.ColorMediumSpringGreen
 )
 
 const ( // Search page colors

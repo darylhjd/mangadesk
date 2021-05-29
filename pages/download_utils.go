@@ -93,7 +93,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 	mangaPage.Selected = &map[int]struct{}{} // Empty the map
 }
 
-// generateChapterFolderName : Generate a folder name for the chapter.
+// generateChapterFolderName : Generate a folder name for the chapter of this form: chapNum_chapName_UUID
 func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
 	chapterNum := "unknown"
 	if cr.Data.Attributes.Chapter != nil {
@@ -108,5 +108,5 @@ func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
 	}
 
 	// Use compound name to try to avoid collisions.
-	return fmt.Sprintf("%s - %s", chapterNum, chapterName)
+	return fmt.Sprintf("%s_%s_%s", chapterNum, chapterName, strings.SplitN(cr.Data.ID, "-", 2)[0])
 }

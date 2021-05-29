@@ -53,6 +53,8 @@ func CheckAuth() error {
 		return err
 	}
 
+	fmt.Println("Welcome back!")
+	fmt.Println("Restoring session...")
 	g.Dex.RefreshToken = string(content) // We set the stored refresh token.
 
 	// Do a refresh of the token to keep it up to date.

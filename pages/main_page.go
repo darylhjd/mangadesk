@@ -7,7 +7,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 
 	g "github.com/darylhjd/mangadesk/globals"
@@ -16,6 +18,8 @@ import (
 type MainPage struct {
 	Grid           *tview.Grid  // The page grid.
 	MangaListTable *tview.Table // The table that contains the list of manga.
+	CurrentOffset  int
+	MaxOffset      int
 }
 
 // ShowMainPage : Show the main page. Can be for logged user or guest user.
@@ -48,6 +52,8 @@ func ShowMainPage(pages *tview.Pages) {
 	mainPage := MainPage{
 		Grid:           grid,
 		MangaListTable: table,
+		CurrentOffset:  0,
+		MaxOffset:      0,
 	}
 
 	// Decide what to show for the main page.
@@ -78,12 +84,16 @@ func (mp *MainPage) SetUpLoggedPage(pages *tview.Pages) {
 	mp.Grid.SetTitle(fmt.Sprintf("%s, [lightgreen]%s!", welcome, username))
 
 	// Fill in the table for the logged user.
-	mp.SetUpLoggedTable(pages, 0)
+	mp.SetUpLoggedTable(pages)
 }
 
 // SetUpLoggedTable : Readies the MangaListTable to show information for a logged user.
 // This includes the manga title and the publication status for the manga.
-func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages, offset int) {
+func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
+	// This function will always clear the table before drawing again.
+	// Required as this page has pagination ability.
+	mp.MangaListTable.Clear()
+
 	mangaTitleHeader := tview.NewTableCell("Title").
 		SetAlign(tview.AlignCenter).
 		SetTextColor(g.LoggedMainPageTitleColor).
@@ -96,32 +106,63 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages, offset int) {
 		SetCell(0, 1, pubStatusHeader).
 		SetFixed(1, 0)
 
+	// Add loading indicator
+	loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
+	mp.MangaListTable.SetCell(1, 0, loadingCell)
+
+	// Get pagination numbers and fill table title.
+	// This is filler until the title is updated using the API response later in the goroutine.
+	// Helps the user keep track of the current page when flipping pages very fast.
+	page, first, last := mp.CalculatePaginationData()
+	mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+
+	// Use context to stop goroutines that are no longer needed.
+	// The page handler will induce cancel whenever the user flips pages.
+	ctx, cancel := context.WithCancel(context.Background())
+	SetMainPageTableHandlers(cancel, pages, mp, "")
+
+	// Fill in each manga info row
 	go func() {
+		// NOTE: Due to pagination behaviour and API rate limits,
+		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
+		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
+		time.Sleep(time.Millisecond * 40)
+		defer cancel()
+
 		// Get list of user's followed manga.
-		mangaList, err := g.Dex.GetUserFollowedMangaList(g.OffsetRange, offset)
-		if err != nil {
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				OKModal(pages, g.GenericAPIErrorModalID, "Error loading your followed manga.")
-			})
+		var (
+			mangaList *mangodex.MangaList
+			err       error
+		)
+		select {
+		case <-ctx.Done():
 			return
-		} else if len(mangaList.Results) == 0 {
-			noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+		default:
+			mangaList, err = g.Dex.GetUserFollowedMangaList(g.OffsetRange, mp.CurrentOffset)
+			if err != nil {
+				OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
+				return
+			} else if len(mangaList.Results) == 0 {
+				noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
 				mp.MangaListTable.SetCell(1, 0, noResCell)
-			})
-			return
+				return
+			}
+			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
 
+		// Set selected function for the table.
+		// When user presses ENTER on a manga row, they are redirected to the manga page.
+		mp.MangaListTable.SetSelectedFunc(func(row, column int) {
+			// We do not need to worry about index out-of-range as we checked results earlier.
+			ShowMangaPage(pages, &(mangaList.Results[row-1]))
+		})
+
 		// Get pagination numbers and fill table title.
-		page, first, last := calculatePaginationData(offset, mangaList.Total)
-		mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+		})
 
-		// Set up input captures for the table.
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		SetMainPageTableHandlers(cancel, pages, mp, mangaList, offset, "")
-
-		// Fill in each manga info row
 		for i, mr := range mangaList.Results {
 			select {
 			case <-ctx.Done():
@@ -139,7 +180,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages, offset int) {
 				sCell := tview.NewTableCell(fmt.Sprintf("%-15s", status)).
 					SetMaxWidth(15).SetTextColor(g.LoggedMainPagePubStatusColor)
 
-				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(i+1, 0, mtCell).SetCell(i+1, 1, sCell)
 				})
 			}
@@ -153,12 +194,16 @@ func (mp *MainPage) SetUpGenericPage(pages *tview.Pages, gridTitle, tableTitle s
 	mp.Grid.SetTitle(gridTitle)
 
 	// Fill in the generic manga list table.
-	mp.SetUpGenericTable(pages, tableTitle, 0, "")
+	mp.SetUpGenericTable(pages, tableTitle, "")
 }
 
 // SetUpGenericTable : Readies the MangaListTable to show generic manga information for a user.
 // This includes the manga title, description, and tags.
-func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, offset int, searchTitle string) {
+func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, searchTitle string) {
+	// This function will always clear the table before drawing again.
+	// Required as this page has pagination ability.
+	mp.MangaListTable.Clear()
+
 	// Set up the table.
 	mangaTitleHeader := tview.NewTableCell("Manga").
 		SetAlign(tview.AlignCenter).
@@ -177,39 +222,70 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, off
 		SetCell(0, 2, tagHeader).
 		SetFixed(1, 0)
 
+	// Add loading indicator
+	loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
+	mp.MangaListTable.SetCell(1, 0, loadingCell)
+
+	// Get pagination numbers and fill table title.
+	// This is filler until the title is updated using the API response later in the goroutine.
+	// Helps the user keep track of the current page when flipping pages very fast.
+	page, first, last := mp.CalculatePaginationData()
+	mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+
+	// Use context to stop goroutines that are no longer needed.
+	// The page handler will induce cancel whenever the user flips pages.
+	ctx, cancel := context.WithCancel(context.Background())
+	SetMainPageTableHandlers(cancel, pages, mp, searchTitle)
+
+	// Fill in each manga info row
 	go func() {
+		// NOTE: Due to pagination behaviour and API rate limits,
+		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
+		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
+		time.Sleep(time.Millisecond * 40)
+		defer cancel()
+
 		// Get manga list (search).
 		// Set up search parameters
 		params := url.Values{}
 		params.Set("limit", strconv.Itoa(g.OffsetRange))
-		params.Set("offset", strconv.Itoa(offset))
+		params.Set("offset", strconv.Itoa(mp.CurrentOffset))
 		if searchTitle != "" {
 			params.Set("title", searchTitle)
 		}
-		mangaList, err := g.Dex.MangaList(params)
-		if err != nil {
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+		var (
+			mangaList *mangodex.MangaList
+			err       error
+		)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			mangaList, err = g.Dex.MangaList(params)
+			if err != nil {
 				OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
-			})
-			return
-		} else if len(mangaList.Results) == 0 {
-			noResCell := tview.NewTableCell("No results.").SetSelectable(false)
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+				return
+			} else if len(mangaList.Results) == 0 {
+				noResCell := tview.NewTableCell("No results.").SetSelectable(false)
 				mp.MangaListTable.SetCell(1, 0, noResCell)
-			})
-			return
+				return
+			}
+			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
 
+		// Set selected function for the table.
+		// When user presses ENTER on a manga row, they are redirected to the manga page.
+		mp.MangaListTable.SetSelectedFunc(func(row, column int) {
+			// We do not need to worry about index out-of-range as we checked results earlier.
+			ShowMangaPage(pages, &(mangaList.Results[row-1]))
+		})
+
 		// Get pagination numbers and fill table title.
-		page, first, last := calculatePaginationData(offset, mangaList.Total)
-		mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+		})
 
-		// Set up input captures for the table.
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		SetMainPageTableHandlers(cancel, pages, mp, mangaList, offset, searchTitle)
-
-		// Fill in each manga info row
 		for i, mr := range mangaList.Results {
 			select {
 			case <-ctx.Done():
@@ -220,8 +296,8 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, off
 					SetMaxWidth(40).SetTextColor(g.GuestMainPageTitleColor)
 
 				// Description cell.
-				desc := tview.Escape(fmt.Sprintf("%-70s", mr.Data.Attributes.Description["en"]))
-				descCell := tview.NewTableCell(desc).SetMaxWidth(70).SetTextColor(g.GuestMainPageDescColor)
+				desc := tview.Escape(fmt.Sprintf("%-60s", mr.Data.Attributes.Description["en"]))
+				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(g.GuestMainPageDescColor)
 
 				// Tag cell.
 				tags := make([]string, len(mr.Data.Attributes.Tags))
@@ -230,24 +306,23 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, off
 				}
 				tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(g.GuestMainPageTagColor)
 
-				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-					mp.MangaListTable.SetCell(i+1, 0, mtCell).
-						SetCell(i+1, 1, descCell).
-						SetCell(i+1, 2, tagCell)
-				})
+				mp.MangaListTable.SetCell(i+1, 0, mtCell).
+					SetCell(i+1, 1, descCell).
+					SetCell(i+1, 2, tagCell)
+				g.App.Draw()
 			}
 		}
 	}()
 }
 
-// calculatePaginationData : Calculates the current page and first/last entry number.
-func calculatePaginationData(offset, total int) (int, int, int) {
-	page := offset/g.OffsetRange + 1
-	firstEntry := offset + 1
+// CalculatePaginationData : Calculates the current page and first/last entry number.
+func (mp *MainPage) CalculatePaginationData() (int, int, int) {
+	page := mp.CurrentOffset/g.OffsetRange + 1
+	firstEntry := mp.CurrentOffset + 1
 	lastEntry := page * g.OffsetRange
 
-	if lastEntry > total {
-		lastEntry = total
+	if lastEntry > mp.MaxOffset {
+		lastEntry = mp.MaxOffset
 	}
 	if firstEntry > lastEntry {
 		firstEntry = lastEntry

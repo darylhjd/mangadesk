@@ -34,45 +34,38 @@ func SetUniversalHandlers(pages *tview.Pages) {
 }
 
 // SetMainPageTableHandlers :
-func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, ml *mangodex.MangaList, offset int, searchTitle string) {
-	// When user presses ENTER on a manga row, they are redirected to the manga page.
-	mp.MangaListTable.SetSelectedFunc(func(row, column int) {
-		// We do not need to worry about index out-of-range as we checked results earlier.
-		ShowMangaPage(pages, &(ml.Results[row-1]))
-	})
-
+func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string) {
 	// Pagination logic.
 	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		changePage := false
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			offset += g.OffsetRange
-			if offset >= ml.Total {
+			if mp.CurrentOffset+g.OffsetRange >= mp.MaxOffset {
 				OKModal(pages, g.OffsetErrorModalID, "No more results to show.")
 				break
 			}
+			mp.CurrentOffset += g.OffsetRange
 			changePage = true
 		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
-			if offset == 0 {
+			if mp.CurrentOffset == 0 {
 				OKModal(pages, g.OffsetErrorModalID, "Already on first page.")
 				break
 			}
-			offset -= g.OffsetRange
-			if offset < 0 {
-				offset = 0
+			mp.CurrentOffset -= g.OffsetRange
+			if mp.CurrentOffset < 0 {
+				mp.CurrentOffset = 0
 			}
 			changePage = true
 		}
 
 		if changePage {
-			mp.MangaListTable.Clear() // Clear the table.
-			cancel()                  // Hit off cancel function if changing page to stop other goroutines from updating table anymore.
+			cancel() // Cancel current goroutine.
 			if g.Dex.IsLoggedIn() {
-				mp.SetUpLoggedTable(pages, offset)
+				mp.SetUpLoggedTable(pages)
 			} else {
 				// Get titles
 				tableTitle := strings.SplitN(mp.MangaListTable.GetTitle(), ".", 2)[0] + "."
-				mp.SetUpGenericTable(pages, tableTitle, offset, searchTitle)
+				mp.SetUpGenericTable(pages, tableTitle, searchTitle)
 			}
 		}
 		return event
@@ -119,6 +112,30 @@ func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *man
 			ctrlEInput(mangaPage)
 		case tcell.KeyCtrlA: // User wants to toggle select all.
 			ctrlAInput(mangaPage, len(*chaps))
+		}
+		return event
+	})
+}
+
+// SetSearchPageHandlers : Set input handlers for the search page.
+// List of input captures : ESC, Ctrl+Space, KeyDown
+func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
+	// Set up input capture for the grid.
+	searchPage.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
+			pages.RemovePage(g.SearchPageID)
+		case tcell.KeyCtrlSpace: // When user presses Ctrl+Space, they are sent back to the search form.
+			g.App.SetFocus(searchPage.SearchForm)
+		}
+		return event
+	})
+
+	// Set up input capture for the search bar.
+	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyDown:
+			g.App.SetFocus(searchPage.MangaListTable)
 		}
 		return event
 	})

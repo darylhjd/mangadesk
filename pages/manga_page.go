@@ -95,9 +95,9 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 
 	// Set up manga info and chapter info.
 	go func() {
+		defer cancel() // Hit off the cancel function if it has not yet been cancelled.
 		mangaPage.SetMangaInfo(ctx, mr)
 		mangaPage.SetChapterTable(ctx, pages, mr)
-		cancel() // Hit off the cancel function if it has not yet been cancelled.
 	}()
 
 	// Add info and table to the grid. Set the focus to the chapter table.
@@ -193,7 +193,7 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 				SetTextColor(g.MangaPageChapNumColor)
 
 			// Chapter title cell.
-			tCell := tview.NewTableCell(fmt.Sprintf("%-40s", cr.Data.Attributes.Title)).SetMaxWidth(40).
+			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", cr.Data.Attributes.Title)).SetMaxWidth(30).
 				SetTextColor(g.MangaPageTitleColor)
 
 			// Chapter download status cell.
@@ -268,12 +268,10 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 	if !g.Dex.IsLoggedIn() { // If user is not logged in.
 		// We inform user to log in to track read status.
 		// Split the message into 2 rows.
-		rSCell1 := tview.NewTableCell("Log in to").SetTextColor(g.MangaPageReadStatColor)
-		rSCell2 := tview.NewTableCell("see read status!").SetTextColor(g.MangaPageReadStatColor)
+		rSCell := tview.NewTableCell("Not logged in!").SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)
 
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			mp.ChapterTable.SetCell(1, 3, rSCell1)
-			mp.ChapterTable.SetCell(2, 3, rSCell2)
+			mp.ChapterTable.SetCell(1, 3, rSCell)
 		})
 		return // We return immediately. No need to continue.
 	}
