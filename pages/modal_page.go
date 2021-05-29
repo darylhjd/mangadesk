@@ -1,5 +1,9 @@
 package pages
 
+/*
+Modal Page shows the modal on top of the current page (does not switch to, only shows on top of).
+*/
+
 import (
 	"github.com/rivo/tview"
 

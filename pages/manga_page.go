@@ -1,5 +1,9 @@
 package pages
 
+/*
+Manga Page shows information including chapters for a particular manga.
+*/
+
 import (
 	"context"
 	"fmt"
@@ -75,6 +79,7 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 		SetTitleColor(g.MangaPageTableTitleColor).
 		SetBorder(true)
 
+	// Create the MangaPage.
 	mangaPage := MangaPage{
 		InfoView:     info,
 		ChapterTable: table,

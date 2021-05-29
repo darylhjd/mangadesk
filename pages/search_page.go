@@ -1,9 +1,6 @@
 package pages
 
 import (
-	"net/url"
-	"strconv"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -13,8 +10,8 @@ import (
 // TODO: Refactor this.
 
 type SearchPage struct {
-	Grid       *tview.Grid
-	MangaTable *tview.Table
+	MainPage
+	SearchForm *tview.Form
 }
 
 // ShowSearchPage : Show the search page to the user.
@@ -50,27 +47,28 @@ func ShowSearchPage(pages *tview.Pages) {
 	search.SetButtonsAlign(tview.AlignLeft).
 		SetLabelColor(g.SearchFormLabelColor)
 
+	// Create the SearchPage.
+	// We use the MainPage struct.
+	searchPage := SearchPage{
+		MainPage: MainPage{
+			Grid:           grid,
+			MangaListTable: table,
+		},
+		SearchForm: search,
+	}
+
 	// Add form fields
 	search.AddInputField("Search Manga:", "", 0, nil, nil).
 		AddButton("Search", func() { // Search button.
 			// Remove all current search results
-			table.Clear()
+			searchPage.MainPage.MangaListTable.Clear()
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
-
-			// Set up query parameters for the search.
-			params := url.Values{}
-			params.Add("limit", strconv.Itoa(g.OffsetRange))
-			params.Add("title", searchTerm)
-			title := "Search Results."
-			SetUpGenericMainPage(pages, grid, table, &params, title)
-
-			// Set the correct titles, since the function sets the titles for the guest main page and not search.
-			grid.SetTitle("Search Manga. [yellow]Press ↓ on search bar to switch to table. [green]Press Ctrl+Space on table to switch to search bar.")
+			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", 0, searchTerm)
 
 			// Send focus to the search result table.
-			g.App.SetFocus(table)
+			g.App.SetFocus(searchPage.MainPage.MangaListTable)
 		}).SetFocus(0) // Set focus to the title field.
 
 	// Set up input capture for the grid.

@@ -1,5 +1,9 @@
 package pages
 
+/*
+Login Page shows the form for the user to login or to continue as guest.
+*/
+
 import (
 	"io/ioutil"
 	"os"

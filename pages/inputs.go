@@ -2,10 +2,9 @@ package pages
 
 import (
 	"context"
-	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
@@ -34,65 +33,47 @@ func SetUniversalHandlers(pages *tview.Pages) {
 	})
 }
 
-// SetLoggedMainPageHandlers : Set input handlers for the logged main page.
-// List of input captures : Ctrl+F, Ctrl+B
-func SetLoggedMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, offset *int) {
-	// NOTE: Potentially confusing. I am also confused.
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			*offset += g.OffsetRange
-			if *offset >= ml.Total {
-				OKModal(pages, g.OffsetErrorModalID, "Last page!")
-				*offset -= g.OffsetRange
-				break // No need to load anymore. Break.
-			}
-			table.Clear()
-			SetUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
-		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
-			if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
-				OKModal(pages, g.OffsetErrorModalID, "First page!")
-				break // No need to load anymore. Break.
-			}
-			*offset -= g.OffsetRange
-			if *offset < 0 { // Make sure non negative.
-				*offset = 0
-			}
-			table.Clear()
-			SetUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
-		}
-		return event
+// SetMainPageTableHandlers :
+func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, ml *mangodex.MangaList, offset int, searchTitle string) {
+	// When user presses ENTER on a manga row, they are redirected to the manga page.
+	mp.MangaListTable.SetSelectedFunc(func(row, column int) {
+		// We do not need to worry about index out-of-range as we checked results earlier.
+		ShowMangaPage(pages, &(ml.Results[row-1]))
 	})
-}
 
-// SetGuestMainPageHandlers : Set input handlers for the guest main page. Also used by search page.
-// List of input captures : Ctrl+F, Ctrl+B
-func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, params *url.Values, title string) {
-	// NOTE: Like above. Also potentially confusing. *Cries*
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		currOffset, _ := strconv.Atoi(params.Get("offset"))
+	// Pagination logic.
+	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		changePage := false
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			currOffset += g.OffsetRange // Add the next offset.
-			if currOffset >= ml.Total { // If the offset is more than total results, inform user.
-				OKModal(pages, g.OffsetErrorModalID, "Last page!")
-				break // No need to load anymore. Break.
+			offset += g.OffsetRange
+			if offset >= ml.Total {
+				OKModal(pages, g.OffsetErrorModalID, "No more results to show.")
+				break
 			}
-			table.Clear()
-			params.Set("offset", strconv.Itoa(currOffset))
-			SetUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
-		case tcell.KeyCtrlB: // User wants to go to previous offset page.
-			if currOffset == 0 { // If offset already zero, cannot go to previous page. Inform user.
-				OKModal(pages, g.OffsetErrorModalID, "First page!")
-				break // No need to load anymore. Break.
+			changePage = true
+		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
+			if offset == 0 {
+				OKModal(pages, g.OffsetErrorModalID, "Already on first page.")
+				break
 			}
-			currOffset -= g.OffsetRange
-			if currOffset < 0 { // Make sure not less than zero.
-				currOffset = 0
+			offset -= g.OffsetRange
+			if offset < 0 {
+				offset = 0
 			}
-			table.Clear()
-			params.Set("offset", strconv.Itoa(currOffset))
-			SetUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
+			changePage = true
+		}
+
+		if changePage {
+			mp.MangaListTable.Clear() // Clear the table.
+			cancel()                  // Hit off cancel function if changing page to stop other goroutines from updating table anymore.
+			if g.Dex.IsLoggedIn() {
+				mp.SetUpLoggedTable(pages, offset)
+			} else {
+				// Get titles
+				tableTitle := strings.SplitN(mp.MangaListTable.GetTitle(), ".", 2)[0] + "."
+				mp.SetUpGenericTable(pages, tableTitle, offset, searchTitle)
+			}
 		}
 		return event
 	})

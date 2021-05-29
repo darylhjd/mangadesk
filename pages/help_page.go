@@ -1,5 +1,9 @@
 package pages
 
+/*
+Help Page shows the keybindings for the application.
+*/
+
 import (
 	"fmt"
 
