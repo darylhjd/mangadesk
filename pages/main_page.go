@@ -106,15 +106,11 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		SetCell(0, 1, pubStatusHeader).
 		SetFixed(1, 0)
 
-	// Add loading indicator
-	loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
-	mp.MangaListTable.SetCell(1, 0, loadingCell)
-
 	// Get pagination numbers and fill table title.
 	// This is filler until the title is updated using the API response later in the goroutine.
 	// Helps the user keep track of the current page when flipping pages very fast.
 	page, first, last := mp.CalculatePaginationData()
-	mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+	mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d). [::bu]Loading...", page, first, last))
 
 	// Use context to stop goroutines that are no longer needed.
 	// The page handler will induce cancel whenever the user flips pages.
@@ -157,12 +153,6 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 			ShowMangaPage(pages, &(mangaList.Results[row-1]))
 		})
 
-		// Get pagination numbers and fill table title.
-		page, first, last = mp.CalculatePaginationData()
-		g.App.QueueUpdateDraw(func() {
-			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
-		})
-
 		for i, mr := range mangaList.Results {
 			select {
 			case <-ctx.Done():
@@ -185,6 +175,12 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 				})
 			}
 		}
+
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
+		})
 	}()
 }
 
@@ -222,15 +218,11 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		SetCell(0, 2, tagHeader).
 		SetFixed(1, 0)
 
-	// Add loading indicator
-	loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
-	mp.MangaListTable.SetCell(1, 0, loadingCell)
-
 	// Get pagination numbers and fill table title.
 	// This is filler until the title is updated using the API response later in the goroutine.
 	// Helps the user keep track of the current page when flipping pages very fast.
 	page, first, last := mp.CalculatePaginationData()
-	mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+	mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d). [::bu]Loading...", tableTitle, page, first, last))
 
 	// Use context to stop goroutines that are no longer needed.
 	// The page handler will induce cancel whenever the user flips pages.
@@ -280,12 +272,6 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 			ShowMangaPage(pages, &(mangaList.Results[row-1]))
 		})
 
-		// Get pagination numbers and fill table title.
-		page, first, last = mp.CalculatePaginationData()
-		g.App.QueueUpdateDraw(func() {
-			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
-		})
-
 		for i, mr := range mangaList.Results {
 			select {
 			case <-ctx.Done():
@@ -296,7 +282,8 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 					SetMaxWidth(40).SetTextColor(g.GuestMainPageTitleColor)
 
 				// Description cell.
-				desc := tview.Escape(fmt.Sprintf("%-60s", mr.Data.Attributes.Description["en"]))
+				desc := tview.Escape(fmt.Sprintf("%-60s",
+					strings.SplitN(tview.Escape(mr.Data.Attributes.Description["en"]), "\n", 2)[0]))
 				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(g.GuestMainPageDescColor)
 
 				// Tag cell.
@@ -306,12 +293,19 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 				}
 				tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(g.GuestMainPageTagColor)
 
-				mp.MangaListTable.SetCell(i+1, 0, mtCell).
-					SetCell(i+1, 1, descCell).
-					SetCell(i+1, 2, tagCell)
-				g.App.Draw()
+				g.App.QueueUpdateDraw(func() {
+					mp.MangaListTable.SetCell(i+1, 0, mtCell).
+						SetCell(i+1, 1, descCell).
+						SetCell(i+1, 2, tagCell)
+				})
 			}
 		}
+
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
+		})
 	}()
 }
 
