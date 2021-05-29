@@ -1,20 +1,32 @@
 package pages
 
+/*
+Modal Page shows the modal on top of the current page (does not switch to, only shows on top of).
+*/
+
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	g "github.com/darylhjd/mangadesk/globals"
 )
 
-// ShowModal : Convenience function to create a modal.
-func ShowModal(pages *tview.Pages, label, text string, buttons []string, f func(buttonIndex int, buttonLabel string)) {
+// ShowModal : Create a modal and show it with required buttons and done function.
+func ShowModal(pages *tview.Pages, modalID, text string, buttons []string, f func(buttonIndex int, buttonLabel string)) {
 	m := tview.NewModal()
 	// Set modal attributes
 	m.SetText(text).
 		AddButtons(buttons).
 		SetDoneFunc(f).
 		SetFocus(0).
-		SetBackgroundColor(tcell.ColorDarkSlateGrey)
+		SetBackgroundColor(g.ModalColor)
 
-	pages.AddPage(label, m, true, false)
-	pages.ShowPage(label)
+	pages.AddPage(modalID, m, true, false)
+	pages.ShowPage(modalID)
+}
+
+// OKModal : Convenience function to show an acknowledgement modal.
+func OKModal(pages *tview.Pages, modalID, text string) {
+	ShowModal(pages, modalID, text, []string{"OK"}, func(buttonIndex int, buttonLabel string) {
+		pages.RemovePage(modalID)
+	})
 }

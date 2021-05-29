@@ -1,10 +1,16 @@
 package pages
 
+/*
+This file contains the input handlers for the pages.
+
+The 2nd section of this page contains the logic for keybindings.
+*/
+
 import (
-	"net/url"
+	"context"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
@@ -33,73 +39,41 @@ func SetUniversalHandlers(pages *tview.Pages) {
 	})
 }
 
-// SetLoggedMainPageHandlers : Set input handlers for the logged main page.
-// List of input captures : Ctrl+F, Ctrl+B
-func SetLoggedMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, offset *int) {
-	// NOTE: Potentially confusing. I am also confused.
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+// SetMainPageTableHandlers : Set input handler for main page table.
+// List of input captures : Ctrl+F. Ctrl+B
+func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string) {
+	// Pagination logic.
+	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		changePage := false
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			*offset += g.OffsetRange
-			if *offset >= ml.Total {
-				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
-				*offset -= g.OffsetRange
-				break // No need to load anymore. Break.
+			if mp.CurrentOffset+g.OffsetRange >= mp.MaxOffset {
+				OKModal(pages, g.OffsetErrorModalID, "No more results to show.")
+				break
 			}
-			table.Clear()
-			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+			mp.CurrentOffset += g.OffsetRange
+			changePage = true
 		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
-			if *offset == 0 { // If already zero, cannot go to previous page. Inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "First Page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
-				break // No need to load anymore. Break.
+			if mp.CurrentOffset == 0 {
+				OKModal(pages, g.OffsetErrorModalID, "Already on first page.")
+				break
 			}
-			*offset -= g.OffsetRange
-			if *offset < 0 { // Make sure non negative.
-				*offset = 0
+			mp.CurrentOffset -= g.OffsetRange
+			if mp.CurrentOffset < 0 {
+				mp.CurrentOffset = 0
 			}
-			table.Clear()
-			setUpLoggedMainPage(pages, grid, table, offset) // Recursive call to set table.
+			changePage = true
 		}
-		return event
-	})
-}
 
-// SetGuestMainPageHandlers : Set input handlers for the guest main page. Also used by search page.
-// List of input captures : Ctrl+F, Ctrl+B
-func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview.Table, ml *mangodex.MangaList, params *url.Values, title string) {
-	// NOTE: Like above. Also potentially confusing. *Cries*
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		currOffset, _ := strconv.Atoi(params.Get("offset"))
-		switch event.Key() {
-		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			currOffset += g.OffsetRange // Add the next offset.
-			if currOffset >= ml.Total { // If the offset is more than total results, inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "Last page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
-				break // No need to load anymore. Break.
+		if changePage {
+			cancel() // Cancel current goroutine.
+			if g.Dex.IsLoggedIn() {
+				mp.SetUpLoggedTable(pages)
+			} else {
+				// Get titles
+				tableTitle := strings.SplitN(mp.MangaListTable.GetTitle(), ".", 2)[0] + "."
+				mp.SetUpGenericTable(pages, tableTitle, searchTitle)
 			}
-			table.Clear()
-			params.Set("offset", strconv.Itoa(currOffset))
-			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
-		case tcell.KeyCtrlB: // User wants to go to previous offset page.
-			if currOffset == 0 { // If offset already zero, cannot go to previous page. Inform user.
-				ShowModal(pages, g.OffsetErrorModalID, "First page!", []string{"OK"}, func(i int, label string) {
-					pages.RemovePage(g.OffsetErrorModalID)
-				})
-				break // No need to load anymore. Break.
-			}
-			currOffset -= g.OffsetRange
-			if currOffset < 0 { // Make sure not less than zero.
-				currOffset = 0
-			}
-			table.Clear()
-			params.Set("offset", strconv.Itoa(currOffset))
-			setUpGenericMainPage(pages, grid, table, params, title) // Recursive call to set table.
 		}
 		return event
 	})
@@ -107,11 +81,12 @@ func SetGuestMainPageHandlers(pages *tview.Pages, grid *tview.Grid, table *tview
 
 // SetMangaPageHandlers : Set input handlers for the manga page.
 // List of input captures : ESC
-func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
+func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *tview.Grid) {
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // User wants to go back.
 			pages.RemovePage(g.MangaPageID)
+			cancel()
 		}
 		return event
 	})
@@ -119,13 +94,67 @@ func SetMangaPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 
 // SetMangaPageTableHandlers : Set input handlers for the manga page table.
 // List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(table *tview.Table, selected *map[int]struct{}, numChaps int, selectedAll *bool) {
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
+	// When user presses ENTER to confirm selected.
+	mangaPage.ChapterTable.SetSelectedFunc(func(row, column int) {
+		// We add the current selection if the there are no selected rows currently.
+		if len(*mangaPage.Selected) == 0 {
+			(*mangaPage.Selected)[row] = struct{}{}
+		}
+		// Show modal to confirm download.
+		ShowModal(pages, g.DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
+			func(i int, label string) {
+				if label == "Yes" {
+					// If user confirms to download, then we download the chapters.
+					downloadChapters(pages, mangaPage, mr, chaps)
+				}
+				pages.RemovePage(g.DownloadChaptersModalID)
+			})
+	})
+
+	// For custom input.
+	mangaPage.ChapterTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlE: // User selects this manga row.
-			ctrlEInput(table, selected)
+			ctrlEInput(mangaPage)
 		case tcell.KeyCtrlA: // User wants to toggle select all.
-			ctrlAInput(table, selected, numChaps, selectedAll)
+			ctrlAInput(mangaPage, len(*chaps))
+		}
+		return event
+	})
+}
+
+// SetSearchPageHandlers : Set input handlers for the search page.
+// List of input captures : ESC, Ctrl+Space, KeyDown
+func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
+	// Set up input capture for the grid.
+	searchPage.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
+			pages.RemovePage(g.SearchPageID)
+		case tcell.KeyCtrlSpace: // When user presses Ctrl+Space, they are sent back to the search form.
+			g.App.SetFocus(searchPage.SearchForm)
+		}
+		return event
+	})
+
+	// Set up input capture for the search bar.
+	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
+			g.App.SetFocus(searchPage.MangaListTable)
+		}
+		return event
+	})
+}
+
+// SetHelpPageHandlers : Set input handlers for the help page.
+// List of input captures : ESC
+func SetHelpPageHandlers(pages *tview.Pages, grid *tview.Grid) {
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc: // When user presses ESC, then we remove the Help Page.
+			pages.RemovePage(g.HelpPageID)
 		}
 		return event
 	})
@@ -156,12 +185,8 @@ func ctrlLInput(pages *tview.Pages) {
 		title = "Logout\nStored credentials will be deleted.\n\n"
 		buttonFn = func() { // Set the function.
 			// Attempt logout
-			err := g.Dex.Logout()
-			if err != nil {
-				ShowModal(pages, g.LoginLogoutFailureModalID, "Error logging out!", []string{"OK"},
-					func(i int, label string) {
-						pages.RemovePage(g.LoginLogoutFailureModalID)
-					})
+			if err := g.Dex.Logout(); err != nil {
+				OKModal(pages, g.LoginLogoutFailureModalID, "Error logging out!")
 				return
 			}
 			// Remove the credentials file, but we ignore errors.
@@ -188,40 +213,6 @@ func ctrlLInput(pages *tview.Pages) {
 		})
 }
 
-// ctrlEInput : Handler for Ctrl+E input.
-// This input enables user to select a chapter table row without activating the select action.
-// This is done by using a int map to keep track of the selected row indexes.
-func ctrlEInput(table *tview.Table, sRows *map[int]struct{}) {
-	// Get the current row (and col, but we do not need that)
-	row, _ := table.GetSelection()
-	if _, ok := (*sRows)[row]; ok { // If the row already exists in the map, then we remove it!
-		markChapterUnselected(table, row)
-		delete(*sRows, row)
-	} else { // Else, we add the row into the map.
-		markChapterSelected(table, row)
-		(*sRows)[row] = struct{}{}
-	}
-}
-
-// ctrlAInput : Handler for Ctrl+A.
-// This input enables users to select all chapters in the table.
-func ctrlAInput(table *tview.Table, sRows *map[int]struct{}, numChaps int, selectedAll *bool) {
-	// Note that the row is indexed with respect to the table.
-	if *selectedAll { // If user has already selected all, then pressing again deselects all.
-		*sRows = map[int]struct{}{} // Empty the map
-		*selectedAll = false        // Set to false
-		for r := 0; r < numChaps; r++ {
-			markChapterUnselected(table, r+1)
-		}
-	} else {
-		*selectedAll = true
-		for r := 0; r < numChaps; r++ {
-			(*sRows)[r+1] = struct{}{}
-			markChapterSelected(table, r+1)
-		}
-	}
-}
-
 // ctrlKInput : Handler for Ctrl+K input.
 // This shows the help page to the user.
 func ctrlKInput(pages *tview.Pages) {
@@ -231,8 +222,42 @@ func ctrlKInput(pages *tview.Pages) {
 // ctrlSInput : Handler for Ctrl+S input.
 // THis shows search page to the user.
 func ctrlSInput(pages *tview.Pages) {
+	// Do not allow when on login screen.
 	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
 		return
 	}
 	ShowSearchPage(pages)
+}
+
+// ctrlEInput : Handler for Ctrl+E input.
+// This input enables user to select a chapter table row without activating the select action.
+// This is done by using a int map to keep track of the selected row indexes.
+func ctrlEInput(mangaPage *MangaPage) {
+	// Get the current row (and col, but we do not need that)
+	row, _ := mangaPage.ChapterTable.GetSelection()
+	if _, ok := (*mangaPage.Selected)[row]; ok { // If the row already exists in the map, then we remove it!
+		markChapterUnselected(mangaPage.ChapterTable, row)
+		delete(*mangaPage.Selected, row)
+	} else { // Else, we add the row into the map.
+		markChapterSelected(mangaPage.ChapterTable, row)
+		(*mangaPage.Selected)[row] = struct{}{}
+	}
+}
+
+// ctrlAInput : Handler for Ctrl+A.
+// This input enables users to select all chapters in the table.
+func ctrlAInput(mangaPage *MangaPage, numChaps int) {
+	// Note that the row is indexed with respect to the table.
+	if mangaPage.SelectedAll { // If user has already selected all, then pressing again deselects all.
+		mangaPage.Selected = &map[int]struct{}{} // Empty the map
+		for r := 0; r < numChaps; r++ {
+			markChapterUnselected(mangaPage.ChapterTable, r+1)
+		}
+	} else {
+		for r := 0; r < numChaps; r++ {
+			(*mangaPage.Selected)[r+1] = struct{}{}
+			markChapterSelected(mangaPage.ChapterTable, r+1)
+		}
+	}
+	mangaPage.SelectedAll = !mangaPage.SelectedAll
 }
