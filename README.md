@@ -37,7 +37,6 @@ You may change your desired language(s) through the `languages` field in the `us
 
 Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
 
-
 ### Keybindings ⌨
 
 - Ctrl + L   : Login/Logout
@@ -79,5 +78,5 @@ Please take some time to familiarise yourself with the [contributing guidelines]
 
 - Creating TUIs with tview/tcell.
 - Working with the filesystem in Golang.
-- Goroutines.
+- Goroutines & Context.
 - Go Project structure.
