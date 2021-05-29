@@ -288,7 +288,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 				mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Data.Attributes.Title["en"])).
 					SetMaxWidth(40).SetTextColor(g.GuestMainPageTitleColor)
 
-				// Description cell.
+				// Description cell. Truncate description to improve loading times.
 				desc := tview.Escape(fmt.Sprintf("%-60s",
 					strings.SplitN(tview.Escape(mr.Data.Attributes.Description["en"]), "\n", 2)[0]))
 				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(g.GuestMainPageDescColor)

@@ -146,8 +146,7 @@ CheckRelationshipLoop:
 
 	// Set up information text.
 	infoText := fmt.Sprintf("Title: %s\n\nAuthor: %s\nStatus: %s\n\nDescription:\n%s",
-		mr.Data.Attributes.Title["en"], author, status,
-		strings.SplitN(tview.Escape(mr.Data.Attributes.Description["en"]), "\n", 2)[0])
+		mr.Data.Attributes.Title["en"], author, status, tview.Escape(mr.Data.Attributes.Description["en"]))
 
 	g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 		mp.InfoView.SetText(infoText)
@@ -184,13 +183,13 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 		case <-ctx.Done():
 			return
 		default:
-			// Chapter number cell.
+			// Chapter number cell. Note that this column also contains the translated language.
 			c := "-"
 			if cr.Data.Attributes.Chapter != nil {
 				c = *cr.Data.Attributes.Chapter
 			}
-			cCell := tview.NewTableCell(fmt.Sprintf("%-6s", c)).SetMaxWidth(6).
-				SetTextColor(g.MangaPageChapNumColor)
+			cCell := tview.NewTableCell(fmt.Sprintf("%-6s %s", c, cr.Data.Attributes.TranslatedLanguage)).
+				SetMaxWidth(10).SetTextColor(g.MangaPageChapNumColor)
 
 			// Chapter title cell.
 			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", cr.Data.Attributes.Title)).SetMaxWidth(30).
@@ -200,7 +199,6 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 			// Get chapter folder name.
 			chapter := generateChapterFolderName(&cr)
 			chapFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
-
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
 			stat := ""
 			if _, err := os.Stat(chapFolder); err == nil {
@@ -209,9 +207,9 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 			dCell := tview.NewTableCell(stat).SetTextColor(g.MangaPageDownloadStatColor)
 
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				mp.ChapterTable.SetCell(i+1, 0, cCell)
-				mp.ChapterTable.SetCell(i+1, 1, tCell)
-				mp.ChapterTable.SetCell(i+1, 2, dCell)
+				mp.ChapterTable.SetCell(i+1, 0, cCell).
+					SetCell(i+1, 1, tCell).
+					SetCell(i+1, 2, dCell)
 			})
 		}
 	}
@@ -306,7 +304,7 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 			if _, ok := read[cr.Data.ID]; ok { // If chapter ID is in map of read markers.
 				readStatus = "R"
 			}
-			rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor)
+			rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				mp.ChapterTable.SetCell(i+1, 3, rSCell)
 			})
