@@ -131,14 +131,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer func() {
-			cancel()
-			// Get pagination numbers and fill table title.
-			page, first, last = mp.CalculatePaginationData()
-			g.App.QueueUpdateDraw(func() {
-				mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
-			})
-		}()
+		defer cancel()
 
 		// Get list of user's followed manga.
 		var (
@@ -159,17 +152,17 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 				noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(1, 0, noResCell)
+					mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
 				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
 
-		// Set selected function for the table.
-		// When user presses ENTER on a manga row, they are redirected to the manga page.
-		mp.MangaListTable.SetSelectedFunc(func(row, column int) {
-			// We do not need to worry about index out-of-range as we checked results earlier.
-			ShowMangaPage(pages, &(mangaList.Results[row-1]))
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
 		})
 
 		for i, mr := range mangaList.Results {
@@ -191,6 +184,14 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(i+1, 0, mtCell).SetCell(i+1, 1, sCell)
+				})
+
+				// Set selected function for the table.
+				// When user presses ENTER on a manga row, they are redirected to the manga page.
+				// It is inside the for loop so user can press enter the moment they see an entry.
+				mp.MangaListTable.SetSelectedFunc(func(row, column int) {
+					// We do not need to worry about index out-of-range as we checked results earlier.
+					ShowMangaPage(pages, &(mangaList.Results[row-1]))
 				})
 			}
 		}
@@ -249,14 +250,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		// it is necessary to add a sleep here to allow the context to have enough time to react to cancels.
 		// This is due to how users are able to hold down Ctrl+F/Ctrl+B respectively to switch pages very fast.
 		time.Sleep(time.Millisecond * 40)
-		defer func() {
-			cancel()
-			// Get pagination numbers and fill table title.
-			page, first, last = mp.CalculatePaginationData()
-			g.App.QueueUpdateDraw(func() {
-				mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
-			})
-		}()
+		defer cancel()
 
 		// Get manga list (search).
 		// Set up search parameters
@@ -284,17 +278,17 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 				noResCell := tview.NewTableCell("No results.").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 					mp.MangaListTable.SetCell(1, 0, noResCell)
+					mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
 				})
 				return
 			}
 			mp.MaxOffset = mangaList.Total // Note how the max offset is updated here.
 		}
 
-		// Set selected function for the table.
-		// When user presses ENTER on a manga row, they are redirected to the manga page.
-		mp.MangaListTable.SetSelectedFunc(func(row, column int) {
-			// We do not need to worry about index out-of-range as we checked results earlier.
-			ShowMangaPage(pages, &(mangaList.Results[row-1]))
+		// Get pagination numbers and fill table title.
+		page, first, last = mp.CalculatePaginationData()
+		g.App.QueueUpdateDraw(func() {
+			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
 		})
 
 		for i, mr := range mangaList.Results {
@@ -322,6 +316,14 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 					mp.MangaListTable.SetCell(i+1, 0, mtCell).
 						SetCell(i+1, 1, descCell).
 						SetCell(i+1, 2, tagCell)
+				})
+
+				// Set selected function for the table.
+				// When user presses ENTER on a manga row, they are redirected to the manga page.
+				// It is inside the for loop so user can press enter the moment they see an entry.
+				mp.MangaListTable.SetSelectedFunc(func(row, column int) {
+					// We do not need to worry about index out-of-range as we checked results earlier.
+					ShowMangaPage(pages, &(mangaList.Results[row-1]))
 				})
 			}
 		}

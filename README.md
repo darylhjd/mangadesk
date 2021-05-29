@@ -1,4 +1,6 @@
 # mangadesk - Terminal client for MangaDex 📖
+[![Go Report Card](https://goreportcard.com/badge/github.com/darylhjd/mangadesk)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
+![GitHub all releases](https://img.shields.io/github/downloads/darylhjd/mangadesk/total)
 
 <p align="center">Download manga directly from your terminal to read!</p>
 
@@ -39,17 +41,15 @@ Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resour
 
 ### Keybindings ⌨
 
-- Ctrl + L   : Login/Logout
-- Ctrl + K   : Keybindings/Help
-- Ctrl + S   : Search
-- Ctrl + F/B : Next/Prev Page
-
-
-- Ctrl + E   : Select multiple chapters
-- Ctrl + A   : Toggle select all
-
-
-- Esc        : Going back
+| Operation                 | Binding                          |
+|---------------------------|----------------------------------|
+| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
+| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
+| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
+| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
+| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
+| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
+| Escape                    | <kbd>Esc</kbd>                   |
 
 ## Installation 🔧
 
@@ -57,7 +57,7 @@ Check out the releases page for relevant files.
 
 For bleeding edge 🗡 updates, you may compile from source:
 
-```
+```cmd
 git clone https://github.com/darylhjd/mangadesk.git
 cd mangadesk
 go get -d ./...
