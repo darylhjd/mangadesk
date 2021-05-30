@@ -1,6 +1,7 @@
 # <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
+
 <p align="center">
-  <img alt="Top Langauge" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
+  <img alt="Top Language" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
   <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">
   <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square">
   <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square">
@@ -29,7 +30,8 @@ Works for Windows/Linux/macOS.
 
 ## Installation 🔧
 
-Check out the releases page for relevant files.
+Check out the [releases page](https://github.com/darylhjd/mangadesk/releases) for relevant files. To update, just
+download the latest release.
 
 For bleeding edge 🗡 updates, you may compile from source:
 
@@ -58,27 +60,36 @@ Simply choose the chapters you want to read to download.
 
 ## Settings
 
-### Download folder
+You may change the appropriate settings in the `usr_config.json` file.
 
-By default, all downloads are stored in a folder titled `downloads`, relative to where you run the application.
+You can find this file in the `usr` folder which is located relative to where you run the application.
 
-However, you can change this by changing the `downloadDir` field in the `usr/usr_config.json` file (this file only
-appears after running the application at least once!).
+### Download folder - `downloadDir`
 
-### Languages
+By default, all downloads are stored in a folder titled `downloads`.
 
-By default, English (`en`) is the main language.
+You can change this by changing the `downloadDir` field.
 
-You may change your desired language(s) through the `languages` field in the `usr_config.json` file.
+### Languages - `langauges`
 
-Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
+By default, only English (`en`) translated chapters are shown.
 
-### Force Port 443
+You may change your desired language(s) through the `languages` field. Please use
+comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).
 
-Valid options for this are `true` or `false`. It is `false` by default.
+### Download Quality - `downloadQuality`
 
-Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports 
-(such as school/office networks). [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
+Valid options are `data` (high quality) and `data-saver` (lower quality).
+
+Any other empty/invalid option will default to `data`.
+
+### Force Port 443 - `forcePort443`
+
+Valid options are `true` or `false`. It is `false` by default.
+
+Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports
+(such as school/office networks).
+[More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
 
 ## Issues ☠
 

@@ -33,11 +33,12 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 			chapterName := generateChapterFolderName(&chapR)
 
 			// Get MangaDex@Home downloader for the chapterName.
-			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, "data", chapR.Data.Attributes.Hash, g.Conf.ForcePort443)
+			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, g.Conf.DownloadQuality,
+				chapR.Data.Attributes.Hash, g.Conf.ForcePort443)
 			if err != nil {
 				// If error getting downloader, we add this chapterName to the errorPages chapters list.
 				errorChaps = append(errorChaps,
-					fmt.Sprintf("%s: %s", chapterName, err.Error()))
+					fmt.Sprintf("%s -> %s", chapterName, err.Error()))
 				continue // Continue on to the next chapterName to download.
 			}
 
@@ -47,19 +48,23 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
 				// If error creating folder to store this chapterName, we add this chapterName to errorPages chapters list.
 				errorChaps = append(errorChaps,
-					fmt.Sprintf("%s: %s", chapterName, err.Error()))
+					fmt.Sprintf("%s: ->%s", chapterName, err.Error()))
 				continue // Continue on to the next chapterName to download.
 			}
 
 			// Get each page and save it.
 			// Note that the moment one page fails to download, the whole chapter is skipped.
-			for pageNum, file := range chapR.Data.Attributes.Data {
+			pageFiles := chapR.Data.Attributes.Data
+			if g.Conf.DownloadQuality == "data-saver" {
+				pageFiles = chapR.Data.Attributes.DataSaver
+			}
+			for pageNum, file := range pageFiles {
 				// Get page data.
 				image, err := downloader.GetChapterPage(file)
 				if err != nil {
 					// If error downloading page data.
 					errorChaps = append(errorChaps,
-						fmt.Sprintf("%s: %s", chapterName, err.Error()))
+						fmt.Sprintf("%s -> %s", chapterName, err.Error()))
 					continue ChapterForLoop // Continue on to the next chapter.
 				}
 
@@ -69,7 +74,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 				if err != nil {
 					// If error storing page data.
 					errorChaps = append(errorChaps,
-						fmt.Sprintf("%s: %s", chapterName, err.Error()))
+						fmt.Sprintf("%s -> %s", chapterName, err.Error()))
 					continue ChapterForLoop // Continue on to the next page.
 				}
 			}
@@ -112,8 +117,9 @@ func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
 	}
 
 	// Use compound name to try to avoid collisions.
-	generatedName := fmt.Sprintf("Chapter%s_%s_%s_%s", chapterNum,
-		cr.Data.Attributes.TranslatedLanguage, cr.Data.Attributes.Title, strings.SplitN(cr.Data.ID, "-", 2)[0])
+	generatedName := fmt.Sprintf("Chapter%s_[%s-%s]_%s_%s",
+		chapterNum, strings.ToUpper(cr.Data.Attributes.TranslatedLanguage), g.Conf.DownloadQuality,
+		cr.Data.Attributes.Title, strings.SplitN(cr.Data.ID, "-", 2)[0])
 
 	// Remove all invalid folder characters from folder name
 	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
