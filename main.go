@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/rivo/tview"
 
@@ -58,5 +59,10 @@ func CheckAuth() error {
 	g.Dex.RefreshToken = string(content) // We set the stored refresh token.
 
 	// Do a refresh of the token to keep it up to date.
-	return g.Dex.RefreshSessionToken()
+	if err = g.Dex.RefreshSessionToken(); err != nil {
+		fmt.Println("Session expired. Please login again.")
+		time.Sleep(time.Millisecond * 750)
+		return err
+	}
+	return nil
 }

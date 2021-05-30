@@ -132,7 +132,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 		switch event.Key() {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
 			pages.RemovePage(g.SearchPageID)
-		case tcell.KeyCtrlSpace: // When user presses Ctrl+Space, they are sent back to the search form.
+		case tcell.KeyTab: // When user presses Ctrl+Space, they are sent back to the search form.
 			g.App.SetFocus(searchPage.SearchForm)
 		}
 		return event
