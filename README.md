@@ -39,6 +39,13 @@ You may change your desired language(s) through the `languages` field in the `us
 
 Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
 
+### Force Port 443
+
+Valid options for this are `true` or `false`. It is `false` by default.
+
+Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports 
+(such a school/office) networks. [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
+
 ### Keybindings ⌨
 
 | Operation                 | Binding                          |

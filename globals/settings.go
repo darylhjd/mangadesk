@@ -22,8 +22,9 @@ var (
 
 // UserConfig : This struct contains information for user configurable settings.
 type UserConfig struct {
-	DownloadDir string   `json:"downloadDir"`
-	Languages   []string `json:"languages"`
+	DownloadDir  string   `json:"downloadDir"`
+	Languages    []string `json:"languages"`
+	ForcePort443 bool     `json:"forcePort443"`
 }
 
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
@@ -66,10 +67,13 @@ func SaveConfiguration(path string) error {
 
 // SetDefaultConfigurations : Sets default configurations.
 func SetDefaultConfigurations() {
+	// Set default download directory if not set.
 	if Conf.DownloadDir == "" {
 		Conf.DownloadDir = DownloadDir
 	}
+	// Set default language if not set.
 	if len(Conf.Languages) == 0 {
 		Conf.Languages = Languages
 	}
+	// ForcePort443 is false by default.
 }

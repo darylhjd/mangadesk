@@ -33,10 +33,11 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 			chapterName := generateChapterFolderName(&chapR)
 
 			// Get MangaDex@Home downloader for the chapterName.
-			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, "data", chapR.Data.Attributes.Hash, false)
+			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, "data", chapR.Data.Attributes.Hash, g.Conf.ForcePort443)
 			if err != nil {
 				// If error getting downloader, we add this chapterName to the errorPages chapters list.
-				errorChaps = append(errorChaps, chapterName)
+				errorChaps = append(errorChaps,
+					fmt.Sprintf("%s: %s", chapterName, err.Error()))
 				continue // Continue on to the next chapterName to download.
 			}
 
@@ -45,16 +46,20 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 			chapterFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapterName)
 			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
 				// If error creating folder to store this chapterName, we add this chapterName to errorPages chapters list.
-				errorChaps = append(errorChaps, chapterName)
+				errorChaps = append(errorChaps,
+					fmt.Sprintf("%s: %s", chapterName, err.Error()))
 				continue // Continue on to the next chapterName to download.
 			}
 
 			// Get each page and save it.
+			// Note that the moment one page fails to download, the whole chapter is skipped.
 			for pageNum, file := range chapR.Data.Attributes.Data {
 				// Get page data.
 				image, err := downloader.GetChapterPage(file)
 				if err != nil {
 					// If error downloading page data.
+					errorChaps = append(errorChaps,
+						fmt.Sprintf("%s: %s", chapterName, err.Error()))
 					continue ChapterForLoop // Continue on to the next chapter.
 				}
 
@@ -63,6 +68,8 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 				err = ioutil.WriteFile(filepath.Join(chapterFolder, filename), image, os.ModePerm)
 				if err != nil {
 					// If error storing page data.
+					errorChaps = append(errorChaps,
+						fmt.Sprintf("%s: %s", chapterName, err.Error()))
 					continue ChapterForLoop // Continue on to the next page.
 				}
 			}
