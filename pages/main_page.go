@@ -25,6 +25,7 @@ import (
 type MainPage struct {
 	Grid           *tview.Grid  // The page grid.
 	MangaListTable *tview.Table // The table that contains the list of manga.
+	LoggedPage     bool         // To track whether the page is for logged user or not.
 	CurrentOffset  int
 	MaxOffset      int
 }
@@ -65,6 +66,7 @@ func ShowMainPage(pages *tview.Pages) {
 
 	// Decide what to show for the main page.
 	if g.Dex.IsLoggedIn() {
+		mainPage.LoggedPage = true
 		mainPage.SetUpLoggedPage(pages)
 	} else {
 		mainPage.SetUpGenericPage(pages, "Welcome to MangaDex, [red]Guest!", "Popular Manga.")

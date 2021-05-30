@@ -67,7 +67,7 @@ func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp 
 
 		if changePage {
 			cancel() // Cancel current goroutine.
-			if g.Dex.IsLoggedIn() {
+			if mp.LoggedPage {
 				mp.SetUpLoggedTable(pages)
 			} else {
 				// Get titles
