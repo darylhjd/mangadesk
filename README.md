@@ -58,7 +58,7 @@ Simply choose the chapters you want to read to download.
 | Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   | Manga Page |
 | Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   | Manga Page |
 
-## Settings
+## Settings ⚙
 
 You may change the appropriate settings in the `usr_config.json` file.
 
