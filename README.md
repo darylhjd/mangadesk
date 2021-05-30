@@ -58,32 +58,40 @@ Simply choose the chapters you want to read to download.
 | Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   | Manga Page |
 | Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   | Manga Page |
 
-## Settings
+## Settings ⚙
 
 You may change the appropriate settings in the `usr_config.json` file.
 
 You can find this file in the `usr` folder which is located relative to where you run the application.
 
-### Download folder - `downloadDir`
+### Download Folder
+
+- `downloadDir`
 
 By default, all downloads are stored in a folder titled `downloads`.
 
 You can change this by changing the `downloadDir` field.
 
-### Languages - `langauges`
+### Languages
+
+- `langauges`
 
 By default, only English (`en`) translated chapters are shown.
 
 You may change your desired language(s) through the `languages` field. Please use
 comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).
 
-### Download Quality - `downloadQuality`
+### Download Quality
+
+- `downloadQuality`
 
 Valid options are `data` (high quality) and `data-saver` (lower quality).
 
 Any other empty/invalid option will default to `data`.
 
-### Force Port 443 - `forcePort443`
+### Force Port 443
+
+- `forcePort443`
 
 Valid options are `true` or `false`. It is `false` by default.
 
