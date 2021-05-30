@@ -29,7 +29,7 @@ func ShowSearchPage(pages *tview.Pages) {
 		SetBorderColor(g.SearchPageGridBorderColor).
 		SetTitle("Search Manga. " +
 			"[yellow]Press ↓ on search bar to switch to table. " +
-			"[green]Press Ctrl+Space on table to switch to search bar.").
+			"[green]Press Tab on table to switch to search bar.").
 		SetBorder(true)
 
 	// Create table to show manga list.

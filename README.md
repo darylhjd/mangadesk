@@ -1,12 +1,20 @@
-# mangadesk - Terminal client for MangaDex 📖
-[![Go Report Card](https://goreportcard.com/badge/github.com/darylhjd/mangadesk)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
-![GitHub all releases](https://img.shields.io/github/downloads/darylhjd/mangadesk/total)
+# <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
+
+<p align="center">
+  <img alt="Top Language" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
+  <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square">
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square">
+</p>
 
 <p align="center">Download manga directly from your terminal to read!</p>
 
-<img src="assets/demo.gif" alt="">
+<img src="assets/demo.gif" alt="demo.gif">
 
-<p align="center">This client retrieves information straight from MangaDex v5's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
+<p align="center">
+  This client retrieves information straight from MangaDex v5's API.<br>
+  As the API is still a WIP, some changes (probably breaking) might be expected.
+</p>
 
 ## Features ✨
 
@@ -20,47 +28,10 @@
 
 Works for Windows/Linux/macOS.
 
-## Usage ✍
-
-Simply choose the chapters you want to read to download.
-
-### Download folder
-
-By default, all downloads are stored in a folder titled `downloads`, relative to where you run the application.
-
-However, you can change this by changing the `downloadDir` field in the `usr/usr_config.json` file (this file only
-appears after running the application at least once!).
-
-### Languages
-
-By default, English (`en`) is the main language.
-
-You may change your desired language(s) through the `languages` field in the `usr_config.json` file.
-
-Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/)!
-
-### Force Port 443
-
-Valid options for this are `true` or `false`. It is `false` by default.
-
-Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports 
-(such a school/office) networks. [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
-
-### Keybindings ⌨
-
-| Operation                 | Binding                          |
-|---------------------------|----------------------------------|
-| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
-| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
-| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
-| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
-| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
-| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
-| Escape                    | <kbd>Esc</kbd>                   |
-
 ## Installation 🔧
 
-Check out the releases page for relevant files.
+Check out the [releases page](https://github.com/darylhjd/mangadesk/releases) for relevant files. To update, just
+download the latest release.
 
 For bleeding edge 🗡 updates, you may compile from source:
 
@@ -70,6 +41,55 @@ cd mangadesk
 go get -d ./...
 go build
 ```
+
+## Usage ✍
+
+Simply choose the chapters you want to read to download.
+
+### Keybindings ⌨
+
+| Operation                 | Binding                          | Page       |
+|---------------------------|----------------------------------|------------|
+| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   | All        |
+| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   | All        |
+| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   | All        |
+| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> | Some       |
+| Escape                    | <kbd>Esc</kbd>                   | Some       |
+| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   | Manga Page |
+| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   | Manga Page |
+
+## Settings
+
+You may change the appropriate settings in the `usr_config.json` file.
+
+You can find this file in the `usr` folder which is located relative to where you run the application.
+
+### Download folder - `downloadDir`
+
+By default, all downloads are stored in a folder titled `downloads`.
+
+You can change this by changing the `downloadDir` field.
+
+### Languages - `langauges`
+
+By default, only English (`en`) translated chapters are shown.
+
+You may change your desired language(s) through the `languages` field. Please use
+comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).
+
+### Download Quality - `downloadQuality`
+
+Valid options are `data` (high quality) and `data-saver` (lower quality).
+
+Any other empty/invalid option will default to `data`.
+
+### Force Port 443 - `forcePort443`
+
+Valid options are `true` or `false`. It is `false` by default.
+
+Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports
+(such as school/office networks).
+[More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
 
 ## Issues ☠
 

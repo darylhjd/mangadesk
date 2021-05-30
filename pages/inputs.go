@@ -125,14 +125,14 @@ func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *man
 }
 
 // SetSearchPageHandlers : Set input handlers for the search page.
-// List of input captures : ESC, Ctrl+Space, KeyDown
+// List of input captures : ESC, Tab, KeyDown
 func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	// Set up input capture for the grid.
 	searchPage.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
 			pages.RemovePage(g.SearchPageID)
-		case tcell.KeyCtrlSpace: // When user presses Ctrl+Space, they are sent back to the search form.
+		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
 			g.App.SetFocus(searchPage.SearchForm)
 		}
 		return event

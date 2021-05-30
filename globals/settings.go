@@ -16,15 +16,17 @@ const (
 // The following are defaults for user configuration.
 
 var (
-	DownloadDir = "downloads"
-	Languages   = []string{"en"}
+	DownloadDir     = "downloads"
+	Languages       = []string{"en"}
+	DownloadQuality = "data"
 )
 
 // UserConfig : This struct contains information for user configurable settings.
 type UserConfig struct {
-	DownloadDir  string   `json:"downloadDir"`
-	Languages    []string `json:"languages"`
-	ForcePort443 bool     `json:"forcePort443"`
+	DownloadDir     string   `json:"downloadDir"`
+	Languages       []string `json:"languages"`
+	DownloadQuality string   `json:"downloadQuality"`
+	ForcePort443    bool     `json:"forcePort443"`
 }
 
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
@@ -71,9 +73,17 @@ func SetDefaultConfigurations() {
 	if Conf.DownloadDir == "" {
 		Conf.DownloadDir = DownloadDir
 	}
+
 	// Set default language if not set.
 	if len(Conf.Languages) == 0 {
 		Conf.Languages = Languages
 	}
+
 	// ForcePort443 is false by default.
+
+	// Set default download quality.
+	// Will automatically set to `data` if invalid or no download quality specified.
+	if Conf.DownloadQuality == "" || (Conf.DownloadQuality != "data" && Conf.DownloadQuality != "data-saver") {
+		Conf.DownloadQuality = DownloadQuality
+	}
 }
