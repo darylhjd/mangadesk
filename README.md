@@ -1,12 +1,19 @@
-# mangadesk - Terminal client for MangaDex 📖
-[![Go Report Card](https://goreportcard.com/badge/github.com/darylhjd/mangadesk)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
-![GitHub all releases](https://img.shields.io/github/downloads/darylhjd/mangadesk/total)
+# <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
+<p align="center">
+  <img alt="Top Langauge" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
+  <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square">
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square">
+</p>
 
 <p align="center">Download manga directly from your terminal to read!</p>
 
-<img src="assets/demo.gif" alt="">
+<img src="assets/demo.gif" alt="demo.gif">
 
-<p align="center">This client retrieves information straight from MangaDex v5's API. <br>As the API is still a WIP, some changes (probably breaking) might be expected.</p>
+<p align="center">
+  This client retrieves information straight from MangaDex v5's API.<br>
+  As the API is still a WIP, some changes (probably breaking) might be expected.
+</p>
 
 ## Features ✨
 
@@ -20,9 +27,36 @@
 
 Works for Windows/Linux/macOS.
 
+## Installation 🔧
+
+Check out the releases page for relevant files.
+
+For bleeding edge 🗡 updates, you may compile from source:
+
+```cmd
+git clone https://github.com/darylhjd/mangadesk.git
+cd mangadesk
+go get -d ./...
+go build
+```
+
 ## Usage ✍
 
 Simply choose the chapters you want to read to download.
+
+### Keybindings ⌨
+
+| Operation                 | Binding                          | Page       |
+|---------------------------|----------------------------------|------------|
+| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   | All        |
+| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   | All        |
+| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   | All        |
+| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> | Some       |
+| Escape                    | <kbd>Esc</kbd>                   | Some       |
+| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   | Manga Page |
+| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   | Manga Page |
+
+## Settings
 
 ### Download folder
 
@@ -44,32 +78,7 @@ Please use comma-separated [ISO language codes](https://www.andiamo.co.uk/resour
 Valid options for this are `true` or `false`. It is `false` by default.
 
 Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports 
-(such a school/office) networks. [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
-
-### Keybindings ⌨
-
-| Operation                 | Binding                          |
-|---------------------------|----------------------------------|
-| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
-| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
-| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
-| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
-| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
-| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
-| Escape                    | <kbd>Esc</kbd>                   |
-
-## Installation 🔧
-
-Check out the releases page for relevant files.
-
-For bleeding edge 🗡 updates, you may compile from source:
-
-```cmd
-git clone https://github.com/darylhjd/mangadesk.git
-cd mangadesk
-go get -d ./...
-go build
-```
+(such as school/office networks). [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
 
 ## Issues ☠
 
