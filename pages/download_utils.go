@@ -29,8 +29,8 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 			// Get the corresponding ChapterResponse object.
 			chapR := (*chaps)[r-1] // We -1 since the first row is the header.
 
-			// Get chapterName folder name.
-			chapterName := generateChapterFolderName(&chapR)
+			// Get manga and chapter folder name.
+			mangaName, chapterName := generateChapterFolderNames(mr, &chapR)
 
 			// Get MangaDex@Home downloader for the chapterName.
 			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, g.Conf.DownloadQuality,
@@ -44,11 +44,11 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 
 			// Create directory to store the downloaded chapters.
 			// It is stored in DOWNLOAD_FOLDER/MANGA_NAME/CHAPTER_FOLDER
-			chapterFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapterName)
+			chapterFolder := filepath.Join(g.Conf.DownloadDir, mangaName, chapterName)
 			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
 				// If error creating folder to store this chapterName, we add this chapterName to errorPages chapters list.
 				errorChaps = append(errorChaps,
-					fmt.Sprintf("%s: ->%s", chapterName, err.Error()))
+					fmt.Sprintf("%s ->%s", chapterName, err.Error()))
 				continue // Continue on to the next chapterName to download.
 			}
 
@@ -109,13 +109,15 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 	mangaPage.Selected = &map[int]struct{}{} // Empty the map
 }
 
-// generateChapterFolderName : Generate a folder name for the chapter of this form: chapNum_chapName_UUID
-func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
+// generateChapterFolderNames : Generate folder names for the chapter and manga.
+// Returns the name for the manga folder, then the name for the chapter folder.
+func generateChapterFolderNames(mr *mangodex.MangaResponse, cr *mangodex.ChapterResponse) (string, string) {
 	chapterNum := "-"
 	if cr.Data.Attributes.Chapter != nil {
 		chapterNum = *(cr.Data.Attributes.Chapter)
 	}
 
+	mangaName := mr.Data.Attributes.Title["en"]
 	// Use compound name to try to avoid collisions.
 	generatedName := fmt.Sprintf("Chapter%s_[%s-%s]_%s_%s",
 		chapterNum, strings.ToUpper(cr.Data.Attributes.TranslatedLanguage), g.Conf.DownloadQuality,
@@ -124,7 +126,8 @@ func generateChapterFolderName(cr *mangodex.ChapterResponse) string {
 	// Remove all invalid folder characters from folder name
 	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
 	for s := range restrictedChars {
+		mangaName = strings.ReplaceAll(mangaName, restrictedChars[s], "")
 		generatedName = strings.ReplaceAll(generatedName, restrictedChars[s], "")
 	}
-	return generatedName
+	return mangaName, generatedName
 }

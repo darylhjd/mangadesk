@@ -2,14 +2,15 @@
 
 <p align="center">
   <img alt="Top Language" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
-  <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">
-  <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square">
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue">
+  <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">  
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square&color=success">
 </p>
 
-<p align="center">Download manga directly from your terminal to read!</p>
-
-<img src="assets/demo.gif" alt="demo.gif">
+<p align="center">
+  Download manga directly from your terminal to read!<br><br>
+  <img src="assets/demo.gif" alt="demo.gif">
+</p>
 
 <p align="center">
   This client retrieves information straight from MangaDex v5's API.<br>
