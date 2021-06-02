@@ -196,9 +196,9 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 				SetTextColor(g.MangaPageTitleColor)
 
 			// Chapter download status cell.
-			// Get chapter folder name.
-			chapter := generateChapterFolderName(&cr)
-			chapFolder := filepath.Join(g.Conf.DownloadDir, mr.Data.Attributes.Title["en"], chapter)
+			// Get the manga and chapter folder name.
+			mangaName, chapter := generateChapterFolderNames(mr, &cr)
+			chapFolder := filepath.Join(g.Conf.DownloadDir, mangaName, chapter)
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
 			stat := ""
 			if _, err := os.Stat(chapFolder); err == nil {
