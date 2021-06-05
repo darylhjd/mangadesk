@@ -31,6 +31,8 @@ Works for Windows/Linux/macOS.
 
 ## Installation 🔧
 
+This application runs as a standalone executable, and does not install itself.
+
 Check out the [releases page](https://github.com/darylhjd/mangadesk/releases) for relevant files. To update, just
 download the latest release.
 
@@ -43,9 +45,24 @@ go get -d ./...
 go build
 ```
 
+**NOTE**: The application will create a `usr` folder in the same directory as where you run the application to store
+your credentials/configurations.
+
+## Uninstall ❌
+
+To uninstall, simply delete the executable and its related folders and files (namely, the `usr` folder).
+
+Your downloads will not be removed by deleting the executable.
+
 ## Usage ✍
 
-Simply choose the chapters you want to read to download.
+To run the application, navigate to the directory where you stored the executable, and run the following command:
+
+```cmd
+$ ./mangadesk 
+```
+
+Steps may differ for different OSes. For example, in Windows, use a backslash `\` instead.
 
 ### Keybindings ⌨
 
@@ -61,15 +78,13 @@ Simply choose the chapters you want to read to download.
 
 ## Settings ⚙
 
-You may change the appropriate settings in the `usr_config.json` file.
-
-You can find this file in the `usr` folder which is located relative to where you run the application.
+You may change the appropriate settings in the `usr_config.json` file, which is stored in the `usr` folder.
 
 ### Download Folder
 
 - `downloadDir`
 
-By default, all downloads are stored in a folder titled `downloads`.
+By default, all downloads will be stored in a folder titled `downloads`.
 
 You can change this by changing the `downloadDir` field.
 
@@ -77,7 +92,7 @@ You can change this by changing the `downloadDir` field.
 
 - `langauges`
 
-By default, only English (`en`) translated chapters are shown.
+By default, only English (`en`) translated chapters will be shown.
 
 You may change your desired language(s) through the `languages` field. Please use
 comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).

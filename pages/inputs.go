@@ -41,7 +41,7 @@ func SetUniversalHandlers(pages *tview.Pages) {
 
 // SetMainPageTableHandlers : Set input handler for main page table.
 // List of input captures : Ctrl+F. Ctrl+B
-func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string) {
+func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string, exContent bool) {
 	// Pagination logic.
 	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		changePage := false
@@ -72,7 +72,7 @@ func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp 
 			} else {
 				// Get titles
 				tableTitle := strings.SplitN(mp.MangaListTable.GetTitle(), ".", 2)[0] + "."
-				mp.SetUpGenericTable(pages, tableTitle, searchTitle)
+				mp.SetUpGenericTable(pages, tableTitle, searchTitle, exContent)
 			}
 		}
 		return event

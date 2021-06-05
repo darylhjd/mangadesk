@@ -125,7 +125,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 	// Use context to stop goroutines that are no longer needed.
 	// The page handler will induce cancel whenever the user flips pages.
 	ctx, cancel := context.WithCancel(context.Background())
-	SetMainPageTableHandlers(cancel, pages, mp, "")
+	SetMainPageTableHandlers(cancel, pages, mp, "", false)
 
 	// Fill in each manga info row
 	go func() {
@@ -206,12 +206,12 @@ func (mp *MainPage) SetUpGenericPage(pages *tview.Pages, gridTitle, tableTitle s
 	mp.Grid.SetTitle(gridTitle)
 
 	// Fill in the generic manga list table.
-	mp.SetUpGenericTable(pages, tableTitle, "")
+	mp.SetUpGenericTable(pages, tableTitle, "", false)
 }
 
 // SetUpGenericTable : Readies the MangaListTable to show generic manga information for a user.
 // This includes the manga title, description, and tags.
-func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, searchTitle string) {
+func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitle string, exContent bool) {
 	// This function will always clear the table and selected function before drawing again.
 	// Required as this page has pagination ability.
 	mp.MangaListTable.Clear()
@@ -244,7 +244,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 	// Use context to stop goroutines that are no longer needed.
 	// The page handler will induce cancel whenever the user flips pages.
 	ctx, cancel := context.WithCancel(context.Background())
-	SetMainPageTableHandlers(cancel, pages, mp, searchTitle)
+	SetMainPageTableHandlers(cancel, pages, mp, searchTitle, exContent)
 
 	// Fill in each manga info row
 	go func() {
@@ -262,6 +262,16 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle string, sea
 		if searchTitle != "" {
 			params.Set("title", searchTitle)
 		}
+		// The default search includes these 4 ratings. We have to explicitly add them in if we want to
+		// add more ratings, so that the search does not only return results for the added rating.
+		ratings := []string{"none", "safe", "suggestive", "erotica"}
+		if exContent {
+			ratings = append(ratings, "pornographic")
+		}
+		for _, rating := range ratings {
+			params.Add("contentRating[]", rating)
+		}
+
 		var (
 			mangaList *mangodex.MangaList
 			err       error

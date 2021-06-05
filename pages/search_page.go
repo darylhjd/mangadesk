@@ -62,13 +62,15 @@ func ShowSearchPage(pages *tview.Pages) {
 
 	// Add form fields
 	search.AddInputField("Search Manga:", "", 0, nil, nil).
+		AddCheckbox("Explicit Content?", false, nil).
 		AddButton("Search", func() { // Search button.
 			// Remove all current search results
 			searchPage.MangaListTable.Clear()
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
-			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", searchTerm)
+			exContent := search.GetFormItemByLabel("Explicit Content?").(*tview.Checkbox).IsChecked()
+			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", searchTerm, exContent)
 
 			// Send focus to the search result table.
 			g.App.SetFocus(searchPage.MangaListTable)
