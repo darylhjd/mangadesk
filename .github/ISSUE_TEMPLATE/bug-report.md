@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+- [ ] I have read the [contributing guidelines](../CONTRIBUTING.md).
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
