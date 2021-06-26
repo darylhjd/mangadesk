@@ -61,7 +61,7 @@ To run the application, navigate to the directory where you stored the executabl
 $ ./mangadesk 
 ```
 
-Steps may differ for different OSes. For example, in Windows, use a forward slash `\` instead.
+Steps may differ for different OSes. For example, in Windows, use a backslash `\` instead.
 
 ### Keybindings ⌨
 
