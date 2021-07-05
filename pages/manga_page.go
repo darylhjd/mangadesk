@@ -203,6 +203,8 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 			stat := ""
 			if _, err := os.Stat(chapFolder); err == nil {
 				stat = "Y"
+			} else if _, err = os.Stat(fmt.Sprintf("%s.%s", chapFolder, g.Conf.ZipType)); err == nil {
+				stat = "Y"
 			}
 			dCell := tview.NewTableCell(stat).SetTextColor(g.MangaPageDownloadStatColor)
 

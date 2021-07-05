@@ -5,7 +5,10 @@ Functions used by the application for downloading of chapters.
 */
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -79,6 +82,19 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 				}
 			}
 
+			// Check whether to also save as zip file type
+			if g.Conf.AsZip {
+				err := saveAsZipFolder(chapterFolder)
+				if err != nil {
+					// If error saving zip folder
+					errorChaps = append(errorChaps,
+						fmt.Sprintf("%s -> %s", chapterName, err.Error()))
+					continue // Continue on to the next chapterName to download.
+				}
+				// Remove unzipped folder. Ignore any errors.
+				_ = os.RemoveAll(chapterFolder)
+			}
+
 			// Update downloaded column.
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				dCell := tview.NewTableCell("Y").SetTextColor(g.MangaPageDownloadStatColor)
@@ -107,6 +123,56 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 		markChapterUnselected(mangaPage.ChapterTable, k)
 	}
 	mangaPage.Selected = &map[int]struct{}{} // Empty the map
+}
+
+// saveAsZipFolder : This function creates a zip folder to store a chapter download.
+func saveAsZipFolder(chapterFolder string) error {
+	zipFile, err := os.Create(fmt.Sprintf("%s.%s", chapterFolder, g.Conf.ZipType))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = zipFile.Close()
+	}()
+
+	w := zip.NewWriter(zipFile)
+	defer func() {
+		_ = w.Close()
+	}()
+
+	return filepath.WalkDir(chapterFolder, func(path string, d fs.DirEntry, err error) error {
+		// Stop walking immediately if encounter error
+		if err != nil {
+			return err
+		}
+		// Skip if a DirEntry is a folder. By right, this shouldn't happen since any downloads will
+		// just contain PNGs or JPEGs but it's here just in case.
+		if d.IsDir() {
+			return nil
+		}
+
+		// Open the original image file.
+		fileOriginal, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = fileOriginal.Close()
+		}()
+
+		// Create a designated file in the zip folder for the current image.
+		fileZip, err := w.Create(d.Name())
+		if err != nil {
+			return err
+		}
+
+		// Copy the original file into its designated file in the zip archive
+		_, err = io.Copy(fileZip, fileOriginal)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // generateChapterFolderNames : Generate folder names for the chapter and manga.
