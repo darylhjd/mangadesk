@@ -101,7 +101,7 @@ comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-lan
 
 - `downloadQuality`
 
-Valid options are `data` (high quality) and `data-saver` (lower quality).
+Valid options are `data` (high quality) or `data-saver` (lower quality).
 
 Any other empty/invalid option will default to `data`.
 
@@ -114,6 +114,22 @@ Valid options are `true` or `false`. It is `false` by default.
 Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports
 (such as school/office networks).
 [More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
+
+### As Zip
+
+- `asZip`
+
+Valid options are `true` or `false`. It is `false` by default.
+
+Set to `true` if you want your chapter downloads to be compressed into a zip folder.
+
+### Zip Type
+
+- `zipType`
+
+Valid options are `zip` or `cbz`. This is ignored if `asZip` is set to `false`.
+
+Any other empty/invalid option will default to `zip`.
 
 ## Issues ☠
 

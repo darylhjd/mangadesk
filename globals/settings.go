@@ -19,6 +19,7 @@ var (
 	DownloadDir     = "downloads"
 	Languages       = []string{"en"}
 	DownloadQuality = "data"
+	ZipType         = "zip"
 )
 
 // UserConfig : This struct contains information for user configurable settings.
@@ -27,6 +28,8 @@ type UserConfig struct {
 	Languages       []string `json:"languages"`
 	DownloadQuality string   `json:"downloadQuality"`
 	ForcePort443    bool     `json:"forcePort443"`
+	AsZip           bool     `json:"asZip"`
+	ZipType         string   `json:"zipType"`
 }
 
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
@@ -83,7 +86,15 @@ func SetDefaultConfigurations() {
 
 	// Set default download quality.
 	// Will automatically set to `data` if invalid or no download quality specified.
-	if Conf.DownloadQuality == "" || (Conf.DownloadQuality != "data" && Conf.DownloadQuality != "data-saver") {
+	if Conf.DownloadQuality != "data" && Conf.DownloadQuality != "data-saver" {
 		Conf.DownloadQuality = DownloadQuality
+	}
+
+	// AsZip is false by default.
+
+	// Set default zip download type. Can be `zip` or `cbz`.
+	// Any other invalid entries will default to `zip`.
+	if Conf.ZipType != "zip" && Conf.ZipType != "cbz" {
+		Conf.ZipType = ZipType
 	}
 }
