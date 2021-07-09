@@ -161,18 +161,21 @@ func saveAsZipFolder(chapterFolder string) error {
 			_ = fileOriginal.Close()
 		}()
 
-		//Create file in zip with file header
-		fh := new(zip.FileHeader)
-		fh.Modified = time.Now()
-		fh.Name = d.Name()
-
-		wh, err := w.CreateHeader(fh)
+		// Create designated file in zip folder for current image. 
+		// Use custom header to set modified timing.
+		// This fixes zip parsing issues in certain situations.
+		fh := zip.FileHeader{
+			Name: d.Name(),
+			Modified: time.Now(),
+			Method: zip.Deflate, // Consistent with w.Create() source code.
+		}
+		fileZip, err := w.CreateHeader(&fh)
 		if err != nil {
 			return err
 		}
 
-		// Copy the original file into its designated file in the zip archive
-		_, err = io.Copy(wh, fileOriginal)
+		// Copy the original file into its designated file in the zip archive.
+		_, err = io.Copy(fileZip, fileOriginal)
 		if err != nil {
 			return err
 		}
