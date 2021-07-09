@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
@@ -160,13 +161,20 @@ func saveAsZipFolder(chapterFolder string) error {
 			_ = fileOriginal.Close()
 		}()
 
-		// Create a designated file in the zip folder for the current image.
-		fileZip, err := w.Create(d.Name())
+		// Create designated file in zip folder for current image. 
+		// Use custom header to set modified timing.
+		// This fixes zip parsing issues in certain situations.
+		fh := zip.FileHeader{
+			Name: d.Name(),
+			Modified: time.Now(),
+			Method: zip.Deflate, // Consistent with w.Create() source code.
+		}
+		fileZip, err := w.CreateHeader(&fh)
 		if err != nil {
 			return err
 		}
 
-		// Copy the original file into its designated file in the zip archive
+		// Copy the original file into its designated file in the zip archive.
 		_, err = io.Copy(fileZip, fileOriginal)
 		if err != nil {
 			return err
