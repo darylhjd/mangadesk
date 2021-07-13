@@ -101,10 +101,9 @@ type Tag struct {
 }
 
 type TagAttributes struct {
-	Name        LocalisedStrings   `json:"name"`
-	Description []LocalisedStrings `json:"description"`
-	Group       string             `json:"group"`
-	Version     int                `json:"version"`
+	Name    LocalisedStrings `json:"name"`
+	Group   string           `json:"group"`
+	Version int              `json:"version"`
 }
 
 type MangaVolChapsResponse struct {
