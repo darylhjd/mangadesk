@@ -32,7 +32,8 @@ func NewDexClient() *DexClient {
 
 	// Create header
 	header := http.Header{}
-	header.Add("Accept", "application/json") // Set default accepted encoding
+	header.Add("Accept", "application/json")       // Set default accepted encoding
+	header.Add("Content-Type", "application/json") // Set default content type.
 
 	// Create default logger for the client
 	logger := log.New(os.Stderr, "mango", log.LstdFlags|log.Lshortfile)
