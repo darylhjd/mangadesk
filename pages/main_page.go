@@ -264,7 +264,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 		}
 		// The default search includes these 4 ratings. We have to explicitly add them in if we want to
 		// add more ratings, so that the search does not only return results for the added rating.
-		ratings := []string{"none", "safe", "suggestive", "erotica"}
+		ratings := []string{"safe", "suggestive", "erotica"}
 		if exContent {
 			ratings = append(ratings, "pornographic")
 		}
