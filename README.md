@@ -39,10 +39,10 @@ download the latest release.
 For bleeding edge 🗡 updates, you may compile from source:
 
 ```cmd
-git clone https://github.com/darylhjd/mangadesk.git
-cd mangadesk
-go get -d ./...
-go build
+$ git clone https://github.com/darylhjd/mangadesk.git
+$ cd mangadesk
+$ go get -d ./...
+$ go build
 ```
 
 ### Arch Linux
@@ -50,11 +50,8 @@ go build
 Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
 
 ```cmd
-paru -S mangadesk
+$ paru -S mangadesk
 ```
-
-**NOTE**: The application will create a `usr` folder in the same directory as where you run the application to store
-your credentials/configurations.
 
 ## Uninstall ❌
 
@@ -67,7 +64,7 @@ Your downloads will not be removed by deleting the executable.
 Uninstall with an AUR helper or with pacman:
 
 ```cmd
-pacman -R mangadesk
+$ pacman -R mangadesk
 ```
 
 ## Usage ✍
@@ -94,7 +91,8 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ## Settings ⚙
 
-You may change the appropriate settings in the `usr_config.json` file, which is stored in the `usr` folder.
+You may change the appropriate settings in the `config.json` file, which is stored in your OS' default configuration
+folder (.i.e. `$XDG_CONFIG_HOME` on Linux, *BSD, and MacOS; `%LOCALAPPDATA%` for Windows)
 
 ### Download Folder
 
@@ -157,7 +155,7 @@ Always welcome and appreciated :)
 
 Please take some time to familiarise yourself with the [contributing guidelines](.github/CONTRIBUTING.md).
 
-## Learning points 🧠
+## Learning Points 🧠
 
 - Creating TUIs with tview/tcell.
 - Working with the filesystem in Golang.
