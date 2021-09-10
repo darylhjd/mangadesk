@@ -45,6 +45,14 @@ go get -d ./...
 go build
 ```
 
+### Arch Linux
+
+Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
+
+```cmd
+paru -S mangadesk
+```
+
 **NOTE**: The application will create a `usr` folder in the same directory as where you run the application to store
 your credentials/configurations.
 
@@ -53,6 +61,14 @@ your credentials/configurations.
 To uninstall, simply delete the executable and its related folders and files (namely, the `usr` folder).
 
 Your downloads will not be removed by deleting the executable.
+
+### Arch Linux
+
+Uninstall with an AUR helper or with pacman:
+
+```cmd
+pacman -R mangadesk
+```
 
 ## Usage ✍
 
