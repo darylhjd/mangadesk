@@ -47,7 +47,7 @@ go build
 
 ### Arch Linux
 
-Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such. It may be installed manually or with your preferred AUR helper:
+Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
 
 ```cmd
 paru -S mangadesk
