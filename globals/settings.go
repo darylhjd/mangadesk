@@ -107,10 +107,10 @@ func ConfDir() string {
 	UsrDir := ""
 
 	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "darwin" {
-	// Uses the XDG_CONFIG_HOME environment variable for Linux, BSD, and apparently MacOS uses it too
+		// Uses the XDG_CONFIG_HOME environment variable for Linux, BSD, and apparently MacOS uses it too
 		UsrDir = filepath.Join(os.Getenv("XDG_CONFIG_HOME"), directory)
 	} else {
-	// Could use LOCALAPPDATA environment variable here, potentially switch back to usr, depending on who use cases
+		// Could use LOCALAPPDATA environment variable here, potentially switch back to usr, depending on who use cases
 		// UsrDir = "usr"
 		UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
 	}
