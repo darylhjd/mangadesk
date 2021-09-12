@@ -9,8 +9,6 @@ import (
 )
 
 const (
-	// cannot dynamically determine usrdir as constant has to be known at compile time
-	// UsrDir         = "usr"
 	CredFileName   = "credentials"
 	ConfigFileName = "config.json"
 )
@@ -18,8 +16,6 @@ const (
 // The following are defaults for user configuration.
 
 var (
-	// UsrDir = os.Getenv("XDG_CONFIG_HOME")
-	// UsrDir = ""
 	DownloadDir     = "downloads"
 	Languages       = []string{"en"}
 	DownloadQuality = "data"
@@ -39,7 +35,6 @@ type UserConfig struct {
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
 func LoadUserConfiguration() error {
 	// Path to user configuration file.
-	// confPath := filepath.Join(UsrDir, ConfigFileName)
 	confPath := filepath.Join(ConfDir(), ConfigFileName)
 
 	// Attempt to read user configuration file.
@@ -68,9 +63,7 @@ func SaveConfiguration(path string) error {
 		return err
 	}
 
-	// Make sure `usr` directory exists. If it already exists, then nothing is done.
 	// Make sure the configuration directory exists. If it already exists, then nothing is done.
-	// if err = os.MkdirAll(UsrDir, os.ModePerm); err != nil {
 	if err = os.MkdirAll(ConfDir(), os.ModePerm); err != nil {
 		return err
 	}
@@ -110,16 +103,16 @@ func SetDefaultConfigurations() {
 func ConfDir() string {
 	directory := "mangadesk"
 
+	// initialise empty variable here so can be modified below
 	UsrDir := ""
 
-	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
-	// Uses the XDG_CONFIG_HOME environment variable for Linux
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "darwin" {
+	// Uses the XDG_CONFIG_HOME environment variable for Linux, BSD, and apparently MacOS uses it too
 		UsrDir = filepath.Join(os.Getenv("XDG_CONFIG_HOME"), directory)
-	} else if runtime.GOOS == "darwin" {
-		UsrDir = filepath.Join(os.Getenv("HOME"), "Library/Preferences", directory)
 	} else {
-	// Could use LOCALAPPDATA environment variable here, though most windows users will likely run mangadesk from the directory it is in
-		UsrDir = "usr"
+	// Could use LOCALAPPDATA environment variable here, potentially switch back to usr, depending on who use cases
+		// UsrDir = "usr"
+		UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
 	}
 	return UsrDir
 }
