@@ -75,8 +75,8 @@ func attemptLogin(pages *tview.Pages, form *tview.Form) bool {
 // storeLoginDetails : Store the refresh token after logging in successfully if user wants to.
 func storeLoginDetails() bool {
 	// Store user credentials in `usr` folder. This is not (and should not be) changeable!
-	if err := os.MkdirAll(g.UsrDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(g.ConfDir(), os.ModePerm); err != nil {
 		return false
 	}
-	return ioutil.WriteFile(filepath.Join(g.UsrDir, g.CredFileName), []byte(g.Dex.RefreshToken), os.ModePerm) != nil
+	return ioutil.WriteFile(filepath.Join(g.ConfDir(), g.CredFileName), []byte(g.Dex.RefreshToken), os.ModePerm) != nil
 }
