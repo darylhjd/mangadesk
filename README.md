@@ -53,9 +53,6 @@ Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mang
 paru -S mangadesk
 ```
 
-**NOTE**: The application will create a `usr` folder in the same directory as where you run the application to store
-your credentials/configurations.
-
 ## Uninstall ❌
 
 To uninstall, simply delete the executable and its related folders and files (namely, the `usr` folder).
@@ -94,7 +91,7 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ## Settings ⚙
 
-You may change the appropriate settings in the `usr_config.json` file, which is stored in the `usr` folder.
+You may change the appropriate settings in the `config.json` file, which is stored in your OS' default configution folder (.i.e. $XDG_CONFIG_HOME on Linux, *BSD, and MacOS; %LOCALAPPDATA% for Windows)
 
 ### Download Folder
 
