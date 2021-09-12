@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 const (
-	UsrDir         = "usr"
+	// cannot dynamically determine usrdir as constant has to be known at compile time
+	// UsrDir         = "usr"
 	CredFileName   = "credentials"
 	ConfigFileName = "config.json"
 )
@@ -16,6 +18,8 @@ const (
 // The following are defaults for user configuration.
 
 var (
+	// UsrDir = os.Getenv("XDG_CONFIG_HOME")
+	// UsrDir = ""
 	DownloadDir     = "downloads"
 	Languages       = []string{"en"}
 	DownloadQuality = "data"
@@ -35,7 +39,8 @@ type UserConfig struct {
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
 func LoadUserConfiguration() error {
 	// Path to user configuration file.
-	confPath := filepath.Join(UsrDir, ConfigFileName)
+	// confPath := filepath.Join(UsrDir, ConfigFileName)
+	confPath := filepath.Join(ConfDir(), ConfigFileName)
 
 	// Attempt to read user configuration file.
 	if confBytes, err := ioutil.ReadFile(confPath); err != nil { // If error, assume file does not exist.
@@ -64,7 +69,9 @@ func SaveConfiguration(path string) error {
 	}
 
 	// Make sure `usr` directory exists. If it already exists, then nothing is done.
-	if err = os.MkdirAll(UsrDir, os.ModePerm); err != nil {
+	// Make sure the configuration directory exists. If it already exists, then nothing is done.
+	// if err = os.MkdirAll(UsrDir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(ConfDir(), os.ModePerm); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path, confBytes, os.ModePerm)
@@ -97,4 +104,22 @@ func SetDefaultConfigurations() {
 	if Conf.ZipType != "zip" && Conf.ZipType != "cbz" {
 		Conf.ZipType = ZipType
 	}
+}
+
+// Find the operating system and determine the usrdir
+func ConfDir() string {
+	directory := "mangadesk"
+
+	UsrDir := ""
+
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
+	// Uses the XDG_CONFIG_HOME environment variable for Linux
+		UsrDir = filepath.Join(os.Getenv("XDG_CONFIG_HOME"), directory)
+	} else if runtime.GOOS == "darwin" {
+		UsrDir = filepath.Join(os.Getenv("HOME"), "Library/Preferences", directory)
+	} else {
+	// Could use LOCALAPPDATA environment variable here, though most windows users will likely run mangadesk from the directory it is in
+		UsrDir = "usr"
+	}
+	return UsrDir
 }
