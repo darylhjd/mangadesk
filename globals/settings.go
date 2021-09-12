@@ -9,8 +9,8 @@ import (
 
 const (
 	UsrDir         = "usr"
-	CredFileName   = "cred"
-	ConfigFileName = "usr_config.json"
+	CredFileName   = "credentials"
+	ConfigFileName = "config.json"
 )
 
 // The following are defaults for user configuration.
