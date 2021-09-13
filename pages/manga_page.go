@@ -28,7 +28,7 @@ type MangaPage struct {
 }
 
 // ShowMangaPage : Show the manga page.
-func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
+func ShowMangaPage(pages *tview.Pages, m *mangodex.Manga) {
 	// Create the base main grid.
 	// 15x15 grid.
 	var ga []int
@@ -96,8 +96,8 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 	// Set up manga info and chapter info.
 	go func() {
 		defer cancel() // Hit off the cancel function if it has not yet been cancelled.
-		mangaPage.SetMangaInfo(ctx, mr)
-		mangaPage.SetChapterTable(ctx, pages, mr)
+		mangaPage.SetMangaInfo(ctx, m)
+		mangaPage.SetChapterTable(ctx, pages, m)
 	}()
 
 	// Add info and table to the grid. Set the focus to the chapter table.
@@ -113,11 +113,11 @@ func ShowMangaPage(pages *tview.Pages, mr *mangodex.MangaResponse) {
 
 // SetMangaInfo : Populate the info TextView with required information.
 // NOTE: This is run as a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) SetMangaInfo(ctx context.Context, mr *mangodex.MangaResponse) {
+func (mp *MangaPage) SetMangaInfo(ctx context.Context, m *mangodex.Manga) {
 	// Get author information
 	author := "-"
 CheckRelationshipLoop:
-	for _, r := range mr.Relationships {
+	for _, r := range m.Relationships {
 		select {
 		case <-ctx.Done():
 			return
@@ -140,13 +140,13 @@ CheckRelationshipLoop:
 
 	// Get status information
 	status := "-"
-	if mr.Data.Attributes.Status != nil {
-		status = strings.Title(*mr.Data.Attributes.Status)
+	if m.Attributes.Status != nil {
+		status = strings.Title(*m.Attributes.Status)
 	}
 
 	// Set up information text.
 	infoText := fmt.Sprintf("Title: %s\n\nAuthor: %s\nStatus: %s\n\nDescription:\n%s",
-		mr.Data.Attributes.Title["en"], author, status, tview.Escape(mr.Data.Attributes.Description["en"]))
+		m.Attributes.Title["en"], author, status, tview.Escape(m.Attributes.Description["en"]))
 
 	g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 		mp.InfoView.SetText(infoText)
@@ -155,7 +155,7 @@ CheckRelationshipLoop:
 
 // SetChapterTable : Populate the manga page chapter table.
 // NOTE: This is run as a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr *mangodex.MangaResponse) {
+func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m *mangodex.Manga) {
 	// Show loading status so user knows it's loading.
 	g.App.QueueUpdateDraw(func() {
 		loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
@@ -163,7 +163,7 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 	})
 
 	// Get all chapters for this manga. No pages.
-	chapters, ok := mp.GetAllChapters(ctx, pages, mr.Data.ID)
+	chapters, ok := mp.GetAllChapters(ctx, pages, m.ID)
 	if !ok {
 		return
 	} else if len(*chapters) == 0 { // If no chapters
@@ -175,29 +175,29 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 	}
 
 	// Set input handlers for the table
-	SetMangaPageTableHandlers(pages, mp, mr, chapters) // For custom input handlers.
+	SetMangaPageTableHandlers(pages, mp, m, chapters) // For custom input handlers.
 
 	// Add each chapter info to the table.
-	for i, cr := range *chapters {
+	for i, c := range *chapters {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			// Chapter number cell. Note that this column also contains the translated language.
-			c := "-"
-			if cr.Data.Attributes.Chapter != nil {
-				c = *cr.Data.Attributes.Chapter
+			cNum := "-"
+			if c.Attributes.Chapter != nil {
+				cNum = *c.Attributes.Chapter
 			}
-			cCell := tview.NewTableCell(fmt.Sprintf("%-6s %s", c, cr.Data.Attributes.TranslatedLanguage)).
+			cCell := tview.NewTableCell(fmt.Sprintf("%-6s %s", cNum, c.Attributes.TranslatedLanguage)).
 				SetMaxWidth(10).SetTextColor(g.MangaPageChapNumColor)
 
 			// Chapter title cell.
-			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", cr.Data.Attributes.Title)).SetMaxWidth(30).
+			tCell := tview.NewTableCell(fmt.Sprintf("%-30s", c.Attributes.Title)).SetMaxWidth(30).
 				SetTextColor(g.MangaPageTitleColor)
 
 			// Chapter download status cell.
 			// Get the manga and chapter folder name.
-			mangaName, chapter := generateChapterFolderNames(mr, &cr)
+			mangaName, chapter := generateChapterFolderNames(m, &c)
 			chapFolder := filepath.Join(g.Conf.DownloadDir, mangaName, chapter)
 			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
 			stat := ""
@@ -217,12 +217,12 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, mr
 	}
 
 	// Set read markers for chapters.
-	mp.SetChapterReadMarkers(ctx, mr.Data.ID, chapters)
+	mp.SetChapterReadMarkers(ctx, m.ID, chapters)
 }
 
 // GetAllChapters : Get all chapters for a manga.
 // NOTE: This is run in a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, mangaID string) (*[]mangodex.ChapterResponse, bool) {
+func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, mangaID string) (*[]mangodex.Chapter, bool) {
 	// Set up query parameters to get chapters.
 	params := url.Values{}
 	params.Set("limit", "500")
@@ -232,7 +232,7 @@ func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, man
 	params.Set("order[chapter]", "desc") // Show latest chapters first
 
 	var (
-		chapters []mangodex.ChapterResponse
+		chapters []mangodex.Chapter
 		offset   = 0
 	)
 GetAllChapterLoop:
@@ -250,7 +250,7 @@ GetAllChapterLoop:
 				})
 				return nil, false // We end immediately. No need to continue.
 			}
-			chapters = append(chapters, chapterList.Results...)
+			chapters = append(chapters, chapterList.Data...)
 			// Check if there are still more chapters to load.
 			offset += 500
 			if offset >= chapterList.Total {
@@ -263,7 +263,7 @@ GetAllChapterLoop:
 
 // SetChapterReadMarkers : Set read markers for each chapter for a manga.
 // NOTE: This is run in a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, chapters *[]mangodex.ChapterResponse) {
+func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, chapters *[]mangodex.Chapter) {
 	// Check for manga read markers.
 	if !g.Dex.IsLoggedIn() { // If user is not logged in.
 		// We inform user to log in to track read status.
@@ -303,7 +303,7 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 			return
 		default:
 			readStatus := ""
-			if _, ok := read[cr.Data.ID]; ok { // If chapter ID is in map of read markers.
+			if _, ok := read[cr.ID]; ok { // If chapter ID is in map of read markers.
 				readStatus = "R"
 			}
 			rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)

@@ -22,7 +22,7 @@ import (
 )
 
 // downloadChapters : Attempt to download pages
-func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
+func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Manga, chaps *[]mangodex.Chapter) {
 	// Download each chapter.
 	// NOTE : Run as a GOROUTINE. Require QueueUpdateDraw
 	go func(rows map[int]struct{}) {
@@ -30,15 +30,15 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 		var errorChaps []string
 	ChapterForLoop:
 		for r := range rows {
-			// Get the corresponding ChapterResponse object.
-			chapR := (*chaps)[r-1] // We -1 since the first row is the header.
+			// Get the corresponding Chapter object.
+			chap := (*chaps)[r-1] // We -1 since the first row is the header.
 
 			// Get manga and chapter folder name.
-			mangaName, chapterName := generateChapterFolderNames(mr, &chapR)
+			mangaName, chapterName := generateChapterFolderNames(m, &chap)
 
 			// Get MangaDex@Home downloader for the chapterName.
-			downloader, err := g.Dex.NewMDHomeClient(chapR.Data.ID, g.Conf.DownloadQuality,
-				chapR.Data.Attributes.Hash, g.Conf.ForcePort443)
+			downloader, err := g.Dex.NewMDHomeClient(chap.ID, g.Conf.DownloadQuality,
+				chap.Attributes.Hash, g.Conf.ForcePort443)
 			if err != nil {
 				// If error getting downloader, we add this chapterName to the errorPages chapters list.
 				errorChaps = append(errorChaps,
@@ -58,9 +58,9 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.Man
 
 			// Get each page and save it.
 			// Note that the moment one page fails to download, the whole chapter is skipped.
-			pageFiles := chapR.Data.Attributes.Data
+			pageFiles := chap.Attributes.Data
 			if g.Conf.DownloadQuality == "data-saver" {
-				pageFiles = chapR.Data.Attributes.DataSaver
+				pageFiles = chap.Attributes.DataSaver
 			}
 			for pageNum, file := range pageFiles {
 				// Get page data.
@@ -161,13 +161,13 @@ func saveAsZipFolder(chapterFolder string) error {
 			_ = fileOriginal.Close()
 		}()
 
-		// Create designated file in zip folder for current image. 
+		// Create designated file in zip folder for current image.
 		// Use custom header to set modified timing.
 		// This fixes zip parsing issues in certain situations.
 		fh := zip.FileHeader{
-			Name: d.Name(),
+			Name:     d.Name(),
 			Modified: time.Now(),
-			Method: zip.Deflate, // Consistent with w.Create() source code.
+			Method:   zip.Deflate, // Consistent with w.Create() source code.
 		}
 		fileZip, err := w.CreateHeader(&fh)
 		if err != nil {
@@ -185,20 +185,20 @@ func saveAsZipFolder(chapterFolder string) error {
 
 // generateChapterFolderNames : Generate folder names for the chapter and manga.
 // Returns the name for the manga folder, then the name for the chapter folder.
-func generateChapterFolderNames(mr *mangodex.MangaResponse, cr *mangodex.ChapterResponse) (string, string) {
+func generateChapterFolderNames(m *mangodex.Manga, c *mangodex.Chapter) (string, string) {
 	chapterNum := "-"
-	if cr.Data.Attributes.Chapter != nil {
-		chapterNum = *(cr.Data.Attributes.Chapter)
+	if c.Attributes.Chapter != nil {
+		chapterNum = *(c.Attributes.Chapter)
 	}
 
-	mangaName := mr.Data.Attributes.Title["en"]
+	mangaName := m.Attributes.Title["en"]
 	// Use compound name to try to avoid collisions.
 	generatedName := fmt.Sprintf("Chapter%s_[%s-%s]_%s_%s",
-		chapterNum, strings.ToUpper(cr.Data.Attributes.TranslatedLanguage), g.Conf.DownloadQuality,
-		cr.Data.Attributes.Title, strings.SplitN(cr.Data.ID, "-", 2)[0])
+		chapterNum, strings.ToUpper(c.Attributes.TranslatedLanguage), g.Conf.DownloadQuality,
+		c.Attributes.Title, strings.SplitN(c.ID, "-", 2)[0])
 
 	// Remove all invalid folder characters from folder name
-	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\"}
+	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\", "."}
 	for s := range restrictedChars {
 		mangaName = strings.ReplaceAll(mangaName, restrictedChars[s], "")
 		generatedName = strings.ReplaceAll(generatedName, restrictedChars[s], "")
