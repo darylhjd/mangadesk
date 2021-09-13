@@ -94,7 +94,7 @@ func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *t
 
 // SetMangaPageTableHandlers : Set input handlers for the manga page table.
 // List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *mangodex.MangaResponse, chaps *[]mangodex.ChapterResponse) {
+func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Manga, chaps *[]mangodex.Chapter) {
 	// When user presses ENTER to confirm selected.
 	mangaPage.ChapterTable.SetSelectedFunc(func(row, column int) {
 		// We add the current selection if the there are no selected rows currently.
@@ -106,7 +106,7 @@ func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, mr *man
 			func(i int, label string) {
 				if label == "Yes" {
 					// If user confirms to download, then we download the chapters.
-					downloadChapters(pages, mangaPage, mr, chaps)
+					downloadChapters(pages, mangaPage, m, chaps)
 				}
 				pages.RemovePage(g.DownloadChaptersModalID)
 			})

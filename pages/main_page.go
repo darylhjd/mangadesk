@@ -150,7 +150,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 					OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
 				})
 				return
-			} else if len(mangaList.Results) == 0 {
+			} else if len(mangaList.Data) == 0 {
 				noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(1, 0, noResCell)
@@ -167,19 +167,19 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 			mp.MangaListTable.SetTitle(fmt.Sprintf("Your followed manga. Page %d (%d-%d).", page, first, last))
 		})
 
-		for i, mr := range mangaList.Results {
+		for i, mr := range mangaList.Data {
 			select {
 			case <-ctx.Done():
 				return
 			default:
 				// Manga title cell.
-				mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", mr.Data.Attributes.Title["en"])).
+				mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", mr.Attributes.Title["en"])).
 					SetMaxWidth(50).SetTextColor(g.LoggedMainPageTitleColor)
 
 				// Pub status cell.
 				status := "-"
-				if mr.Data.Attributes.Status != nil {
-					status = strings.Title(*mr.Data.Attributes.Status)
+				if mr.Attributes.Status != nil {
+					status = strings.Title(*mr.Attributes.Status)
 				}
 				sCell := tview.NewTableCell(fmt.Sprintf("%-15s", status)).
 					SetMaxWidth(15).SetTextColor(g.LoggedMainPagePubStatusColor)
@@ -193,7 +193,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 				// It is inside the for loop so user can press enter the moment they see an entry.
 				mp.MangaListTable.SetSelectedFunc(func(row, column int) {
 					// We do not need to worry about index out-of-range as we checked results earlier.
-					ShowMangaPage(pages, &(mangaList.Results[row-1]))
+					ShowMangaPage(pages, &(mangaList.Data[row-1]))
 				})
 			}
 		}
@@ -286,7 +286,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 					OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
 				})
 				return
-			} else if len(mangaList.Results) == 0 {
+			} else if len(mangaList.Data) == 0 {
 				noResCell := tview.NewTableCell("No results.").SetSelectable(false)
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 					mp.MangaListTable.SetCell(1, 0, noResCell)
@@ -303,23 +303,23 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 			mp.MangaListTable.SetTitle(fmt.Sprintf("%s Page %d (%d-%d).", tableTitle, page, first, last))
 		})
 
-		for i, mr := range mangaList.Results {
+		for i, mr := range mangaList.Data {
 			select {
 			case <-ctx.Done():
 				return
 			default:
 				// Manga title cell.
-				mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Data.Attributes.Title["en"])).
+				mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Attributes.Title["en"])).
 					SetMaxWidth(40).SetTextColor(g.GuestMainPageTitleColor)
 
 				// Description cell. Truncate description to improve loading times.
 				desc := tview.Escape(fmt.Sprintf("%-60s",
-					strings.SplitN(tview.Escape(mr.Data.Attributes.Description["en"]), "\n", 2)[0]))
+					strings.SplitN(tview.Escape(mr.Attributes.Description["en"]), "\n", 2)[0]))
 				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(g.GuestMainPageDescColor)
 
 				// Tag cell.
-				tags := make([]string, len(mr.Data.Attributes.Tags))
-				for ti, tag := range mr.Data.Attributes.Tags {
+				tags := make([]string, len(mr.Attributes.Tags))
+				for ti, tag := range mr.Attributes.Tags {
 					tags[ti] = tag.Attributes.Name["en"]
 				}
 				tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(g.GuestMainPageTagColor)
@@ -335,7 +335,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 				// It is inside the for loop so user can press enter the moment they see an entry.
 				mp.MangaListTable.SetSelectedFunc(func(row, column int) {
 					// We do not need to worry about index out-of-range as we checked results earlier.
-					ShowMangaPage(pages, &(mangaList.Results[row-1]))
+					ShowMangaPage(pages, &(mangaList.Data[row-1]))
 				})
 			}
 		}
