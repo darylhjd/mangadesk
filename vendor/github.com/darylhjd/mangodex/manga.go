@@ -27,10 +27,10 @@ const (
 )
 
 type MangaList struct {
-	Results []MangaResponse `json:"results"`
-	Limit   int             `json:"limit"`
-	Offset  int             `json:"offset"`
-	Total   int             `json:"total"`
+	Data   []Manga `json:"data"`
+	Limit  int     `json:"limit"`
+	Offset int     `json:"offset"`
+	Total  int     `json:"total"`
 }
 
 type MangaResponse struct {
@@ -44,9 +44,10 @@ func (mr *MangaResponse) GetResult() string {
 }
 
 type Manga struct {
-	ID         string          `json:"id"`
-	Type       string          `json:"type"`
-	Attributes MangaAttributes `json:"attributes"`
+	ID            string          `json:"id"`
+	Type          string          `json:"type"`
+	Attributes    MangaAttributes `json:"attributes"`
+	Relationships []Relationship  `json:"relationships"`
 }
 
 type Relationship struct {

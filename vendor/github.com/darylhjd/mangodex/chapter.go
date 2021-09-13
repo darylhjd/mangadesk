@@ -16,10 +16,10 @@ const (
 )
 
 type ChapterList struct {
-	Results []ChapterResponse `json:"results"`
-	Limit   int               `json:"limit"`
-	Offset  int               `json:"offset"`
-	Total   int               `json:"total"`
+	Data  []Chapter `json:"data"`
+	Limit int       `json:"limit"`
+	Offset  int       `json:"offset"`
+	Total   int       `json:"total"`
 }
 
 type ChapterResponse struct {
@@ -33,9 +33,10 @@ func (r *ChapterResponse) GetResult() string {
 }
 
 type Chapter struct {
-	ID         string            `json:"id"`
-	Type       string            `json:"type"`
-	Attributes ChapterAttributes `json:"attributes"`
+	ID            string            `json:"id"`
+	Type          string            `json:"type"`
+	Attributes    ChapterAttributes `json:"attributes"`
+	Relationships []Relationship    `json:"relationships"`
 }
 
 type ChapterAttributes struct {
