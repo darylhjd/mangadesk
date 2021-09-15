@@ -16,10 +16,10 @@ const (
 )
 
 type ChapterList struct {
-	Data  []Chapter `json:"data"`
-	Limit int       `json:"limit"`
-	Offset  int       `json:"offset"`
-	Total   int       `json:"total"`
+	Data   []Chapter `json:"data"`
+	Limit  int       `json:"limit"`
+	Offset int       `json:"offset"`
+	Total  int       `json:"total"`
 }
 
 type ChapterResponse struct {
