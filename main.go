@@ -49,7 +49,7 @@ func main() {
 // Will return error if any steps fail (no stored credentials, authentication failed).
 func CheckAuth() error {
 	// Try to read stored credential file.
-	content, err := ioutil.ReadFile(filepath.Join(g.UsrDir, g.CredFileName))
+	content, err := ioutil.ReadFile(filepath.Join(g.GetConfDir(), g.CredFileName))
 	if err != nil { // If error, then file does not exist.
 		return err
 	}

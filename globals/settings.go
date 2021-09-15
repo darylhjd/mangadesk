@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 const (
-	UsrDir         = "usr"
-	CredFileName   = "cred"
-	ConfigFileName = "usr_config.json"
+	CredFileName   = "credentials"
+	ConfigFileName = "config.json"
 )
 
 // The following are defaults for user configuration.
@@ -35,7 +35,7 @@ type UserConfig struct {
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
 func LoadUserConfiguration() error {
 	// Path to user configuration file.
-	confPath := filepath.Join(UsrDir, ConfigFileName)
+	confPath := filepath.Join(GetConfDir(), ConfigFileName)
 
 	// Attempt to read user configuration file.
 	if confBytes, err := ioutil.ReadFile(confPath); err != nil { // If error, assume file does not exist.
@@ -63,8 +63,8 @@ func SaveConfiguration(path string) error {
 		return err
 	}
 
-	// Make sure `usr` directory exists. If it already exists, then nothing is done.
-	if err = os.MkdirAll(UsrDir, os.ModePerm); err != nil {
+	// Make sure the configuration directory exists. If it already exists, then nothing is done.
+	if err = os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path, confBytes, os.ModePerm)
@@ -97,4 +97,32 @@ func SetDefaultConfigurations() {
 	if Conf.ZipType != "zip" && Conf.ZipType != "cbz" {
 		Conf.ZipType = ZipType
 	}
+}
+
+// GetConfDir : Find the operating system and determine the configuration directory for the application.
+func GetConfDir() string {
+	directory := "mangadesk"
+
+	// initialise empty variable here so can be modified below
+	UsrDir := ""
+
+	// Looks up XDG_CONFIG_HOME in the environment to check for system set config directory.
+	// Supposedly, Linux, BSD, and apparently MacOS uses this variable.
+	if configDir, ok := os.LookupEnv("XDG_CONFIG_HOME"); ok {
+		UsrDir = filepath.Join(configDir, directory)
+	} else {
+		switch runtime.GOOS {
+		case "linux", "freebsd":
+			UsrDir = filepath.Join(os.Getenv("HOME"), ".config", directory)
+		case "darwin":
+			UsrDir = filepath.Join(os.Getenv("HOME"), "Library", "Preferences", directory)
+		case "windows":
+			// LOCALAPPDATA always available on Windows environments I believe
+			UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
+		default:
+			// Save in `usr` folder in current directory which the application is run from.
+			UsrDir = "usr"
+		}
+	}
+	return UsrDir
 }
