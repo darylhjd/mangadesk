@@ -106,23 +106,23 @@ func GetConfDir() string {
 	// initialise empty variable here so can be modified below
 	UsrDir := ""
 
-	// looks up XDG_CONFIG_HOME in the environment, if xdgConfigHomePresent, assigns to unixConfigHome and makes 'xdgConfigHomePresent' equals true
-	// I know Linux isn't technically UNIX, I just couldn't think of a better variable name
-	unixConfigHome, xdgConfigHomePresent := os.LookupEnv("XDG_CONFIG_HOME")
-
-	if xdgConfigHomePresent {
-		// Uses the XDG_CONFIG_HOME environment variable for Linux, BSD, and apparently MacOS uses it too
-		UsrDir = filepath.Join(unixConfigHome, directory)
-	} else if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
-		UsrDir = filepath.Join(os.Getenv("HOME"), ".config", directory)
-	} else if runtime.GOOS == "darwin" {
-		UsrDir = filepath.Join(os.Getenv("HOME"), "Library/Preferences", directory)
-	} else if runtime.GOOS == "windows" {
-		// LOCALAPPDATA always available on Windows environments I believe
-		UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
+	// Looks up XDG_CONFIG_HOME in the environment to check for system set config directory.
+	// Supposedly, Linux, BSD, and apparently MacOS uses this variable.
+	if configDir, ok := os.LookupEnv("XDG_CONFIG_HOME"); ok {
+		UsrDir = filepath.Join(configDir, directory)
 	} else {
-		UsrDir = "usr"
+		switch runtime.GOOS {
+		case "linux", "freebsd":
+			UsrDir = filepath.Join(os.Getenv("HOME"), ".config", directory)
+		case "darwin":
+			UsrDir = filepath.Join(os.Getenv("HOME"), "Library", "Preferences", directory)
+		case "windows":
+			// LOCALAPPDATA always available on Windows environments I believe
+			UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
+		default:
+			// Save in `usr` folder in current directory which the application is run from.
+			UsrDir = "usr"
+		}
 	}
-
 	return UsrDir
 }
