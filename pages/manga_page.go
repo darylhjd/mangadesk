@@ -163,7 +163,7 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m 
 	})
 
 	// Get all chapters for this manga. No pages.
-	chapters, ok := mp.GetAllChapters(ctx, pages, m.ID)
+	chapters, ok := mp.GetAllChapters(ctx, pages, m)
 	if !ok {
 		return
 	} else if len(*chapters) == 0 { // If no chapters
@@ -222,7 +222,7 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m 
 
 // GetAllChapters : Get all chapters for a manga.
 // NOTE: This is run in a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, mangaID string) (*[]mangodex.Chapter, bool) {
+func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, m *mangodex.Manga) (*[]mangodex.Chapter, bool) {
 	// Set up query parameters to get chapters.
 	params := url.Values{}
 	params.Set("limit", "500")
@@ -230,6 +230,13 @@ func (mp *MangaPage) GetAllChapters(ctx context.Context, pages *tview.Pages, man
 		params.Add("translatedLanguage[]", lang)
 	}
 	params.Set("order[chapter]", "desc") // Show latest chapters first
+	// If manga is pornographic, then also load pornographic chapters.
+	if m.Attributes.ContentRating != nil && *m.Attributes.ContentRating == "pornographic" {
+		ratings := []string{"safe", "suggestive", "erotica", "pornographic"}
+		for _, rating := range ratings {
+			params.Add("contentRating[]", rating)
+		}
+	}
 
 	var (
 		chapters []mangodex.Chapter
@@ -242,7 +249,7 @@ GetAllChapterLoop:
 			return nil, false
 		default:
 			params.Set("offset", strconv.Itoa(offset))
-			chapterList, err := g.Dex.MangaFeed(mangaID, params)
+			chapterList, err := g.Dex.MangaFeed(m.ID, params)
 			if err != nil {
 				// If error getting chapters for the manga, we tell the user so through a modal.
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
