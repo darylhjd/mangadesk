@@ -35,7 +35,7 @@ type UserConfig struct {
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
 func LoadUserConfiguration() error {
 	// Path to user configuration file.
-	confPath := filepath.Join(ConfDir(), ConfigFileName)
+	confPath := filepath.Join(GetConfDir(), ConfigFileName)
 
 	// Attempt to read user configuration file.
 	if confBytes, err := ioutil.ReadFile(confPath); err != nil { // If error, assume file does not exist.
@@ -64,7 +64,7 @@ func SaveConfiguration(path string) error {
 	}
 
 	// Make sure the configuration directory exists. If it already exists, then nothing is done.
-	if err = os.MkdirAll(ConfDir(), os.ModePerm); err != nil {
+	if err = os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path, confBytes, os.ModePerm)
@@ -99,8 +99,8 @@ func SetDefaultConfigurations() {
 	}
 }
 
-// Find the operating system and determine the usrdir
-func ConfDir() string {
+// GetConfDir : Find the operating system and determine the configuration directory for the application.
+func GetConfDir() string {
 	directory := "mangadesk"
 
 	// initialise empty variable here so can be modified below

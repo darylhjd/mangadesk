@@ -91,7 +91,8 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ## Settings ⚙
 
-You may change the appropriate settings in the `config.json` file, which is stored in your OS' default configution folder (.i.e. $XDG_CONFIG_HOME on Linux, *BSD, and MacOS; %LOCALAPPDATA% for Windows)
+You may change the appropriate settings in the `config.json` file, which is stored in your OS' default configution
+folder (.i.e. $XDG_CONFIG_HOME on Linux, *BSD, and MacOS; %LOCALAPPDATA% for Windows)
 
 ### Download Folder
 
@@ -154,7 +155,7 @@ Always welcome and appreciated :)
 
 Please take some time to familiarise yourself with the [contributing guidelines](.github/CONTRIBUTING.md).
 
-## Learning points 🧠
+## Learning Points 🧠
 
 - Creating TUIs with tview/tcell.
 - Working with the filesystem in Golang.

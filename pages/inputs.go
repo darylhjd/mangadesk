@@ -190,7 +190,7 @@ func ctrlLInput(pages *tview.Pages) {
 				return
 			}
 			// Remove the credentials file, but we ignore errors.
-			_ = os.Remove(filepath.Join(g.ConfDir(), g.CredFileName))
+			_ = os.Remove(filepath.Join(g.GetConfDir(), g.CredFileName))
 			// Then we redirect the user to the guest main page
 			ShowMainPage(pages)
 		}

@@ -161,13 +161,13 @@ func saveAsZipFolder(chapterFolder string) error {
 			_ = fileOriginal.Close()
 		}()
 
-		// Create designated file in zip folder for current image. 
+		// Create designated file in zip folder for current image.
 		// Use custom header to set modified timing.
 		// This fixes zip parsing issues in certain situations.
 		fh := zip.FileHeader{
-			Name: d.Name(),
+			Name:     d.Name(),
 			Modified: time.Now(),
-			Method: zip.Deflate, // Consistent with w.Create() source code.
+			Method:   zip.Deflate, // Consistent with w.Create() source code.
 		}
 		fileZip, err := w.CreateHeader(&fh)
 		if err != nil {
