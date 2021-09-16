@@ -60,7 +60,6 @@ type MangaAttributes struct {
 	AltTitles              []LocalisedStrings `json:"altTitles"`
 	Description            LocalisedStrings   `json:"description"`
 	IsLocked               bool               `json:"isLocked"`
-	Links                  LocalisedStrings   `json:"links"`
 	OriginalLanguage       string             `json:"originalLanguage"`
 	LastVolume             *string            `json:"lastVolume"`
 	LastChapter            *string            `json:"lastChapter"`

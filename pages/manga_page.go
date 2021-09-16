@@ -66,10 +66,14 @@ func ShowMangaPage(pages *tview.Pages, m *mangodex.Manga) {
 	readMarkerHeader := tview.NewTableCell("Read Status").
 		SetTextColor(g.MangaPageReadStatColor).
 		SetSelectable(false)
+	scanGroupHeader := tview.NewTableCell("ScanGroup").
+		SetTextColor(g.MangaPageScanGroupColor).
+		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
 		SetCell(0, 2, downloadHeader).
-		SetCell(0, 3, readMarkerHeader).
+		SetCell(0, 3, scanGroupHeader).
+		SetCell(0, 4, readMarkerHeader).
 		SetFixed(1, 0)
 	// Set table attributes
 	table.SetSelectable(true, false).
@@ -216,6 +220,8 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m 
 		}
 	}
 
+	// Set scanlation groups for chapters.
+	mp.SetChapterScanGroup(ctx, chapters)
 	// Set read markers for chapters.
 	mp.SetChapterReadMarkers(ctx, m.ID, chapters)
 }
@@ -278,7 +284,7 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 		rSCell := tview.NewTableCell("Not logged in!").SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)
 
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			mp.ChapterTable.SetCell(1, 3, rSCell)
+			mp.ChapterTable.SetCell(1, 4, rSCell)
 		})
 		return // We return immediately. No need to continue.
 	}
@@ -294,7 +300,7 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 			readStatus := "API Error!"
 			g.App.QueueUpdateDraw(func() {
 				rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor)
-				mp.ChapterTable.SetCell(1, 3, rSCell)
+				mp.ChapterTable.SetCell(1, 4, rSCell)
 			})
 			return // We return immediately. No need to continue.
 		}
@@ -313,10 +319,52 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 			if _, ok := read[cr.ID]; ok { // If chapter ID is in map of read markers.
 				readStatus = "R"
 			}
-			rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)
+			rSCell := tview.NewTableCell(readStatus).SetTextColor(g.MangaPageReadStatColor)
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				mp.ChapterTable.SetCell(i+1, 3, rSCell)
+				mp.ChapterTable.SetCell(i+1, 4, rSCell)
 			})
+		}
+	}
+}
+
+func (mp *MangaPage) SetChapterScanGroup(ctx context.Context, chapters *[]mangodex.Chapter) {
+	// Keep track of already checked groups to avoid calling the API too many times.
+	groups := map[string]string{}
+	for i, c := range *chapters {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			// Find the scanlation_group relationship
+			group := ""
+			for _, r := range c.Relationships {
+				if r.Type == "scanlation_group" {
+					groupId := r.ID
+					if name, ok := groups[groupId]; ok {
+						group = name
+					} else {
+						sgr, err := g.Dex.ViewScanGroup(groupId)
+						if err != nil {
+							group = "API Error!"
+							g.App.QueueUpdateDraw(func() {
+								sgCell := tview.NewTableCell(group).SetTextColor(g.MangaPageScanGroupColor)
+								mp.ChapterTable.SetCell(1, 3, sgCell)
+							})
+							return
+						}
+						group = sgr.Data.Attributes.Name
+						// Add to cache
+						groups[groupId] = group
+					}
+					// Get group name using ID
+					sgCell := tview.NewTableCell(fmt.Sprintf("%-15s", group)).SetMaxWidth(15).
+						SetTextColor(g.MangaPageScanGroupColor)
+					g.App.QueueUpdateDraw(func() {
+						mp.ChapterTable.SetCell(i+1, 3, sgCell)
+					})
+					break
+				}
+			}
 		}
 	}
 }

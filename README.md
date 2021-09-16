@@ -1,5 +1,8 @@
 # <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
 
+**<div align="center">Note: Repository is in maintenance mode. No new features will be worked on and will be postponed to a later date.</div>**
+
+
 <p align="center">
   <img alt="Top Language" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
   <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue">
