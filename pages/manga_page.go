@@ -222,6 +222,8 @@ func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m 
 
 	// Set read markers for chapters.
 	mp.SetChapterReadMarkers(ctx, m.ID, chapters)
+	// Set scanlation groups for chapters.
+	mp.SetChapterScanGroup(ctx, chapters)
 }
 
 // GetAllChapters : Get all chapters for a manga.
@@ -326,9 +328,44 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 }
 
 func (mp *MangaPage) SetChapterScanGroup(ctx context.Context, chapters *[]mangodex.Chapter) {
-	// Check for which scan group uploaded the specific chapter.
-
 	// Keep track of already checked groups to avoid calling the API too many times.
+	groups := map[string]string{}
+	for i, c := range *chapters {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			// Find the scanlation_group relationship
+			group := ""
+			for _, r := range c.Relationships {
+				if r.Type == "scanlation_group" {
+					groupId := r.ID
+					if name, ok := groups[groupId]; ok {
+						group = name
+					} else {
+						sgr, err := g.Dex.ViewScanGroup(groupId)
+						if err != nil {
+							group = "API Error!"
+							g.App.QueueUpdateDraw(func() {
+								sgCell := tview.NewTableCell(group).SetTextColor(g.MangaPageScanGroupColor)
+								mp.ChapterTable.SetCell(1, 4, sgCell)
+							})
+							return
+						}
+						group = sgr.Data.Attributes.Name
+						// Add to cache
+						groups[groupId] = group
+					}
+					// Get group name using ID
+					sgCell := tview.NewTableCell(group).SetTextColor(g.MangaPageScanGroupColor).SetSelectable(false)
+					g.App.QueueUpdateDraw(func() {
+						mp.ChapterTable.SetCell(i+1, 4, sgCell)
+					})
+					break
+				}
+			}
+		}
+	}
 }
 
 // MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.
