@@ -66,10 +66,14 @@ func ShowMangaPage(pages *tview.Pages, m *mangodex.Manga) {
 	readMarkerHeader := tview.NewTableCell("Read Status").
 		SetTextColor(g.MangaPageReadStatColor).
 		SetSelectable(false)
+	scanGroupHeader := tview.NewTableCell("ScanGroup").
+		SetTextColor(g.MangaPageScanGroupColor).
+		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
 		SetCell(0, 2, downloadHeader).
 		SetCell(0, 3, readMarkerHeader).
+		SetCell(0, 4, scanGroupHeader).
 		SetFixed(1, 0)
 	// Set table attributes
 	table.SetSelectable(true, false).
@@ -319,6 +323,12 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 			})
 		}
 	}
+}
+
+func (mp *MangaPage) SetChapterScanGroup(ctx context.Context, chapters *[]mangodex.Chapter) {
+	// Check for which scan group uploaded the specific chapter.
+
+	// Keep track of already checked groups to avoid calling the API too many times.
 }
 
 // MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.
