@@ -62,10 +62,10 @@ type MangaAttributes struct {
 	OriginalLanguage       string           `json:"originalLanguage"`
 	LastVolume             *string          `json:"lastVolume"`
 	LastChapter            *string          `json:"lastChapter"`
-	PublicationDemographic *Demographic     `json:"publicationDemographic"`
+	PublicationDemographic *string          `json:"publicationDemographic"`
 	Status                 *string          `json:"status"`
 	Year                   *int             `json:"year"`
-	ContentRating          *ContentRating   `json:"contentRating"`
+	ContentRating          *string          `json:"contentRating"`
 	Tags                   []Tag            `json:"tags"`
 	State                  string           `json:"state"`
 	Version                int              `json:"version"`

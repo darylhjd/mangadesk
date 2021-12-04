@@ -23,6 +23,7 @@ type UserConfig struct {
 	DownloadDir     string   `json:"downloadDir"`
 	Languages       []string `json:"languages"`
 	DownloadQuality string   `json:"downloadQuality"`
+	ExplicitContent bool     `json:"explicitContent"`
 	ForcePort443    bool     `json:"forcePort443"`
 	AsZip           bool     `json:"asZip"`
 	ZipType         string   `json:"zipType"`

@@ -76,7 +76,15 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non-200 status code -> %d", resp.StatusCode)
+		// Decode to an ErrorResponse struct.
+		var er ErrorResponse
+		if err = json.NewDecoder(resp.Body).Decode(&er); err != nil {
+			return nil, err
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(resp.Body)
+		return nil, fmt.Errorf("non-200 status code -> %s", er.GetErrors())
 	}
 	return resp, nil
 }

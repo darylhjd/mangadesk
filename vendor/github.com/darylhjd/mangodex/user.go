@@ -9,6 +9,7 @@ import (
 
 const (
 	GetUserFollowedMangaListPath = "user/follows/manga"
+	GetLoggedUserPath            = "user/me"
 )
 
 // UserService : Provides User services provided by the API.
@@ -37,4 +38,43 @@ func (s *UserService) GetUserFollowedMangaListContext(ctx context.Context, limit
 	var l MangaList
 	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &l)
 	return &l, err
+}
+
+// UserResponse : Typical User response.
+type UserResponse struct {
+	Result   string `json:"result"`
+	Response string `json:"response"`
+	Data     User   `json:"user"`
+}
+
+func (ur *UserResponse) GetResult() string {
+	return ur.Result
+}
+
+// User : Info on a MangaDex user.
+type User struct {
+	ID            string         `json:"id"`
+	Type          string         `json:"type"`
+	Attributes    UserAttributes `json:"attributes"`
+	Relationships []Relationship `json:"relationships"`
+}
+
+// UserAttributes : Attributes of a User.
+type UserAttributes struct {
+	Username string   `json:"username"`
+	Roles    []string `json:"roles"`
+	Version  int      `json:"version"`
+}
+
+// GetLoggedUser : Return logged UserResponse.
+// https://api.mangadex.org/docs.html#operation/get-user-follows-group
+func (s *UserService) GetLoggedUser() (*UserResponse, error) {
+	return s.GetLoggedUserContext(context.Background())
+}
+
+// GetLoggedUserContext : GetLoggedUser with custom context.
+func (s *UserService) GetLoggedUserContext(ctx context.Context) (*UserResponse, error) {
+	var r UserResponse
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, GetLoggedUserPath, nil, &r)
+	return &r, err
 }

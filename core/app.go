@@ -24,10 +24,6 @@ type MangaDesk struct {
 	LogFile *os.File
 }
 
-const (
-	OffsetRange = 100
-)
-
 // Initialise : Set up the application.
 func Initialise() {
 	// Create new app

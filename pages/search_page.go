@@ -52,10 +52,10 @@ func ShowSearchPage(pages *tview.Pages) {
 	// We use the MainPage struct.
 	searchPage := SearchPage{
 		MainPage: MainPage{
-			Grid:           grid,
-			MangaListTable: table,
-			CurrentOffset:  0,
-			MaxOffset:      0,
+			Grid:          grid,
+			Table:         table,
+			CurrentOffset: 0,
+			MaxOffset:     0,
 		},
 		SearchForm: search,
 	}
@@ -65,7 +65,7 @@ func ShowSearchPage(pages *tview.Pages) {
 		AddCheckbox("Explicit Content?", false, nil).
 		AddButton("Search", func() { // Search button.
 			// Remove all current search results
-			searchPage.MangaListTable.Clear()
+			searchPage.Table.Clear()
 
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
@@ -73,7 +73,7 @@ func ShowSearchPage(pages *tview.Pages) {
 			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", searchTerm, exContent)
 
 			// Send focus to the search result table.
-			g.App.SetFocus(searchPage.MangaListTable)
+			g.App.SetFocus(searchPage.Table)
 		}).SetFocus(0) // Set focus to the title field.
 
 	// Set up input capture for the search page.

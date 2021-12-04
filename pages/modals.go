@@ -1,16 +1,12 @@
 package pages
 
-/*
-Modal Page shows the modal on top of the current page (does not switch to, only shows on top of).
-*/
-
 import (
 	"github.com/darylhjd/mangadesk/core"
 	"github.com/rivo/tview"
 )
 
-// OKModal : Convenience function to show an acknowledgement modal.
-func OKModal(m *core.MangaDesk, id, text string) *tview.Modal {
+// OKModal : Creates a new modal with an "OK" acknowledgement button.
+func OKModal(id, text string) *tview.Modal {
 	modal := tview.NewModal()
 
 	// Set modal attributes
@@ -18,7 +14,7 @@ func OKModal(m *core.MangaDesk, id, text string) *tview.Modal {
 		AddButtons([]string{"OK"}).
 		SetFocus(0).
 		SetDoneFunc(func(_ int, _ string) {
-			m.PageHolder.RemovePage(id)
+			core.App.PageHolder.RemovePage(id)
 		})
 
 	return modal

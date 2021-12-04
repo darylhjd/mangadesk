@@ -22,10 +22,10 @@ import (
 // List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
 func SetUniversalHandlers() {
 	// Enable mouse.
-	core.App.EnableMouse(true)
+	core.App.ViewApp.EnableMouse(true)
 
 	// Set keyboard captures
-	core.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	core.App.ViewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput()
@@ -40,11 +40,82 @@ func SetUniversalHandlers() {
 	})
 }
 
+// ctrlLInput : Handler for Ctrl+L input.
+// This input enables user to toggle login/logout.
+func ctrlLInput() {
+	// Do not allow pop up when on login screen.
+	if page, _ := core.App.PageHolder.GetFrontPage(); page == LoginPageID {
+		return
+	}
+
+	// Create the modal to prompt user confirmation.
+	var (
+		buttonFn func()
+		title    string
+	)
+
+	// This will decide the function of the modal by checking whether user is logged in or out.
+	switch core.DexClient.Auth.IsLoggedIn() {
+	case true: // Show LogoutModal
+		title = "Logout\nStored credentials will be deleted.\n\n"
+		buttonFn = func() { // Set the function.
+			// Attempt logout
+			if err := core.DexClient.Auth.Logout(); err != nil {
+				OKModal(pages, LoginLogoutFailureModalID, "Error logging out!")
+				return
+			}
+			// Remove the credentials file.
+			core.DeleteCredentials()
+			// Then we redirect the user to the guest main page
+			ShowMainPage(pages)
+		}
+	case false: // User wants to login.
+		title = "Login\n"
+		buttonFn = func() {
+			ShowLoginPage(pages)
+		}
+	}
+
+	// Create the modal for the user.
+	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
+		func(i int, label string) {
+			// If user confirms the modal.
+			if label == "Yes" {
+				buttonFn()
+			}
+			// We remove the modal from the page.
+			pages.RemovePage(LoginLogoutCfmModalID)
+		})
+}
+
+// ctrlKInput : Handler for Ctrl+K input.
+// This shows the help page to the user.
+func ctrlKInput() {
+	ShowHelpPage(pages)
+}
+
+// ctrlSInput : Handler for Ctrl+S input.
+// THis shows search page to the user.
+func ctrlSInput() {
+	// Do not allow when on login screen.
+	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+		return
+	}
+	ShowSearchPage(pages)
+}
+
+// ctrlCInput : Handler for Ctrl+C input.
+// This sends an interrupt signal to the application.
+func ctrlCInput() {
+	log.Println("ViewApp stopped by Ctrl-C interrupt.")
+	core.App.ViewApp.Stop()
+}
+
 // SetMainPageTableHandlers : Set input handler for main page table.
 // List of input captures : Ctrl+F. Ctrl+B
 func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string, exContent bool) {
 	// Pagination logic.
-	mp.MangaListTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	mp.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		changePage := false
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
@@ -72,7 +143,7 @@ func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp 
 				mp.SetUpLoggedTable(pages)
 			} else {
 				// Get titles
-				tableTitle := strings.SplitN(mp.MangaListTable.GetTitle(), ".", 2)[0] + "."
+				tableTitle := strings.SplitN(mp.Table.GetTitle(), ".", 2)[0] + "."
 				mp.SetUpGenericTable(pages, tableTitle, searchTitle, exContent)
 			}
 		}
@@ -143,7 +214,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
-			core.App.SetFocus(searchPage.MangaListTable)
+			core.App.SetFocus(searchPage.Table)
 		}
 		return event
 	})
@@ -159,81 +230,6 @@ func SetHelpPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 		}
 		return event
 	})
-}
-
-/*
-Keybinding functions.
-*/
-
-// ctrlCInput : Handler for Ctrl+C input.
-// This sends an interrupt signal to the application.
-func ctrlCInput() {
-	log.Println("ViewApp stopped by Ctrl-C interrupt.")
-	core.App.Stop()
-}
-
-// ctrlLInput : Handler for Ctrl+L input.
-// This input enables user to toggle login/logout.
-func ctrlLInput() {
-	// Do not allow pop up when on login screen.
-	if page, _ := core.PageHolder.GetFrontPage(); page == LoginPageID {
-		return
-	}
-
-	// Create the modal to prompt user confirmation.
-	var (
-		buttonFn func()
-		title    string
-	)
-
-	// This will decide the function of the modal by checking whether user is logged in or out.
-	switch core.DexClient.Auth.IsLoggedIn() {
-	case true: // Show LogoutModal
-		title = "Logout\nStored credentials will be deleted.\n\n"
-		buttonFn = func() { // Set the function.
-			// Attempt logout
-			if err := core.DexClient.Auth.Logout(); err != nil {
-				OKModal(pages, LoginLogoutFailureModalID, "Error logging out!")
-				return
-			}
-			// Remove the credentials file.
-			core.DeleteCredentials()
-			// Then we redirect the user to the guest main page
-			ShowMainPage(pages)
-		}
-	case false: // User wants to login.
-		title = "Login\n"
-		buttonFn = func() {
-			ShowLoginPage(pages)
-		}
-	}
-
-	// Create the modal for the user.
-	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
-		func(i int, label string) {
-			// If user confirms the modal.
-			if label == "Yes" {
-				buttonFn()
-			}
-			// We remove the modal from the page.
-			pages.RemovePage(LoginLogoutCfmModalID)
-		})
-}
-
-// ctrlKInput : Handler for Ctrl+K input.
-// This shows the help page to the user.
-func ctrlKInput() {
-	ShowHelpPage(pages)
-}
-
-// ctrlSInput : Handler for Ctrl+S input.
-// THis shows search page to the user.
-func ctrlSInput() {
-	// Do not allow when on login screen.
-	if page, _ := pages.GetFrontPage(); page == LoginPageID {
-		return
-	}
-	ShowSearchPage(pages)
 }
 
 // ctrlEInput : Handler for Ctrl+E input.

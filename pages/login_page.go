@@ -15,7 +15,7 @@ type LoginPage struct {
 }
 
 // NewLoginPage : Creates a new login page.
-func NewLoginPage(m *core.MangaDesk) *LoginPage {
+func NewLoginPage() *LoginPage {
 	// Create the LoginPage
 	loginPage := &LoginPage{}
 
@@ -34,11 +34,11 @@ func NewLoginPage(m *core.MangaDesk) *LoginPage {
 		AddPasswordField("Password", "", 0, '*', nil).
 		AddCheckbox("Remember Me", false, nil).
 		AddButton("Login", func() {
-			loginPage.attemptLogin(m)
+			loginPage.AttemptLogin()
 		}).
 		AddButton("Guest", func() { // Guest button
-			m.PageHolder.RemovePage(LoginPageID)
-			m.ShowMainPage()
+			core.App.PageHolder.RemovePage(LoginPageID)
+			core.App.ShowMainPage()
 		})
 
 	dimension := []int{0, 0, 0}
@@ -52,29 +52,29 @@ func NewLoginPage(m *core.MangaDesk) *LoginPage {
 	return loginPage
 }
 
-// attemptLogin : Attempts to log in with given form fields. If success, bring user to main page.
-func (f *LoginPage) attemptLogin(m *core.MangaDesk) {
-	form := f.Form
+// AttemptLogin : Attempts to log in with given form fields. If success, bring user to main page.
+func (p *LoginPage) AttemptLogin() {
+	form := p.Form
 
 	// Get username and password input.
-	u := form.GetFormItemByLabel("Username").(*tview.InputField).GetText()
-	p := form.GetFormItemByLabel("Password").(*tview.InputField).GetText()
+	user := form.GetFormItemByLabel("Username").(*tview.InputField).GetText()
+	pwd := form.GetFormItemByLabel("Password").(*tview.InputField).GetText()
 	remember := form.GetFormItemByLabel("Remember Me").(*tview.Checkbox).IsChecked()
 
 	// Attempt to log in to MangaDex API.
-	if err := m.Client.Auth.Login(u, p); err != nil {
-		modal := OKModal(m, LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
-		m.ShowModal(LoginLogoutFailureModalID, modal)
+	if err := core.App.Client.Auth.Login(user, pwd); err != nil {
+		modal := OKModal(LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
+		core.App.ShowModal(LoginLogoutFailureModalID, modal)
 		return
 	}
 
 	// Remember the user's login credentials if user wants it.
 	if remember {
-		if err := m.StoreCredentials(); err != nil {
-			log.Println(fmt.Sprintf("Error storing credentials: %s\n", err.Error()))
+		if err := core.App.StoreCredentials(); err != nil {
+			log.Println(fmt.Sprintf("Error storing credentials: %s", err.Error()))
 		}
 	}
 
-	m.PageHolder.RemovePage(LoginPageID) // Remove the login page as we no longer need it.
-	m.ShowMainPage()
+	core.App.PageHolder.RemovePage(LoginPageID) // Remove the login page as we no longer need it.
+	core.App.ShowMainPage()
 }
