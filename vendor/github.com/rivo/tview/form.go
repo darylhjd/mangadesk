@@ -550,7 +550,7 @@ func (f *Form) Draw(screen tcell.Screen) {
 // Focus is called by the application when the primitive receives focus.
 func (f *Form) Focus(delegate func(p Primitive)) {
 	if len(f.items)+len(f.buttons) == 0 {
-		f.hasFocus = true
+		f.Box.Focus(delegate)
 		return
 	}
 	f.hasFocus = false
@@ -588,17 +588,17 @@ func (f *Form) Focus(delegate func(p Primitive)) {
 	} else {
 		// We're selecting a button.
 		button := f.buttons[f.focusedElement-len(f.items)]
-		button.SetBlurFunc(handler)
+		button.SetExitFunc(handler)
 		delegate(button)
 	}
 }
 
 // HasFocus returns whether or not this primitive has focus.
 func (f *Form) HasFocus() bool {
-	if f.hasFocus {
+	if f.focusIndex() >= 0 {
 		return true
 	}
-	return f.focusIndex() >= 0
+	return f.Box.HasFocus()
 }
 
 // focusIndex returns the index of the currently focused item, counting form
@@ -621,10 +621,6 @@ func (f *Form) focusIndex() int {
 // MouseHandler returns the mouse handler for this primitive.
 func (f *Form) MouseHandler() func(action MouseAction, event *tcell.EventMouse, setFocus func(p Primitive)) (consumed bool, capture Primitive) {
 	return f.WrapMouseHandler(func(action MouseAction, event *tcell.EventMouse, setFocus func(p Primitive)) (consumed bool, capture Primitive) {
-		if !f.InRect(event.Position()) {
-			return false, nil
-		}
-
 		// At the end, update f.focusedElement and prepare current item/button.
 		defer func() {
 			if consumed {
@@ -632,7 +628,6 @@ func (f *Form) MouseHandler() func(action MouseAction, event *tcell.EventMouse, 
 				if index >= 0 {
 					f.focusedElement = index
 				}
-				f.Focus(setFocus)
 			}
 		}()
 
@@ -652,7 +647,7 @@ func (f *Form) MouseHandler() func(action MouseAction, event *tcell.EventMouse, 
 
 		// A mouse click anywhere else will return the focus to the last selected
 		// element.
-		if action == MouseLeftClick {
+		if action == MouseLeftClick && f.InRect(event.Position()) {
 			consumed = true
 		}
 

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -37,6 +38,7 @@ type devTty struct {
 	sig   chan os.Signal
 	cb    func()
 	stopQ chan struct{}
+	dev   string
 	wg    sync.WaitGroup
 	l     sync.Mutex
 }
@@ -50,7 +52,7 @@ func (tty *devTty) Write(b []byte) (int, error) {
 }
 
 func (tty *devTty) Close() error {
-	return nil
+	return tty.f.Close()
 }
 
 func (tty *devTty) Start() error {
@@ -67,10 +69,10 @@ func (tty *devTty) Start() error {
 	// we will have up to two separate file handles open on /dev/tty.  (Note that when
 	// using stdin/stdout instead of /dev/tty this problem is not observed.)
 	var err error
-	if tty.f, err = os.OpenFile("/dev/tty", os.O_RDWR, 0); err != nil {
+	if tty.f, err = os.OpenFile(tty.dev, os.O_RDWR, 0); err != nil {
 		return err
 	}
-	tty.fd = int(tty.of.Fd())
+	tty.fd = int(tty.f.Fd())
 
 	if !term.IsTerminal(tty.fd) {
 		return errors.New("device is not a terminal")
@@ -135,7 +137,23 @@ func (tty *devTty) Stop() error {
 }
 
 func (tty *devTty) WindowSize() (int, int, error) {
-	return term.GetSize(tty.fd)
+	w, h, err := term.GetSize(tty.fd)
+	if err != nil {
+		return 0, 0, err
+	}
+	if w == 0 {
+		w, _ = strconv.Atoi(os.Getenv("COLUMNS"))
+	}
+	if w == 0 {
+		w = 80 // default
+	}
+	if h == 0 {
+		h, _ = strconv.Atoi(os.Getenv("LINES"))
+	}
+	if h == 0 {
+		h = 25 // default
+	}
+	return w, h, nil
 }
 
 func (tty *devTty) NotifyResize(cb func()) {
@@ -144,12 +162,19 @@ func (tty *devTty) NotifyResize(cb func()) {
 	tty.l.Unlock()
 }
 
+// NewDevTty opens a /dev/tty based Tty.
 func NewDevTty() (Tty, error) {
+	return NewDevTtyFromDev("/dev/tty")
+}
+
+// NewDevTtyFromDev opens a tty device given a path.  This can be useful to bind to other nodes.
+func NewDevTtyFromDev(dev string) (Tty, error) {
 	tty := &devTty{
+		dev: dev,
 		sig: make(chan os.Signal),
 	}
 	var err error
-	if tty.of, err = os.OpenFile("/dev/tty", os.O_RDWR, 0); err != nil {
+	if tty.of, err = os.OpenFile(dev, os.O_RDWR, 0); err != nil {
 		return nil, err
 	}
 	tty.fd = int(tty.of.Fd())

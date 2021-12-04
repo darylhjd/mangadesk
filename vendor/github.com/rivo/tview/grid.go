@@ -250,12 +250,7 @@ func (g *Grid) Focus(delegate func(p Primitive)) {
 			return
 		}
 	}
-	g.hasFocus = true
-}
-
-// Blur is called when this primitive loses focus.
-func (g *Grid) Blur() {
-	g.hasFocus = false
+	g.Box.Focus(delegate)
 }
 
 // HasFocus returns whether or not this primitive has focus.
@@ -265,7 +260,7 @@ func (g *Grid) HasFocus() bool {
 			return true
 		}
 	}
-	return g.hasFocus
+	return g.Box.HasFocus()
 }
 
 // InputHandler returns the handler for this primitive.
@@ -412,9 +407,6 @@ func (g *Grid) Draw(screen tcell.Screen) {
 			row = g.rows[index]
 		}
 		if row > 0 {
-			if row < g.minHeight {
-				row = g.minHeight
-			}
 			continue // Not proportional. We already know the width.
 		} else if row == 0 {
 			row = 1
@@ -435,9 +427,6 @@ func (g *Grid) Draw(screen tcell.Screen) {
 			column = g.columns[index]
 		}
 		if column > 0 {
-			if column < g.minWidth {
-				column = g.minWidth
-			}
 			continue // Not proportional. We already know the height.
 		} else if column == 0 {
 			column = 1

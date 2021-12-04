@@ -1,35 +1,33 @@
 # mangodex
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/darylhjd/mangodex.svg)](https://pkg.go.dev/github.com/darylhjd/mangodex)
 
 Golang API wrapper for MangaDex v5's MVP API.
 
-Full documentation is found [here](https://api.mangadex.org/docs.html).
+Full API documentation is found [here](https://api.mangadex.org/docs.html).
 
-This API is still in Open Beta, so testing may not be complete. However, basic authentication has been tested.
+This branch contains only essential services, such as Manga searching and image downloading.
 
 ## Installation
-
-To install, do `go get -u github.com/darylhjd/mangodex`.
+To install, do `go get -u github.com/darylhjd/mangodex@essential`.
 
 ## Usage
-
 ```golang
 package main
 
 import (
 	"fmt"
-	"github.com/darylhjd/mangodex"
+	
+	m "github.com/darylhjd/mangodex@simple"
 )
 
 func main() {
 	// Create new client.
 	// Without logging in, you may not be able to access 
 	// all API functionality.
-	c := mangodex.NewDexClient()
+	c := m.NewDexClient()
 
 	// Login using your username and password.
-	err := c.Login("user", "password")
+	err := c.Auth.Login("user", "password")
 	if err != nil {
 		fmt.Println("Could not login!")
 	}
@@ -37,5 +35,4 @@ func main() {
 ```
 
 ## Contributing
-
-Rapid changes expected. Any contributions are welcome.
+Any contributions are welcome.
