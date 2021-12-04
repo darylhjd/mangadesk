@@ -204,9 +204,9 @@ func (p *MainPage) setGuestTable() {
 	params.Set("limit", strconv.Itoa(OffsetRange))
 	params.Set("offset", strconv.Itoa(p.CurrentOffset))
 	// If user wants explicit content.
-	ratings := []string{"safe", "suggestive", "erotica"}
+	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
 	if core.App.Config.ExplicitContent {
-		ratings = append(ratings, "pornographic")
+		ratings = append(ratings, mangodex.Porn)
 	}
 	for _, rating := range ratings {
 		params.Add("contentRating[]", rating)

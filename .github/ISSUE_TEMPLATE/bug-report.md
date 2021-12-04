@@ -1,9 +1,6 @@
 ---
-name: Bug Report 
-about: Submit a bug report. 
-title: "[BUG]"
-labels: bug 
-assignees: ''
+name: Bug Report about: Submit a bug report. title: "[BUG]"
+labels: bug assignees: ''
 
 ---
 

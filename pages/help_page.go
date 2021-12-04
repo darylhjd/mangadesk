@@ -1,19 +1,18 @@
 package pages
 
-/*
-Help Page shows the keybindings for the application.
-*/
-
 import (
 	"fmt"
 
 	"github.com/rivo/tview"
-
-	g "github.com/darylhjd/mangadesk/core"
 )
 
-// ShowHelpPage : Show the help page to the user.
-func ShowHelpPage(pages *tview.Pages) {
+// HelpPage : This struct contains the grid for the help page.
+type HelpPage struct {
+	Grid *tview.Grid
+}
+
+// NewHelpPage : Creates a new help page.
+func NewHelpPage() *HelpPage {
 	// Set up the help text.
 	helpText := "Keyboard Mappings\n" +
 		"-----------------------------\n\n" +
@@ -37,15 +36,12 @@ func ShowHelpPage(pages *tview.Pages) {
 		SetBorderColor(HelpPageBorderColor).
 		SetBorder(true)
 
-	// Create a new grid for the text view so we can align it to the center.
+	// Create a new grid for the text view, so we can align it to the center.
 	grid := tview.NewGrid().SetColumns(0, 0, 0, 0).SetRows(0, 0, 0, 0).
 		AddItem(help, 0, 0, 4, 4, 0, 0, false).
 		AddItem(help, 1, 1, 2, 2, 45, 100, false)
 
-	// Set up input capture for the help page.
-	SetHelpPageHandlers(pages, grid)
-
-	pages.AddPage(HelpPageID, grid, true, false)
-	g.App.SetFocus(grid)
-	pages.SwitchToPage(HelpPageID)
+	return &HelpPage{
+		Grid: grid,
+	}
 }

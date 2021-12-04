@@ -1,6 +1,7 @@
 # <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
 
-**<div align="center">Note: Repository is in maintenance mode. No new features will be worked on and will be postponed to a later date.</div>**
+**<div align="center">Note: Repository is in maintenance mode. No new features will be worked on and will be postponed
+to a later date.</div>**
 
 
 <p align="center">
@@ -50,7 +51,8 @@ $ go build
 
 ### Arch Linux
 
-Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
+Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (
+thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
 
 ```cmd
 $ paru -S mangadesk

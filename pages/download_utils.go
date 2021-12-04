@@ -18,7 +18,7 @@ import (
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/core"
+	"github.com/darylhjd/mangadesk/core"
 )
 
 // downloadChapters : Attempt to download pages
@@ -37,8 +37,8 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			mangaName, chapterName := generateChapterFolderNames(m, &chap)
 
 			// Get MangaDex@Home downloader for the chapterName.
-			downloader, err := g.DexClient.NewMDHomeClient(chap.ID, g.Conf.DownloadQuality,
-				chap.Attributes.Hash, g.Conf.ForcePort443)
+			downloader, err := core.DexClient.NewMDHomeClient(chap.ID, core.Conf.DownloadQuality,
+				chap.Attributes.Hash, core.Conf.ForcePort443)
 			if err != nil {
 				// If error getting downloader, we add this chapterName to the errorPages chapters list.
 				errorChaps = append(errorChaps,
@@ -48,7 +48,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 
 			// Create directory to store the downloaded chapters.
 			// It is stored in DOWNLOAD_FOLDER/MANGA_NAME/CHAPTER_FOLDER
-			chapterFolder := filepath.Join(g.Conf.DownloadDir, mangaName, chapterName)
+			chapterFolder := filepath.Join(core.Conf.DownloadDir, mangaName, chapterName)
 			if err = os.MkdirAll(chapterFolder, os.ModePerm); err != nil {
 				// If error creating folder to store this chapterName, we add this chapterName to errorPages chapters list.
 				errorChaps = append(errorChaps,
@@ -59,7 +59,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			// Get each page and save it.
 			// Note that the moment one page fails to download, the whole chapter is skipped.
 			pageFiles := chap.Attributes.Data
-			if g.Conf.DownloadQuality == "data-saver" {
+			if core.Conf.DownloadQuality == "data-saver" {
 				pageFiles = chap.Attributes.DataSaver
 			}
 			for pageNum, file := range pageFiles {
@@ -84,7 +84,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			}
 
 			// Check whether to also save as zip file type
-			if g.Conf.AsZip {
+			if core.Conf.AsZip {
 				err := saveAsZipFolder(chapterFolder)
 				if err != nil {
 					// If error saving zip folder
@@ -97,7 +97,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			}
 
 			// Update downloaded column.
-			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				dCell := tview.NewTableCell("Y").SetTextColor(MangaPageDownloadStatColor)
 				mangaPage.ChapterTable.SetCell(r, 2, dCell)
 			})
@@ -114,7 +114,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 				builder.WriteString(v + "\n")
 			}
 		}
-		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+		core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 			OKModal(pages, DownloadFinishedModalID, builder.String())
 		})
 	}(*mangaPage.Selected) // We pass the whole map as a value as we need to clear it later.
@@ -128,7 +128,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 
 // saveAsZipFolder : This function creates a zip folder to store a chapter download.
 func saveAsZipFolder(chapterFolder string) error {
-	zipFile, err := os.Create(fmt.Sprintf("%s.%s", chapterFolder, g.Conf.ZipType))
+	zipFile, err := os.Create(fmt.Sprintf("%s.%s", chapterFolder, core.Conf.ZipType))
 	if err != nil {
 		return err
 	}
@@ -183,25 +183,19 @@ func saveAsZipFolder(chapterFolder string) error {
 	})
 }
 
-// generateChapterFolderNames : Generate folder names for the chapter and manga.
-// Returns the name for the manga folder, then the name for the chapter folder.
-func generateChapterFolderNames(m *mangodex.Manga, c *mangodex.Chapter) (string, string) {
-	chapterNum := "-"
-	if c.Attributes.Chapter != nil {
-		chapterNum = *(c.Attributes.Chapter)
-	}
+// getDownloadFolder : Get the download folder for a manga's chapter.
+func getDownloadFolder(manga *mangodex.Manga, chapter *mangodex.Chapter) string {
+	mangaName := manga.GetTitle("en")
+	chapterName := fmt.Sprintf("Chapter%s [%s-%s] %s_%s",
+		chapter.GetChapterNum(), strings.ToUpper(chapter.Attributes.TranslatedLanguage), core.App.Config.DownloadQuality,
+		chapter.GetTitle(), strings.SplitN(chapter.ID, "-", 2)[0])
 
-	mangaName := m.Attributes.Title["en"]
-	// Use compound name to try to avoid collisions.
-	generatedName := fmt.Sprintf("Chapter%s_[%s-%s]_%s_%s",
-		chapterNum, strings.ToUpper(c.Attributes.TranslatedLanguage), g.Conf.DownloadQuality,
-		c.Attributes.Title, strings.SplitN(c.ID, "-", 2)[0])
+	folder := filepath.Join(core.App.Config.DownloadDir, mangaName, chapterName)
 
-	// Remove all invalid folder characters from folder name
-	restrictedChars := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\", "."}
-	for s := range restrictedChars {
-		mangaName = strings.ReplaceAll(mangaName, restrictedChars[s], "")
-		generatedName = strings.ReplaceAll(generatedName, restrictedChars[s], "")
+	// Remove invalid characters from the folder name
+	restricted := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\", "."}
+	for _, c := range restricted {
+		folder = strings.ReplaceAll(folder, c, "")
 	}
-	return mangaName, generatedName
+	return folder
 }
