@@ -37,7 +37,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			mangaName, chapterName := generateChapterFolderNames(m, &chap)
 
 			// Get MangaDex@Home downloader for the chapterName.
-			downloader, err := g.Dex.NewMDHomeClient(chap.ID, g.Conf.DownloadQuality,
+			downloader, err := g.DexClient.NewMDHomeClient(chap.ID, g.Conf.DownloadQuality,
 				chap.Attributes.Hash, g.Conf.ForcePort443)
 			if err != nil {
 				// If error getting downloader, we add this chapterName to the errorPages chapters list.

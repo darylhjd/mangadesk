@@ -180,12 +180,12 @@ func ctrlLInput(pages *tview.Pages) {
 	)
 
 	// This will decide the function of the modal by checking whether user is logged in or out.
-	switch g.Dex.IsLoggedIn() {
+	switch g.DexClient.IsLoggedIn() {
 	case true: // User wants to logout.
 		title = "Logout\nStored credentials will be deleted.\n\n"
 		buttonFn = func() { // Set the function.
 			// Attempt logout
-			if err := g.Dex.Logout(); err != nil {
+			if err := g.DexClient.Logout(); err != nil {
 				OKModal(pages, g.LoginLogoutFailureModalID, "Error logging out!")
 				return
 			}

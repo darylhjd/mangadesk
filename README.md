@@ -12,7 +12,7 @@
 
 <p align="center">
   Download manga directly from your terminal to read!<br><br>
-  <img src="assets/demo.gif" alt="demo.gif">
+  <img src=".github/assets/demo.gif" alt="demo.gif">
 </p>
 
 <p align="center">

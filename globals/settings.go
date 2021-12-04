@@ -5,24 +5,23 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
-const (
-	CredFileName   = "credentials"
-	ConfigFileName = "config.json"
-)
-
-// The following are defaults for user configuration.
-
+// File paths for settings and configuration.
 var (
-	DownloadDir     = "downloads"
-	Languages       = []string{"en"}
-	DownloadQuality = "data"
-	ZipType         = "zip"
+	credFilePath   = filepath.Join(GetConfDir(), "credentials")
+	configFilePath = filepath.Join(GetConfDir(), "config.json")
 )
 
-// UserConfig : This struct contains information for user configurable settings.
+// Defaults for user configuration.
+var (
+	downloadDir     = "downloads"
+	languages       = []string{"en"}
+	downloadQuality = "data"
+	zipType         = "zip"
+)
+
+// UserConfig : This struct contains user configurable settings.
 type UserConfig struct {
 	DownloadDir     string   `json:"downloadDir"`
 	Languages       []string `json:"languages"`
@@ -32,31 +31,33 @@ type UserConfig struct {
 	ZipType         string   `json:"zipType"`
 }
 
+// LoadCredentials : Load saved credentials if there is. Else, return error.
+func LoadCredentials() ([]byte, error) {
+	return ioutil.ReadFile(credFilePath)
+}
+
 // LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
 func LoadUserConfiguration() error {
-	// Path to user configuration file.
-	confPath := filepath.Join(GetConfDir(), ConfigFileName)
+	// Set the current configuration to empty one.
+	Conf = UserConfig{}
 
 	// Attempt to read user configuration file.
-	if confBytes, err := ioutil.ReadFile(confPath); err != nil { // If error, assume file does not exist.
-		// Set defaults and save new configuration.
-		SetDefaultConfigurations()
-		return SaveConfiguration(confPath)
-	} else if err = json.Unmarshal(confBytes, &Conf); err != nil { // If no error reading, then unmarshal.
-		return err
+	if confBytes, err := ioutil.ReadFile(configFilePath); err == nil {
+		// If no error, attempt unmarshal
+		err = json.Unmarshal(confBytes, &Conf)
+		if err != nil { // Return error if cannot unmarshal.
+			return err
+		}
 	}
-
-	// Check for defaults
-	SetDefaultConfigurations()
-	// Expand any environment variables in the user provided string
-	Conf.DownloadDir = os.ExpandEnv(Conf.DownloadDir)
+	// Set defaults
+	SanitiseConfigurations()
 
 	// Save the config file.
-	return SaveConfiguration(confPath)
+	return SaveConfiguration()
 }
 
 // SaveConfiguration : Save user configuration.
-func SaveConfiguration(path string) error {
+func SaveConfiguration() error {
 	// Format JSON properly for user.
 	confBytes, err := json.MarshalIndent(&Conf, "", "\t")
 	if err != nil {
@@ -67,27 +68,29 @@ func SaveConfiguration(path string) error {
 	if err = os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, confBytes, os.ModePerm)
+	return ioutil.WriteFile(configFilePath, confBytes, os.ModePerm)
 }
 
-// SetDefaultConfigurations : Sets default configurations.
-func SetDefaultConfigurations() {
-	// Set default download directory if not set.
+// SanitiseConfigurations : Sanitises the configuration to ensure validated fields.
+func SanitiseConfigurations() {
+	// Download Directory
 	if Conf.DownloadDir == "" {
-		Conf.DownloadDir = DownloadDir
+		Conf.DownloadDir = downloadDir
 	}
+	// Expand any environment variables in the path.
+	Conf.DownloadDir = os.ExpandEnv(Conf.DownloadDir)
 
-	// Set default language if not set.
+	// Languages
 	if len(Conf.Languages) == 0 {
-		Conf.Languages = Languages
+		Conf.Languages = languages
 	}
 
 	// ForcePort443 is false by default.
 
-	// Set default download quality.
+	// Download Quality
 	// Will automatically set to `data` if invalid or no download quality specified.
 	if Conf.DownloadQuality != "data" && Conf.DownloadQuality != "data-saver" {
-		Conf.DownloadQuality = DownloadQuality
+		Conf.DownloadQuality = downloadQuality
 	}
 
 	// AsZip is false by default.
@@ -95,34 +98,23 @@ func SetDefaultConfigurations() {
 	// Set default zip download type. Can be `zip` or `cbz`.
 	// Any other invalid entries will default to `zip`.
 	if Conf.ZipType != "zip" && Conf.ZipType != "cbz" {
-		Conf.ZipType = ZipType
+		Conf.ZipType = zipType
 	}
 }
 
 // GetConfDir : Find the operating system and determine the configuration directory for the application.
 func GetConfDir() string {
-	directory := "mangadesk"
+	appDir := "mangadesk"
 
-	// initialise empty variable here so can be modified below
-	UsrDir := ""
-
-	// Looks up XDG_CONFIG_HOME in the environment to check for system set config directory.
-	// Supposedly, Linux, BSD, and apparently MacOS uses this variable.
-	if configDir, ok := os.LookupEnv("XDG_CONFIG_HOME"); ok {
-		UsrDir = filepath.Join(configDir, directory)
-	} else {
-		switch runtime.GOOS {
-		case "linux", "freebsd":
-			UsrDir = filepath.Join(os.Getenv("HOME"), ".config", directory)
-		case "darwin":
-			UsrDir = filepath.Join(os.Getenv("HOME"), "Library", "Preferences", directory)
-		case "windows":
-			// LOCALAPPDATA always available on Windows environments I believe
-			UsrDir = filepath.Join(os.Getenv("LOCALAPPDATA"), directory)
-		default:
-			// Save in `usr` folder in current directory which the application is run from.
-			UsrDir = "usr"
+	// Get the default configuration appDir for the OS.
+	configDir, err := os.UserConfigDir()
+	if err != nil { // If there is an error, then we use the home appDir.
+		configDir, err = os.UserHomeDir()
+		if err != nil { // If still fail, then we use `usr` folder in current appDir.
+			configDir = "usr"
 		}
 	}
-	return UsrDir
+
+	// Add the app directory to the path.
+	return filepath.Join(configDir, appDir)
 }

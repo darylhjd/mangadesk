@@ -133,7 +133,7 @@ CheckRelationshipLoop:
 			if r.ID == "" {
 				break CheckRelationshipLoop
 			}
-			if a, err := g.Dex.GetAuthor(r.ID); err != nil {
+			if a, err := g.DexClient.GetAuthor(r.ID); err != nil {
 				author = "?"
 			} else {
 				author = a.Data.Attributes.Name
@@ -255,7 +255,7 @@ GetAllChapterLoop:
 			return nil, false
 		default:
 			params.Set("offset", strconv.Itoa(offset))
-			chapterList, err := g.Dex.MangaFeed(m.ID, params)
+			chapterList, err := g.DexClient.MangaFeed(m.ID, params)
 			if err != nil {
 				// If error getting chapters for the manga, we tell the user so through a modal.
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
@@ -278,7 +278,7 @@ GetAllChapterLoop:
 // NOTE: This is run in a GOROUTINE. Drawing will require QueueUpdateDraw.
 func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, chapters *[]mangodex.Chapter) {
 	// Check for manga read markers.
-	if !g.Dex.IsLoggedIn() { // If user is not logged in.
+	if !g.DexClient.IsLoggedIn() { // If user is not logged in.
 		// We inform user to log in to track read status.
 		// Split the message into 2 rows.
 		rSCell := tview.NewTableCell("Not logged in!").SetTextColor(g.MangaPageReadStatColor).SetSelectable(false)
@@ -295,7 +295,7 @@ func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, 
 	case <-ctx.Done():
 		return
 	default:
-		chapReadMarkerResp, err := g.Dex.MangaReadMarkers(mangaID)
+		chapReadMarkerResp, err := g.DexClient.MangaReadMarkers(mangaID)
 		if err != nil { // If error getting read markers, just put a error message on the column.
 			readStatus := "API Error!"
 			g.App.QueueUpdateDraw(func() {
@@ -343,7 +343,7 @@ func (mp *MangaPage) SetChapterScanGroup(ctx context.Context, chapters *[]mangod
 					if name, ok := groups[groupId]; ok {
 						group = name
 					} else {
-						sgr, err := g.Dex.ViewScanGroup(groupId)
+						sgr, err := g.DexClient.ViewScanGroup(groupId)
 						if err != nil {
 							group = "API Error!"
 							g.App.QueueUpdateDraw(func() {

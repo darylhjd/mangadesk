@@ -61,7 +61,7 @@ func attemptLogin(pages *tview.Pages, form *tview.Form) bool {
 	remember := form.GetFormItemByLabel("Remember Me").(*tview.Checkbox).IsChecked()
 
 	// Attempt to login to MangaDex API.
-	if err := g.Dex.Login(u, p); err != nil {
+	if err := g.DexClient.Login(u, p); err != nil {
 		// If there was error during login, we create a Modal to tell the user that the login failed.
 		OKModal(pages, g.LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
 		return false
@@ -78,5 +78,5 @@ func storeLoginDetails() bool {
 	if err := os.MkdirAll(g.GetConfDir(), os.ModePerm); err != nil {
 		return false
 	}
-	return ioutil.WriteFile(filepath.Join(g.GetConfDir(), g.CredFileName), []byte(g.Dex.RefreshToken), os.ModePerm) != nil
+	return ioutil.WriteFile(filepath.Join(g.GetConfDir(), g.CredFileName), []byte(g.DexClient.RefreshToken), os.ModePerm) != nil
 }

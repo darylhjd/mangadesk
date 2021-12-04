@@ -65,7 +65,7 @@ func ShowMainPage(pages *tview.Pages) {
 	}
 
 	// Decide what to show for the main page.
-	if g.Dex.IsLoggedIn() {
+	if g.DexClient.IsLoggedIn() {
 		mainPage.LoggedPage = true
 		mainPage.SetUpLoggedPage(pages)
 	} else {
@@ -82,7 +82,7 @@ func ShowMainPage(pages *tview.Pages) {
 func (mp *MainPage) SetUpLoggedPage(pages *tview.Pages) {
 	// Get user information
 	username := "?"
-	if u, err := g.Dex.GetLoggedUser(); err == nil {
+	if u, err := g.DexClient.GetLoggedUser(); err == nil {
 		username = u.Data.Attributes.Username
 	}
 	welcome := "Welcome to MangaDex"
@@ -144,7 +144,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 		case <-ctx.Done():
 			return
 		default:
-			mangaList, err = g.Dex.GetUserFollowedMangaList(g.OffsetRange, mp.CurrentOffset)
+			mangaList, err = g.DexClient.GetUserFollowedMangaList(g.OffsetRange, mp.CurrentOffset)
 			if err != nil {
 				g.App.QueueUpdateDraw(func() {
 					OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
@@ -280,7 +280,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 		case <-ctx.Done():
 			return
 		default:
-			mangaList, err = g.Dex.MangaList(params)
+			mangaList, err = g.DexClient.MangaList(params)
 			if err != nil {
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 					OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")

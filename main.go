@@ -2,35 +2,33 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	"github.com/darylhjd/mangadesk/globals"
 	p "github.com/darylhjd/mangadesk/pages"
 )
 
 // Start the program.
 func main() {
 	// Load user configuration.
-	if err := g.LoadUserConfiguration(); err != nil {
-		fmt.Println("Unable to read configuration file. Is it set correctly?")
+	if err := globals.LoadUserConfiguration(); err != nil {
+		fmt.Println("Unable to read configuration file. Is it formatted correctly?")
 		fmt.Println("If in doubt, delete the configuration file to start over!\n\nDetails:")
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
-	// Create new pages holder.
+	// Create a new page holder.
 	pages := tview.NewPages()
 
-	// Set required input captures that are valid for the whole app.
+	// Set input captures that are valid for the whole app.
 	p.SetUniversalHandlers(pages)
 
 	// Check whether the user is remembered. If they are, then load credentials into the client and refresh token.
-	if err := CheckAuth(); err != nil {
+	if err := RestoreSession(); err != nil {
 		// Prompt login if unable to read stored credentials.
 		p.ShowLoginPage(pages)
 	} else {
@@ -39,27 +37,28 @@ func main() {
 	}
 
 	// Run the app. SetRoot also calls SetFocus on the primitive.
-	if err := g.App.SetRoot(pages, true).Run(); err != nil {
+	if err := globals.App.SetRoot(pages, true).Run(); err != nil {
 		panic(err)
 	}
 }
 
-// CheckAuth : Check if the user's credentials have been stored before.
+// RestoreSession : Check if the user's credentials have been stored before.
 // If they are, then read it, and attempt to refresh the token.
 // Will return error if any steps fail (no stored credentials, authentication failed).
-func CheckAuth() error {
+func RestoreSession() error {
 	// Try to read stored credential file.
-	content, err := ioutil.ReadFile(filepath.Join(g.GetConfDir(), g.CredFileName))
-	if err != nil { // If error, then file does not exist.
+	content, err := globals.LoadCredentials()
+	if err != nil { // If error, then user was not originally logged in.
+		fmt.Println("No past session, using Guest account...")
+		time.Sleep(time.Millisecond * 750)
 		return err
 	}
 
-	fmt.Println("Welcome back!")
-	fmt.Println("Restoring session...")
-	g.Dex.RefreshToken = string(content) // We set the stored refresh token.
+	fmt.Println("Attempting session restore...")
+	globals.DexClient.Auth.SetRefreshToken(string(content)) // We set the stored refresh token.
 
-	// Do a refresh of the token to keep it up to date.
-	if err = g.Dex.RefreshSessionToken(); err != nil {
+	// Do a refresh of the token to keep it up to date. If the token has already expired, user needs to log in again.
+	if err = globals.DexClient.Auth.RefreshSessionToken(); err != nil {
 		fmt.Println("Session expired. Please login again.")
 		time.Sleep(time.Millisecond * 750)
 		return err
