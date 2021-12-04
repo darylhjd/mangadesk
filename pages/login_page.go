@@ -1,82 +1,80 @@
 package pages
 
-/*
-Login Page shows the form for the user to login or to continue as guest.
-*/
-
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
+	"fmt"
 	"github.com/rivo/tview"
+	"log"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	"github.com/darylhjd/mangadesk/core"
 )
 
-// ShowLoginPage : Show login page.
-func ShowLoginPage(pages *tview.Pages) {
-	// Create the form.
+// LoginPage : This struct contains the grid and form for the login page.
+type LoginPage struct {
+	Grid *tview.Grid
+	Form *tview.Form
+}
+
+// NewLoginPage : Creates a new login page.
+func NewLoginPage(m *core.MangaDesk) *LoginPage {
+	// Create the LoginPage
+	loginPage := &LoginPage{}
+
 	form := tview.NewForm()
+
 	// Set form attributes.
 	form.SetButtonsAlign(tview.AlignCenter).
-		SetLabelColor(g.LoginFormLabelColor).
+		SetLabelColor(LoginFormLabelColor).
 		SetTitle("Login to MangaDex").
-		SetTitleColor(g.LoginPageTitleColor).
+		SetTitleColor(LoginPageTitleColor).
 		SetBorder(true).
-		SetBorderColor(g.LoginFormBorderColor)
+		SetBorderColor(LoginFormBorderColor)
 
 	// Add form fields.
 	form.AddInputField("Username", "", 0, nil, nil).
 		AddPasswordField("Password", "", 0, '*', nil).
 		AddCheckbox("Remember Me", false, nil).
 		AddButton("Login", func() {
-			// Attempt login.
-			if attemptLogin(pages, form) {
-				// If we login successfully
-				pages.RemovePage(g.LoginPageID) // Remove the login page as we no longer need it.
-				ShowMainPage(pages)
-			}
+			loginPage.attemptLogin(m)
 		}).
 		AddButton("Guest", func() { // Guest button
-			pages.RemovePage(g.LoginPageID)
-			ShowMainPage(pages)
+			m.PageHolder.RemovePage(LoginPageID)
+			m.ShowMainPage()
 		})
 
-	// Create a new grid for the form. This is to align the form to the centre.
-	grid := tview.NewGrid().SetColumns(0, 0, 0).SetRows(0, 0, 0)
+	dimension := []int{0, 0, 0}
+	grid := NewGrid(dimension, dimension)
+
 	grid.AddItem(form, 0, 0, 3, 3, 0, 0, true).
 		AddItem(form, 1, 1, 1, 1, 32, 70, true)
 
-	pages.AddPage(g.LoginPageID, grid, true, false)
-	g.App.SetFocus(grid)
-	pages.SwitchToPage(g.LoginPageID)
+	loginPage.Grid = grid
+	loginPage.Form = form
+	return loginPage
 }
 
-// attemptLogin : Attempts to login to MangaDex API with given form fields.
-func attemptLogin(pages *tview.Pages, form *tview.Form) bool {
+// attemptLogin : Attempts to log in with given form fields. If success, bring user to main page.
+func (f *LoginPage) attemptLogin(m *core.MangaDesk) {
+	form := f.Form
+
 	// Get username and password input.
 	u := form.GetFormItemByLabel("Username").(*tview.InputField).GetText()
 	p := form.GetFormItemByLabel("Password").(*tview.InputField).GetText()
 	remember := form.GetFormItemByLabel("Remember Me").(*tview.Checkbox).IsChecked()
 
-	// Attempt to login to MangaDex API.
-	if err := g.DexClient.Login(u, p); err != nil {
-		// If there was error during login, we create a Modal to tell the user that the login failed.
-		OKModal(pages, g.LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
-		return false
-	} else if remember && storeLoginDetails() { // Remember the user's login credentials if user wants it.
-		// Error when storing credentials.
-		OKModal(pages, g.StoreCredentialErrorModalID, "Error storing credentials.")
+	// Attempt to log in to MangaDex API.
+	if err := m.Client.Auth.Login(u, p); err != nil {
+		modal := OKModal(m, LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
+		m.ShowModal(LoginLogoutFailureModalID, modal)
+		return
 	}
-	return true
-}
 
-// storeLoginDetails : Store the refresh token after logging in successfully if user wants to.
-func storeLoginDetails() bool {
-	// Store user credentials in `usr` folder. This is not (and should not be) changeable!
-	if err := os.MkdirAll(g.GetConfDir(), os.ModePerm); err != nil {
-		return false
+	// Remember the user's login credentials if user wants it.
+	if remember {
+		if err := m.StoreCredentials(); err != nil {
+			log.Println(fmt.Sprintf("Error storing credentials: %s\n", err.Error()))
+		}
 	}
-	return ioutil.WriteFile(filepath.Join(g.GetConfDir(), g.CredFileName), []byte(g.DexClient.RefreshToken), os.ModePerm) != nil
+
+	m.PageHolder.RemovePage(LoginPageID) // Remove the login page as we no longer need it.
+	m.ShowMainPage()
 }

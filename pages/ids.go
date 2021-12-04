@@ -1,4 +1,4 @@
-package globals
+package pages
 
 const (
 	LoginPageID  = "login_page" // Page IDs

@@ -1,4 +1,4 @@
-package globals
+package pages
 
 import "github.com/gdamore/tcell/v2"
 

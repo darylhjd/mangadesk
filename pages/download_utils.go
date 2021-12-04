@@ -18,7 +18,7 @@ import (
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	g "github.com/darylhjd/mangadesk/core"
 )
 
 // downloadChapters : Attempt to download pages
@@ -98,7 +98,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 
 			// Update downloaded column.
 			g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				dCell := tview.NewTableCell("Y").SetTextColor(g.MangaPageDownloadStatColor)
+				dCell := tview.NewTableCell("Y").SetTextColor(MangaPageDownloadStatColor)
 				mangaPage.ChapterTable.SetCell(r, 2, dCell)
 			})
 		}
@@ -115,7 +115,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			}
 		}
 		g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			OKModal(pages, g.DownloadFinishedModalID, builder.String())
+			OKModal(pages, DownloadFinishedModalID, builder.String())
 		})
 	}(*mangaPage.Selected) // We pass the whole map as a value as we need to clear it later.
 

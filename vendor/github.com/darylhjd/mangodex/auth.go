@@ -115,6 +115,11 @@ func (s *AuthService) IsLoggedIn() bool {
 	return s.client.header.Get("Authorization") != ""
 }
 
+// GetRefreshToken : Get the current refresh token of the client.
+func (s *AuthService) GetRefreshToken() string {
+	return s.client.refreshToken
+}
+
 // SetRefreshToken : Set the refresh token for the client.
 func (s *AuthService) SetRefreshToken(refreshToken string) {
 	s.client.refreshToken = refreshToken

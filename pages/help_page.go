@@ -9,7 +9,7 @@ import (
 
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	g "github.com/darylhjd/mangadesk/core"
 )
 
 // ShowHelpPage : Show the help page to the user.
@@ -34,7 +34,7 @@ func ShowHelpPage(pages *tview.Pages) {
 	// Set TextView attributes.
 	help.SetText(helpText).
 		SetTextAlign(tview.AlignCenter).
-		SetBorderColor(g.HelpPageBorderColor).
+		SetBorderColor(HelpPageBorderColor).
 		SetBorder(true)
 
 	// Create a new grid for the text view so we can align it to the center.
@@ -45,7 +45,7 @@ func ShowHelpPage(pages *tview.Pages) {
 	// Set up input capture for the help page.
 	SetHelpPageHandlers(pages, grid)
 
-	pages.AddPage(g.HelpPageID, grid, true, false)
+	pages.AddPage(HelpPageID, grid, true, false)
 	g.App.SetFocus(grid)
-	pages.SwitchToPage(g.HelpPageID)
+	pages.SwitchToPage(HelpPageID)
 }

@@ -8,34 +8,35 @@ The 2nd section of this page contains the logic for keybindings.
 
 import (
 	"context"
-	"os"
-	"path/filepath"
+	"log"
 	"strings"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	"github.com/darylhjd/mangadesk/core"
 )
 
-// SetUniversalHandlers : Set input handlers for the app.
+// SetUniversalHandlers : Set input handlers for the core.
 // List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
-func SetUniversalHandlers(pages *tview.Pages) {
+func SetUniversalHandlers() {
 	// Enable mouse.
-	g.App.EnableMouse(true)
+	core.App.EnableMouse(true)
 
 	// Set keyboard captures
-	g.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	core.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
-			ctrlLInput(pages)
+			ctrlLInput()
 		case tcell.KeyCtrlK: // Help page.
-			ctrlKInput(pages)
+			ctrlKInput()
 		case tcell.KeyCtrlS: // Search page.
-			ctrlSInput(pages)
+			ctrlSInput()
+		case tcell.KeyCtrlC: // Ctrl-C interrupt.
+			ctrlCInput()
 		}
-		return event
+		return event // Forward the event to the actual current primitive.
 	})
 }
 
@@ -47,18 +48,18 @@ func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp 
 		changePage := false
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			if mp.CurrentOffset+g.OffsetRange >= mp.MaxOffset {
-				OKModal(pages, g.OffsetErrorModalID, "No more results to show.")
+			if mp.CurrentOffset+core.OffsetRange >= mp.MaxOffset {
+				OKModal(pages, OffsetErrorModalID, "No more results to show.")
 				break
 			}
-			mp.CurrentOffset += g.OffsetRange
+			mp.CurrentOffset += core.OffsetRange
 			changePage = true
 		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
 			if mp.CurrentOffset == 0 {
-				OKModal(pages, g.OffsetErrorModalID, "Already on first page.")
+				OKModal(pages, OffsetErrorModalID, "Already on first page.")
 				break
 			}
-			mp.CurrentOffset -= g.OffsetRange
+			mp.CurrentOffset -= core.OffsetRange
 			if mp.CurrentOffset < 0 {
 				mp.CurrentOffset = 0
 			}
@@ -85,7 +86,7 @@ func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *t
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // User wants to go back.
-			pages.RemovePage(g.MangaPageID)
+			pages.RemovePage(MangaPageID)
 			cancel()
 		}
 		return event
@@ -102,13 +103,13 @@ func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, m *mang
 			(*mangaPage.Selected)[row] = struct{}{}
 		}
 		// Show modal to confirm download.
-		ShowModal(pages, g.DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
+		ShowModal(pages, DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
 			func(i int, label string) {
 				if label == "Yes" {
 					// If user confirms to download, then we download the chapters.
 					downloadChapters(pages, mangaPage, m, chaps)
 				}
-				pages.RemovePage(g.DownloadChaptersModalID)
+				pages.RemovePage(DownloadChaptersModalID)
 			})
 	})
 
@@ -131,9 +132,9 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	searchPage.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
-			pages.RemovePage(g.SearchPageID)
+			pages.RemovePage(SearchPageID)
 		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
-			g.App.SetFocus(searchPage.SearchForm)
+			core.App.SetFocus(searchPage.SearchForm)
 		}
 		return event
 	})
@@ -142,7 +143,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
-			g.App.SetFocus(searchPage.MangaListTable)
+			core.App.SetFocus(searchPage.MangaListTable)
 		}
 		return event
 	})
@@ -154,22 +155,28 @@ func SetHelpPageHandlers(pages *tview.Pages, grid *tview.Grid) {
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Help Page.
-			pages.RemovePage(g.HelpPageID)
+			pages.RemovePage(HelpPageID)
 		}
 		return event
 	})
 }
 
 /*
-It should be good design (based on what I know anyway) to not have overlapping input handlers for
-different screens. As such, we try to only have one action for each input.
+Keybinding functions.
 */
+
+// ctrlCInput : Handler for Ctrl+C input.
+// This sends an interrupt signal to the application.
+func ctrlCInput() {
+	log.Println("ViewApp stopped by Ctrl-C interrupt.")
+	core.App.Stop()
+}
 
 // ctrlLInput : Handler for Ctrl+L input.
 // This input enables user to toggle login/logout.
-func ctrlLInput(pages *tview.Pages) {
+func ctrlLInput() {
 	// Do not allow pop up when on login screen.
-	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
+	if page, _ := core.PageHolder.GetFrontPage(); page == LoginPageID {
 		return
 	}
 
@@ -180,17 +187,17 @@ func ctrlLInput(pages *tview.Pages) {
 	)
 
 	// This will decide the function of the modal by checking whether user is logged in or out.
-	switch g.DexClient.IsLoggedIn() {
-	case true: // User wants to logout.
+	switch core.DexClient.Auth.IsLoggedIn() {
+	case true: // Show LogoutModal
 		title = "Logout\nStored credentials will be deleted.\n\n"
 		buttonFn = func() { // Set the function.
 			// Attempt logout
-			if err := g.DexClient.Logout(); err != nil {
-				OKModal(pages, g.LoginLogoutFailureModalID, "Error logging out!")
+			if err := core.DexClient.Auth.Logout(); err != nil {
+				OKModal(pages, LoginLogoutFailureModalID, "Error logging out!")
 				return
 			}
-			// Remove the credentials file, but we ignore errors.
-			_ = os.Remove(filepath.Join(g.GetConfDir(), g.CredFileName))
+			// Remove the credentials file.
+			core.DeleteCredentials()
 			// Then we redirect the user to the guest main page
 			ShowMainPage(pages)
 		}
@@ -202,28 +209,28 @@ func ctrlLInput(pages *tview.Pages) {
 	}
 
 	// Create the modal for the user.
-	ShowModal(pages, g.LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
+	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
 		func(i int, label string) {
 			// If user confirms the modal.
 			if label == "Yes" {
 				buttonFn()
 			}
 			// We remove the modal from the page.
-			pages.RemovePage(g.LoginLogoutCfmModalID)
+			pages.RemovePage(LoginLogoutCfmModalID)
 		})
 }
 
 // ctrlKInput : Handler for Ctrl+K input.
 // This shows the help page to the user.
-func ctrlKInput(pages *tview.Pages) {
+func ctrlKInput() {
 	ShowHelpPage(pages)
 }
 
 // ctrlSInput : Handler for Ctrl+S input.
 // THis shows search page to the user.
-func ctrlSInput(pages *tview.Pages) {
+func ctrlSInput() {
 	// Do not allow when on login screen.
-	if page, _ := pages.GetFrontPage(); page == g.LoginPageID {
+	if page, _ := pages.GetFrontPage(); page == LoginPageID {
 		return
 	}
 	ShowSearchPage(pages)

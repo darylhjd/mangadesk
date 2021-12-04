@@ -19,7 +19,7 @@ import (
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	g "github.com/darylhjd/mangadesk/core"
 )
 
 type MainPage struct {
@@ -40,8 +40,8 @@ func ShowMainPage(pages *tview.Pages) {
 	}
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes.
-	grid.SetTitleColor(g.MainPageGridTitleColor).
-		SetBorderColor(g.MainPageGridBorderColor).
+	grid.SetTitleColor(MainPageGridTitleColor).
+		SetBorderColor(MainPageGridBorderColor).
 		SetBorder(true)
 
 	// Create the base main table.
@@ -49,8 +49,8 @@ func ShowMainPage(pages *tview.Pages) {
 	// Set table attributes
 	table.SetSelectable(true, false).
 		SetSeparator('|').
-		SetBordersColor(g.MainPageTableBorderColor).
-		SetTitleColor(g.MainPageTableTitleColor).
+		SetBordersColor(MainPageTableBorderColor).
+		SetTitleColor(MainPageTableTitleColor).
 		SetBorder(true)
 
 	// Add the table to the grid. Table spans the whole page.
@@ -72,9 +72,9 @@ func ShowMainPage(pages *tview.Pages) {
 		mainPage.SetUpGenericPage(pages, "Welcome to MangaDex, [red]Guest!", "Popular Manga.")
 	}
 
-	pages.AddPage(g.MainPageID, grid, true, false)
+	pages.AddPage(MainPageID, grid, true, false)
 	g.App.SetFocus(grid)
-	pages.SwitchToPage(g.MainPageID)
+	pages.SwitchToPage(MainPageID)
 }
 
 // SetUpLoggedPage : Readies the MainPage to be a logged page.
@@ -106,11 +106,11 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 
 	mangaTitleHeader := tview.NewTableCell("Title").
 		SetAlign(tview.AlignCenter).
-		SetTextColor(g.LoggedMainPageTitleColor).
+		SetTextColor(LoggedMainPageTitleColor).
 		SetSelectable(false)
 	pubStatusHeader := tview.NewTableCell("Pub. Status").
 		SetAlign(tview.AlignLeft).
-		SetTextColor(g.LoggedMainPagePubStatusColor).
+		SetTextColor(LoggedMainPagePubStatusColor).
 		SetSelectable(false)
 	mp.MangaListTable.SetCell(0, 0, mangaTitleHeader).
 		SetCell(0, 1, pubStatusHeader).
@@ -147,7 +147,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 			mangaList, err = g.DexClient.GetUserFollowedMangaList(g.OffsetRange, mp.CurrentOffset)
 			if err != nil {
 				g.App.QueueUpdateDraw(func() {
-					OKModal(pages, g.GenericAPIErrorModalID, "Error loading followed manga.")
+					OKModal(pages, GenericAPIErrorModalID, "Error loading followed manga.")
 				})
 				return
 			} else if len(mangaList.Data) == 0 {
@@ -174,7 +174,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 			default:
 				// Manga title cell.
 				mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", mr.Attributes.Title["en"])).
-					SetMaxWidth(50).SetTextColor(g.LoggedMainPageTitleColor)
+					SetMaxWidth(50).SetTextColor(LoggedMainPageTitleColor)
 
 				// Pub status cell.
 				status := "-"
@@ -182,7 +182,7 @@ func (mp *MainPage) SetUpLoggedTable(pages *tview.Pages) {
 					status = strings.Title(*mr.Attributes.Status)
 				}
 				sCell := tview.NewTableCell(fmt.Sprintf("%-15s", status)).
-					SetMaxWidth(15).SetTextColor(g.LoggedMainPagePubStatusColor)
+					SetMaxWidth(15).SetTextColor(LoggedMainPagePubStatusColor)
 
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(i+1, 0, mtCell).SetCell(i+1, 1, sCell)
@@ -220,15 +220,15 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 	// Set up the table.
 	mangaTitleHeader := tview.NewTableCell("Manga").
 		SetAlign(tview.AlignCenter).
-		SetTextColor(g.GuestMainPageTitleColor).
+		SetTextColor(GuestMainPageTitleColor).
 		SetSelectable(false)
 	descHeader := tview.NewTableCell("Description").
 		SetAlign(tview.AlignCenter).
-		SetTextColor(g.GuestMainPageDescColor).
+		SetTextColor(GuestMainPageDescColor).
 		SetSelectable(false)
 	tagHeader := tview.NewTableCell("Tags").
 		SetAlign(tview.AlignCenter).
-		SetTextColor(g.GuestMainPageTagColor).
+		SetTextColor(GuestMainPageTagColor).
 		SetSelectable(false)
 	mp.MangaListTable.SetCell(0, 0, mangaTitleHeader).
 		SetCell(0, 1, descHeader).
@@ -283,7 +283,7 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 			mangaList, err = g.DexClient.MangaList(params)
 			if err != nil {
 				g.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-					OKModal(pages, g.GenericAPIErrorModalID, "Error loading manga list.")
+					OKModal(pages, GenericAPIErrorModalID, "Error loading manga list.")
 				})
 				return
 			} else if len(mangaList.Data) == 0 {
@@ -310,19 +310,19 @@ func (mp *MainPage) SetUpGenericTable(pages *tview.Pages, tableTitle, searchTitl
 			default:
 				// Manga title cell.
 				mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", mr.Attributes.Title["en"])).
-					SetMaxWidth(40).SetTextColor(g.GuestMainPageTitleColor)
+					SetMaxWidth(40).SetTextColor(GuestMainPageTitleColor)
 
 				// Description cell. Truncate description to improve loading times.
 				desc := tview.Escape(fmt.Sprintf("%-60s",
 					strings.SplitN(tview.Escape(mr.Attributes.Description["en"]), "\n", 2)[0]))
-				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(g.GuestMainPageDescColor)
+				descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(GuestMainPageDescColor)
 
 				// Tag cell.
 				tags := make([]string, len(mr.Attributes.Tags))
 				for ti, tag := range mr.Attributes.Tags {
 					tags[ti] = tag.Attributes.Name["en"]
 				}
-				tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(g.GuestMainPageTagColor)
+				tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(GuestMainPageTagColor)
 
 				g.App.QueueUpdateDraw(func() {
 					mp.MangaListTable.SetCell(i+1, 0, mtCell).

@@ -7,7 +7,7 @@ Search Page shows the interface for searching the MangaDex database.
 import (
 	"github.com/rivo/tview"
 
-	g "github.com/darylhjd/mangadesk/globals"
+	g "github.com/darylhjd/mangadesk/core"
 )
 
 type SearchPage struct {
@@ -25,8 +25,8 @@ func ShowSearchPage(pages *tview.Pages) {
 	}
 	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
 	// Set grid attributes
-	grid.SetTitleColor(g.SearchPageGridTitleColor).
-		SetBorderColor(g.SearchPageGridBorderColor).
+	grid.SetTitleColor(SearchPageGridTitleColor).
+		SetBorderColor(SearchPageGridBorderColor).
 		SetTitle("Search Manga. " +
 			"[yellow]Press ↓ on search bar to switch to table. " +
 			"[green]Press Tab on table to switch to search bar.").
@@ -37,8 +37,8 @@ func ShowSearchPage(pages *tview.Pages) {
 	// Set table attributes
 	table.SetSelectable(true, false).
 		SetSeparator('|').
-		SetBordersColor(g.SearchPageTableBorderColor).
-		SetTitleColor(g.SearchPageTableTitleColor).
+		SetBordersColor(SearchPageTableBorderColor).
+		SetTitleColor(SearchPageTableTitleColor).
 		SetTitle("The curious cat peeks into the database...🐈").
 		SetBorder(true)
 
@@ -46,7 +46,7 @@ func ShowSearchPage(pages *tview.Pages) {
 	search := tview.NewForm()
 	// Set form attributes
 	search.SetButtonsAlign(tview.AlignLeft).
-		SetLabelColor(g.SearchFormLabelColor)
+		SetLabelColor(SearchFormLabelColor)
 
 	// Create the SearchPage.
 	// We use the MainPage struct.
@@ -83,7 +83,7 @@ func ShowSearchPage(pages *tview.Pages) {
 	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).
 		AddItem(table, 4, 0, 11, 15, 0, 0, true)
 
-	pages.AddPage(g.SearchPageID, grid, true, false)
+	pages.AddPage(SearchPageID, grid, true, false)
 	g.App.SetFocus(search)
-	pages.SwitchToPage(g.SearchPageID)
+	pages.SwitchToPage(SearchPageID)
 }

@@ -1,4 +1,4 @@
-package globals
+package core
 
 import (
 	"encoding/json"
@@ -7,11 +7,8 @@ import (
 	"path/filepath"
 )
 
-// File paths for settings and configuration.
-var (
-	credFilePath   = filepath.Join(GetConfDir(), "credentials")
-	configFilePath = filepath.Join(GetConfDir(), "config.json")
-)
+// configFilePath : The filepath to the configuration file.
+var configFilePath = filepath.Join(GetConfDir(), "config.json")
 
 // Defaults for user configuration.
 var (
@@ -21,7 +18,7 @@ var (
 	zipType         = "zip"
 )
 
-// UserConfig : This struct contains user configurable settings.
+// UserConfig : This struct contains te user configurable settings.
 type UserConfig struct {
 	DownloadDir     string   `json:"downloadDir"`
 	Languages       []string `json:"languages"`
@@ -31,35 +28,35 @@ type UserConfig struct {
 	ZipType         string   `json:"zipType"`
 }
 
-// LoadCredentials : Load saved credentials if there is. Else, return error.
-func LoadCredentials() ([]byte, error) {
-	return ioutil.ReadFile(credFilePath)
-}
+// LoadConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
+func (m *MangaDesk) LoadConfiguration() error {
+	// Make sure the configuration directory exists.
+	if err := os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
+		return err
+	}
 
-// LoadUserConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
-func LoadUserConfiguration() error {
 	// Set the current configuration to empty one.
-	Conf = UserConfig{}
+	m.Config = &UserConfig{}
 
 	// Attempt to read user configuration file.
 	if confBytes, err := ioutil.ReadFile(configFilePath); err == nil {
 		// If no error, attempt unmarshal
-		err = json.Unmarshal(confBytes, &Conf)
+		err = json.Unmarshal(confBytes, m.Config)
 		if err != nil { // Return error if cannot unmarshal.
 			return err
 		}
 	}
 	// Set defaults
-	SanitiseConfigurations()
+	m.Config.SanitiseConfigurations()
 
 	// Save the config file.
-	return SaveConfiguration()
+	return m.SaveConfiguration()
 }
 
 // SaveConfiguration : Save user configuration.
-func SaveConfiguration() error {
+func (m *MangaDesk) SaveConfiguration() error {
 	// Format JSON properly for user.
-	confBytes, err := json.MarshalIndent(&Conf, "", "\t")
+	confBytes, err := json.MarshalIndent(m.Config, "", "\t")
 	if err != nil {
 		return err
 	}
@@ -72,40 +69,38 @@ func SaveConfiguration() error {
 }
 
 // SanitiseConfigurations : Sanitises the configuration to ensure validated fields.
-func SanitiseConfigurations() {
+func (c *UserConfig) SanitiseConfigurations() {
 	// Download Directory
-	if Conf.DownloadDir == "" {
-		Conf.DownloadDir = downloadDir
+	if c.DownloadDir == "" {
+		c.DownloadDir = downloadDir
 	}
 	// Expand any environment variables in the path.
-	Conf.DownloadDir = os.ExpandEnv(Conf.DownloadDir)
+	c.DownloadDir = os.ExpandEnv(c.DownloadDir)
 
 	// Languages
-	if len(Conf.Languages) == 0 {
-		Conf.Languages = languages
+	if len(c.Languages) == 0 {
+		c.Languages = languages
 	}
 
 	// ForcePort443 is false by default.
 
 	// Download Quality
 	// Will automatically set to `data` if invalid or no download quality specified.
-	if Conf.DownloadQuality != "data" && Conf.DownloadQuality != "data-saver" {
-		Conf.DownloadQuality = downloadQuality
+	if c.DownloadQuality != "data" && c.DownloadQuality != "data-saver" {
+		c.DownloadQuality = downloadQuality
 	}
 
 	// AsZip is false by default.
 
 	// Set default zip download type. Can be `zip` or `cbz`.
 	// Any other invalid entries will default to `zip`.
-	if Conf.ZipType != "zip" && Conf.ZipType != "cbz" {
-		Conf.ZipType = zipType
+	if c.ZipType != "zip" && c.ZipType != "cbz" {
+		c.ZipType = zipType
 	}
 }
 
 // GetConfDir : Find the operating system and determine the configuration directory for the application.
 func GetConfDir() string {
-	appDir := "mangadesk"
-
 	// Get the default configuration appDir for the OS.
 	configDir, err := os.UserConfigDir()
 	if err != nil { // If there is an error, then we use the home appDir.
@@ -115,6 +110,6 @@ func GetConfDir() string {
 		}
 	}
 
-	// Add the app directory to the path.
-	return filepath.Join(configDir, appDir)
+	// Add the core directory to the path.
+	return filepath.Join(configDir, "mangadesk")
 }
