@@ -10,7 +10,7 @@ import (
 )
 
 // credFilePath : The filepath to the credentials file.
-var credFilePath = filepath.Join(GetConfDir(), "credentials")
+var credFilePath = filepath.Join(getConfDir(), "credentials")
 
 // StoreCredentials : Store the refresh token.
 func (m *MangaDesk) StoreCredentials() error {
@@ -21,8 +21,15 @@ func (m *MangaDesk) StoreCredentials() error {
 	return nil
 }
 
-// LoadCredentials : Load saved credentials into the client if there is.
-func (m *MangaDesk) LoadCredentials() error {
+// DeleteCredentials : Delete saved credentials from the system.
+func (m *MangaDesk) DeleteCredentials() {
+	if err := os.Remove(credFilePath); err != nil {
+		log.Println(err)
+	}
+}
+
+// loadCredentials : Load saved credentials into the client if there is.
+func (m *MangaDesk) loadCredentials() error {
 	content, err := ioutil.ReadFile(credFilePath)
 	if err != nil {
 		return err
@@ -31,19 +38,12 @@ func (m *MangaDesk) LoadCredentials() error {
 	return nil
 }
 
-// DeleteCredentials : Delete saved credentials from the system.
-func (m *MangaDesk) DeleteCredentials() {
-	if err := os.Remove(credFilePath); err != nil {
-		log.Println(err)
-	}
-}
-
-// RestoreSession : Check if the user's credentials have been stored before.
+// restoreSession : Check if the user's credentials have been stored before.
 // If they are, then read it, and attempt to refresh the token.
 // Will return error if any steps fail (no stored credentials, authentication failed).
-func (m *MangaDesk) RestoreSession() error {
+func (m *MangaDesk) restoreSession() error {
 	// Try to read stored credential file.
-	if err := m.LoadCredentials(); err != nil { // If error, then user was not originally logged in.
+	if err := m.loadCredentials(); err != nil { // If error, then user was not originally logged in.
 		fmt.Println("No past session, using Guest account...")
 		time.Sleep(time.Millisecond * 750)
 		return err

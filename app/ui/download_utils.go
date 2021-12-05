@@ -1,12 +1,9 @@
-package pages
-
-/*
-Functions used by the application for downloading of chapters.
-*/
+package ui
 
 import (
 	"archive/zip"
 	"fmt"
+	core2 "github.com/darylhjd/mangadesk/app/core"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -21,10 +18,10 @@ import (
 	"github.com/darylhjd/mangadesk/core"
 )
 
-// downloadChapters : Attempt to download pages
+// downloadChapters : Attempt to download Holder
 func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Manga, chaps *[]mangodex.Chapter) {
 	// Download each chapter.
-	// NOTE : Run as a GOROUTINE. Require QueueUpdateDraw
+	// NOTE : Initialise as a GOROUTINE. Require QueueUpdateDraw
 	go func(rows map[int]struct{}) {
 		// For each selected chapter to download.
 		var errorChaps []string
@@ -97,7 +94,7 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 			}
 
 			// Update downloaded column.
-			core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			core2.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
 				dCell := tview.NewTableCell("Y").SetTextColor(MangaPageDownloadStatColor)
 				mangaPage.ChapterTable.SetCell(r, 2, dCell)
 			})
@@ -114,8 +111,8 @@ func downloadChapters(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Mang
 				builder.WriteString(v + "\n")
 			}
 		}
-		core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			OKModal(pages, DownloadFinishedModalID, builder.String())
+		core2.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
+			okModal(pages, DownloadFinishedModalID, builder.String())
 		})
 	}(*mangaPage.Selected) // We pass the whole map as a value as we need to clear it later.
 
@@ -184,18 +181,23 @@ func saveAsZipFolder(chapterFolder string) error {
 }
 
 // getDownloadFolder : Get the download folder for a manga's chapter.
-func getDownloadFolder(manga *mangodex.Manga, chapter *mangodex.Chapter) string {
-	mangaName := manga.GetTitle("en")
+func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
+	mangaName := p.Manga.GetTitle("en")
 	chapterName := fmt.Sprintf("Chapter%s [%s-%s] %s_%s",
-		chapter.GetChapterNum(), strings.ToUpper(chapter.Attributes.TranslatedLanguage), core.App.Config.DownloadQuality,
+		chapter.GetChapterNum(), strings.ToUpper(chapter.Attributes.TranslatedLanguage), core2.App.Config.DownloadQuality,
 		chapter.GetTitle(), strings.SplitN(chapter.ID, "-", 2)[0])
-
-	folder := filepath.Join(core.App.Config.DownloadDir, mangaName, chapterName)
 
 	// Remove invalid characters from the folder name
 	restricted := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\", "."}
 	for _, c := range restricted {
-		folder = strings.ReplaceAll(folder, c, "")
+		mangaName = strings.ReplaceAll(mangaName, c, "")
+		chapterName = strings.ReplaceAll(chapterName, c, "")
+	}
+
+	folder := filepath.Join(core2.App.Config.DownloadDir, mangaName, chapterName)
+	// If the user wants to download as a zip, then we check for the presence of the zip folder.
+	if core2.App.Config.AsZip {
+		folder = fmt.Sprintf("%s.%s", folder, core2.App.Config.ZipType)
 	}
 	return folder
 }

@@ -9,11 +9,11 @@ import (
 )
 
 // loggingDir : The logging directory to store the logs.
-var loggingDir = filepath.Join(GetConfDir(), "logs")
+var loggingDir = filepath.Join(getConfDir(), "logs")
 
-// SetUpLogging : Set up the logger to log any useful information such as errors when running the application.
+// setUpLogging : Set up the logger to log any useful information such as errors when running the application.
 // The log file is stored in the configuration directory.
-func (m *MangaDesk) SetUpLogging() error {
+func (m *MangaDesk) setUpLogging() error {
 	if err := os.MkdirAll(loggingDir, os.ModePerm); err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (m *MangaDesk) SetUpLogging() error {
 	return nil
 }
 
-// StopLogging : Closes the log file.
-func (m *MangaDesk) StopLogging() error {
+// stopLogging : Closes the log file.
+func (m *MangaDesk) stopLogging() error {
 	return m.LogFile.Close()
 }

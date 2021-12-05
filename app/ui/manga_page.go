@@ -1,18 +1,15 @@
-package pages
+package ui
 
 import (
-	"context"
 	"fmt"
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"log"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
-
-	"github.com/darylhjd/mangadesk/core"
 )
 
 // MangaPage : This struct contains the required primitives for the manga page.
@@ -25,13 +22,21 @@ type MangaPage struct {
 	SelectedAll bool             // Keep track of if the user wants to select all.
 }
 
-// NewMangaPage : Creates a new manga page.
-func NewMangaPage(manga *mangodex.Manga) *MangaPage {
+// ShowMangaPage : Make the app show the manga page.
+func ShowMangaPage(manga *mangodex.Manga) {
+	mangaPage := newMangaPage(manga)
+
+	core.App.TView.SetFocus(mangaPage.Grid)
+	core.App.PageHolder.AddAndSwitchToPage(MangaPageID, mangaPage.Grid, true)
+}
+
+// newMangaPage : Creates a new manga page.
+func newMangaPage(manga *mangodex.Manga) *MangaPage {
 	var dimensions []int
 	for i := 0; i < 15; i++ {
 		dimensions = append(dimensions, -1)
 	}
-	grid := NewGrid(dimensions, dimensions)
+	grid := newGrid(dimensions, dimensions)
 	// Set grid attributes
 	grid.SetTitleColor(MangaPageGridTitleColor).
 		SetBorderColor(MangaPageGridBorderColor).
@@ -59,11 +64,11 @@ func NewMangaPage(manga *mangodex.Manga) *MangaPage {
 	downloadHeader := tview.NewTableCell("Download Status").
 		SetTextColor(MangaPageDownloadStatColor).
 		SetSelectable(false)
-	readMarkerHeader := tview.NewTableCell("Read Status").
-		SetTextColor(MangaPageReadStatColor).
-		SetSelectable(false)
 	scanGroupHeader := tview.NewTableCell("ScanGroup").
 		SetTextColor(MangaPageScanGroupColor).
+		SetSelectable(false)
+	readMarkerHeader := tview.NewTableCell("Read Status").
+		SetTextColor(MangaPageReadStatColor).
 		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
@@ -109,6 +114,7 @@ func (p *MangaPage) setMangaInfo() {
 	for _, relation := range p.Manga.Relationships {
 		if relation.Type == mangodex.AuthorRel {
 			author = relation.Attributes.(*mangodex.AuthorAttributes).Name
+			break
 		}
 	}
 
@@ -122,7 +128,7 @@ func (p *MangaPage) setMangaInfo() {
 	infoText := fmt.Sprintf("Title: %s\n\nAuthor: %s\nStatus: %s\n\nDescription:\n%s",
 		title, author, status, desc)
 
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		p.Info.SetText(infoText)
 	})
 }
@@ -130,7 +136,7 @@ func (p *MangaPage) setMangaInfo() {
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
 	// Show loading status so user knows it's loading.
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
 		p.Table.SetCell(1, 1, loadingCell)
 	})
@@ -139,58 +145,72 @@ func (p *MangaPage) setChapterTable() {
 	chapters, err := p.getAllChapters()
 	if err != nil {
 		log.Println(fmt.Sprintf("Error getting manga chapters: %s", err.Error()))
-		modal := OKModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
-		core.App.ShowModal(GenericAPIErrorModalID, modal)
+		modal := okModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
+		ShowModal(GenericAPIErrorModalID, modal)
 		return
 	}
+	// Get the chapter read markers.
+	var markers map[string]struct{}
+	if core.App.Client.Auth.IsLoggedIn() {
+		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
+		if err != nil {
+			log.Println(fmt.Sprintf("Error getting chapter read markers: %s", err.Error()))
+			modal := okModal(GenericAPIErrorModalID, "Error getting chapter read markers.\nCheck log for details.")
+			ShowModal(GenericAPIErrorModalID, modal)
+			return
+		}
+		for _, marker := range markerResponse.Data {
+			markers[marker] = struct{}{}
+		}
+	}
 
+	// TODO: Add manga page input handlers
+
+	// Fill in the chapters
 	for index, chapter := range chapters {
+		// Chapter Number
 		chapterNumCell := tview.NewTableCell(
 			fmt.Sprintf("%-6s %s", chapter.GetChapterNum(), chapter.Attributes.TranslatedLanguage)).
 			SetMaxWidth(10).SetTextColor(MangaPageChapNumColor)
 
+		// Chapter title
 		titleCell := tview.NewTableCell(fmt.Sprintf("%-30s", chapter.GetTitle())).SetMaxWidth(30).
 			SetTextColor(MangaPageTitleColor)
 
+		// Chapter download status
 		var downloadStatus string
 		// Check for the presence of the download folder.
-	}
-}
-
-// SetChapterTable : Populate the manga page chapter table.
-// NOTE: This is run as a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) SetChapterTable(ctx context.Context, pages *tview.Pages, m *mangodex.Manga) {
-	// Add each chapter info to the table.
-	for i, c := range *chapters {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			// Chapter download status cell.
-			// Get the manga and chapter folder name.
-			mangaName, chapter := generateChapterFolderNames(m, &c)
-			chapFolder := filepath.Join(core.Conf.DownloadDir, mangaName, chapter)
-			// Check whether the folder for this chapter exists. If it does, then it is downloaded.
-			stat := ""
-			if _, err := os.Stat(chapFolder); err == nil {
-				stat = "Y"
-			} else if _, err = os.Stat(fmt.Sprintf("%s.%s", chapFolder, core.Conf.ZipType)); err == nil {
-				stat = "Y"
-			}
-			dCell := tview.NewTableCell(stat).SetTextColor(MangaPageDownloadStatColor)
-
-			core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				mp.ChapterTable.SetCell(i+1, 0, cCell).
-					SetCell(i+1, 1, tCell).
-					SetCell(i+1, 2, dCell)
-			})
+		if _, err = os.Stat(p.getDownloadFolder(&chapter)); err == nil {
+			downloadStatus = "Y"
 		}
-	}
+		downloadCell := tview.NewTableCell(downloadStatus).SetTextColor(MangaPageDownloadStatColor)
 
-	// Set scanlation groups for chapters.
-	mp.SetChapterScanGroup(ctx, chapters)
-	// Set read markers for chapters.
-	mp.SetChapterReadMarkers(ctx, m.ID, chapters)
+		// Scanlation group
+		var scanGroup string
+		for _, relation := range p.Manga.Relationships {
+			if relation.Type == mangodex.ScanlationGroupRel {
+				scanGroup = relation.Attributes.(*mangodex.ScanlationGroupAttributes).Name
+				break
+			}
+		}
+		scanGroupCell := tview.NewTableCell(fmt.Sprintf("%-15s", scanGroup)).SetMaxWidth(15).
+			SetTextColor(MangaPageScanGroupColor)
+
+		// Read marker
+		var read string
+		if _, ok := markers[chapter.ID]; ok {
+			read = "Y"
+		}
+		readCell := tview.NewTableCell(read).SetTextColor(MangaPageReadStatColor)
+
+		core.App.TView.QueueUpdateDraw(func() {
+			p.Table.SetCell(index+1, 0, chapterNumCell).
+				SetCell(index+1, 1, titleCell).
+				SetCell(index+1, 2, downloadCell).
+				SetCell(index+1, 3, scanGroupCell).
+				SetCell(index+1, 4, readCell)
+		})
+	}
 }
 
 // getAllChapters : Get all chapters for the manga.
@@ -232,101 +252,6 @@ func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
 		}
 	}
 	return chapters, nil
-}
-
-// SetChapterReadMarkers : Set read markers for each chapter for a manga.
-// NOTE: This is run in a GOROUTINE. Drawing will require QueueUpdateDraw.
-func (mp *MangaPage) SetChapterReadMarkers(ctx context.Context, mangaID string, chapters *[]mangodex.Chapter) {
-	// Check for manga read markers.
-	if !core.DexClient.IsLoggedIn() { // If user is not logged in.
-		// We inform user to log in to track read status.
-		// Split the message into 2 rows.
-		rSCell := tview.NewTableCell("Not logged in!").SetTextColor(MangaPageReadStatColor).SetSelectable(false)
-
-		core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-			mp.ChapterTable.SetCell(1, 4, rSCell)
-		})
-		return // We return immediately. No need to continue.
-	}
-
-	// Use a map to store the read chapter IDs to avoid iterating through every turn.
-	read := map[string]struct{}{}
-	select {
-	case <-ctx.Done():
-		return
-	default:
-		chapReadMarkerResp, err := core.DexClient.MangaReadMarkers(mangaID)
-		if err != nil { // If error getting read markers, just put a error message on the column.
-			readStatus := "API Error!"
-			core.App.QueueUpdateDraw(func() {
-				rSCell := tview.NewTableCell(readStatus).SetTextColor(MangaPageReadStatColor)
-				mp.ChapterTable.SetCell(1, 4, rSCell)
-			})
-			return // We return immediately. No need to continue.
-		}
-		for _, chapID := range chapReadMarkerResp.Data {
-			read[chapID] = struct{}{}
-		}
-	}
-
-	// For every chapter
-	for i, cr := range *chapters {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			readStatus := ""
-			if _, ok := read[cr.ID]; ok { // If chapter ID is in map of read markers.
-				readStatus = "R"
-			}
-			rSCell := tview.NewTableCell(readStatus).SetTextColor(MangaPageReadStatColor)
-			core.App.QueueUpdateDraw(func() { // GOROUTINE : Require QueueUpdateDraw
-				mp.ChapterTable.SetCell(i+1, 4, rSCell)
-			})
-		}
-	}
-}
-
-func (mp *MangaPage) SetChapterScanGroup(ctx context.Context, chapters *[]mangodex.Chapter) {
-	// Keep track of already checked groups to avoid calling the API too many times.
-	groups := map[string]string{}
-	for i, c := range *chapters {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			// Find the scanlation_group relationship
-			group := ""
-			for _, r := range c.Relationships {
-				if r.Type == "scanlation_group" {
-					groupId := r.ID
-					if name, ok := groups[groupId]; ok {
-						group = name
-					} else {
-						sgr, err := core.DexClient.ViewScanGroup(groupId)
-						if err != nil {
-							group = "API Error!"
-							core.App.QueueUpdateDraw(func() {
-								sgCell := tview.NewTableCell(group).SetTextColor(MangaPageScanGroupColor)
-								mp.ChapterTable.SetCell(1, 3, sgCell)
-							})
-							return
-						}
-						group = sgr.Data.Attributes.Name
-						// Add to cache
-						groups[groupId] = group
-					}
-					// Get group name using ID
-					sgCell := tview.NewTableCell(fmt.Sprintf("%-15s", group)).SetMaxWidth(15).
-						SetTextColor(MangaPageScanGroupColor)
-					core.App.QueueUpdateDraw(func() {
-						mp.ChapterTable.SetCell(i+1, 3, sgCell)
-					})
-					break
-				}
-			}
-		}
-	}
 }
 
 // MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.

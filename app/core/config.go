@@ -8,7 +8,7 @@ import (
 )
 
 // configFilePath : The filepath to the configuration file.
-var configFilePath = filepath.Join(GetConfDir(), "config.json")
+var configFilePath = filepath.Join(getConfDir(), "config.json")
 
 // Defaults for user configuration.
 var (
@@ -29,10 +29,10 @@ type UserConfig struct {
 	ZipType         string   `json:"zipType"`
 }
 
-// LoadConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
-func (m *MangaDesk) LoadConfiguration() error {
+// loadConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
+func (m *MangaDesk) loadConfiguration() error {
 	// Make sure the configuration directory exists.
-	if err := os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
+	if err := os.MkdirAll(getConfDir(), os.ModePerm); err != nil {
 		return err
 	}
 
@@ -48,14 +48,14 @@ func (m *MangaDesk) LoadConfiguration() error {
 		}
 	}
 	// Set defaults
-	m.Config.SanitiseConfigurations()
+	m.Config.sanitiseConfigurations()
 
 	// Save the config file.
-	return m.SaveConfiguration()
+	return m.saveConfiguration()
 }
 
-// SaveConfiguration : Save user configuration.
-func (m *MangaDesk) SaveConfiguration() error {
+// saveConfiguration : Save user configuration.
+func (m *MangaDesk) saveConfiguration() error {
 	// Format JSON properly for user.
 	confBytes, err := json.MarshalIndent(m.Config, "", "\t")
 	if err != nil {
@@ -63,14 +63,14 @@ func (m *MangaDesk) SaveConfiguration() error {
 	}
 
 	// Make sure the configuration directory exists. If it already exists, then nothing is done.
-	if err = os.MkdirAll(GetConfDir(), os.ModePerm); err != nil {
+	if err = os.MkdirAll(getConfDir(), os.ModePerm); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(configFilePath, confBytes, os.ModePerm)
 }
 
-// SanitiseConfigurations : Sanitises the configuration to ensure validated fields.
-func (c *UserConfig) SanitiseConfigurations() {
+// sanitiseConfigurations : Sanitises the configuration to ensure validated fields.
+func (c *UserConfig) sanitiseConfigurations() {
 	// Download Directory
 	if c.DownloadDir == "" {
 		c.DownloadDir = downloadDir
@@ -100,8 +100,8 @@ func (c *UserConfig) SanitiseConfigurations() {
 	}
 }
 
-// GetConfDir : Find the operating system and determine the configuration directory for the application.
-func GetConfDir() string {
+// getConfDir : Find the operating system and determine the configuration directory for the application.
+func getConfDir() string {
 	// Get the default configuration appDir for the OS.
 	configDir, err := os.UserConfigDir()
 	if err != nil { // If there is an error, then we use the home appDir.

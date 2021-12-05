@@ -1,13 +1,14 @@
-package pages
+package ui
 
 /*
-This file contains the input handlers for the pages.
+This file contains the input handlers for the Holder.
 
 The 2nd section of this page contains the logic for keybindings.
 */
 
 import (
 	"context"
+	core2 "github.com/darylhjd/mangadesk/app/core"
 	"log"
 	"strings"
 
@@ -22,10 +23,10 @@ import (
 // List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
 func SetUniversalHandlers() {
 	// Enable mouse.
-	core.App.ViewApp.EnableMouse(true)
+	core2.App.TView.EnableMouse(true)
 
 	// Set keyboard captures
-	core.App.ViewApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	core2.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput()
@@ -44,7 +45,7 @@ func SetUniversalHandlers() {
 // This input enables user to toggle login/logout.
 func ctrlLInput() {
 	// Do not allow pop up when on login screen.
-	if page, _ := core.App.PageHolder.GetFrontPage(); page == LoginPageID {
+	if page, _ := core2.App.Pager.GetFrontPage(); page == LoginPageID {
 		return
 	}
 
@@ -61,7 +62,7 @@ func ctrlLInput() {
 		buttonFn = func() { // Set the function.
 			// Attempt logout
 			if err := core.DexClient.Auth.Logout(); err != nil {
-				OKModal(pages, LoginLogoutFailureModalID, "Error logging out!")
+				okModal(pages, LoginLogoutFailureModalID, "Error logging out!")
 				return
 			}
 			// Remove the credentials file.
@@ -107,8 +108,8 @@ func ctrlSInput() {
 // ctrlCInput : Handler for Ctrl+C input.
 // This sends an interrupt signal to the application.
 func ctrlCInput() {
-	log.Println("ViewApp stopped by Ctrl-C interrupt.")
-	core.App.ViewApp.Stop()
+	log.Println("TView stopped by Ctrl-C interrupt.")
+	core2.App.TView.Stop()
 }
 
 // SetMainPageTableHandlers : Set input handler for main page table.
@@ -120,14 +121,14 @@ func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp 
 		switch event.Key() {
 		case tcell.KeyCtrlF: // User wants to go to next offset page.
 			if mp.CurrentOffset+core.OffsetRange >= mp.MaxOffset {
-				OKModal(pages, OffsetErrorModalID, "No more results to show.")
+				okModal(pages, OffsetErrorModalID, "No more results to show.")
 				break
 			}
 			mp.CurrentOffset += core.OffsetRange
 			changePage = true
 		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
 			if mp.CurrentOffset == 0 {
-				OKModal(pages, OffsetErrorModalID, "Already on first page.")
+				okModal(pages, OffsetErrorModalID, "Already on first page.")
 				break
 			}
 			mp.CurrentOffset -= core.OffsetRange
@@ -205,7 +206,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
 			pages.RemovePage(SearchPageID)
 		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
-			core.App.SetFocus(searchPage.SearchForm)
+			core2.App.SetFocus(searchPage.SearchForm)
 		}
 		return event
 	})
@@ -214,7 +215,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
-			core.App.SetFocus(searchPage.Table)
+			core2.App.SetFocus(searchPage.Table)
 		}
 		return event
 	})

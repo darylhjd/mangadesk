@@ -1,8 +1,8 @@
-package pages
+package ui
 
 import (
 	"fmt"
-
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
 )
 
@@ -11,8 +11,16 @@ type HelpPage struct {
 	Grid *tview.Grid
 }
 
-// NewHelpPage : Creates a new help page.
-func NewHelpPage() *HelpPage {
+// ShowHelpPage : Make the app show the help page.
+func ShowHelpPage() {
+	helpPage := newHelpPage()
+
+	core.App.TView.SetFocus(helpPage.Grid)
+	core.App.PageHolder.AddPage(HelpPageID, helpPage.Grid, true, true)
+}
+
+// newHelpPage : Creates a new help page.
+func newHelpPage() *HelpPage {
 	// Set up the help text.
 	helpText := "Keyboard Mappings\n" +
 		"-----------------------------\n\n" +
@@ -23,7 +31,7 @@ func NewHelpPage() *HelpPage {
 		"Manga Page\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + E", "Select mult.") +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + A", "Toggle All") +
-		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Start download") +
+		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Initialise download") +
 		"Others\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Esc", "Go back") +
 		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + F/B", "Next/Prev Page")

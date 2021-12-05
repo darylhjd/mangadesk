@@ -1,13 +1,8 @@
-package pages
-
-/*
-Search Page shows the interface for searching the MangaDex database.
-*/
+package ui
 
 import (
+	g "github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
-
-	g "github.com/darylhjd/mangadesk/core"
 )
 
 type SearchPage struct {

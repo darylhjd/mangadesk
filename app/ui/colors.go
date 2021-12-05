@@ -1,4 +1,4 @@
-package pages
+package ui
 
 import "github.com/gdamore/tcell/v2"
 
@@ -51,8 +51,4 @@ const ( // Search page colors
 
 const ( // Help page colors
 	HelpPageBorderColor = tcell.ColorLightGrey
-)
-
-const ( // Modal colors
-	ModalColor = tcell.ColorDarkSlateGrey
 )

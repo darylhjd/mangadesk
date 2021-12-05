@@ -1,15 +1,14 @@
-package pages
+package ui
 
 import (
 	"fmt"
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 	"log"
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/darylhjd/mangadesk/core"
 )
 
 // MainPage : This struct contains the grid and the entry table.
@@ -23,13 +22,22 @@ type MainPage struct {
 	MaxOffset     int
 }
 
-// NewMainPage : Creates a new main page.
-func NewMainPage() *MainPage {
+// ShowMainPage : Make the app show the main page.
+func ShowMainPage() {
+	// Create the new main page
+	mainPage := newMainPage()
+
+	core.App.TView.SetFocus(mainPage.Grid)
+	core.App.PageHolder.AddAndSwitchToPage(MainPageID, mainPage.Grid, true)
+}
+
+// newMainPage : Creates a new main page.
+func newMainPage() *MainPage {
 	var dimensions []int
 	for i := 0; i < 15; i++ {
 		dimensions = append(dimensions, -1)
 	}
-	grid := NewGrid(dimensions, dimensions)
+	grid := newGrid(dimensions, dimensions)
 	// Set grid attributes.
 	grid.SetTitleColor(MainPageGridTitleColor).
 		SetBorderColor(MainPageGridBorderColor).
@@ -55,15 +63,15 @@ func NewMainPage() *MainPage {
 	// Check what kind of main page to show to the user.
 	if core.App.Client.Auth.IsLoggedIn() {
 		mainPage.LoggedPage = true
-		mainPage.SetLogged()
+		mainPage.setLogged()
 	} else {
-		mainPage.SetGuest()
+		mainPage.setGuest()
 	}
 	return mainPage
 }
 
-// SetLogged : Set up the MainPage for a logged user.
-func (p *MainPage) SetLogged() {
+// setLogged : Set up the MainPage for a logged user.
+func (p *MainPage) setLogged() {
 	go p.setLoggedGrid()
 	go p.setLoggedTable()
 }
@@ -77,14 +85,14 @@ func (p *MainPage) setLoggedGrid() {
 		username = u.Data.Attributes.Username
 	}
 
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		p.Grid.SetTitle(fmt.Sprintf("Welcome to MangaDex, [lightgreen]%s!", username))
 	})
 }
 
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries.
 		p.Table.Clear()
 
@@ -102,7 +110,7 @@ func (p *MainPage) setLoggedTable() {
 			SetFixed(1, 0)
 
 		// Set table title.
-		page, first, last := p.CalculatePaginationData()
+		page, first, last := p.calculatePaginationData()
 		p.Table.SetTitle(fmt.Sprintf("Followed manga. Page %d (%d-%d). [::bu]Loading...", page, first, last))
 	})
 
@@ -111,8 +119,8 @@ func (p *MainPage) setLoggedTable() {
 		OffsetRange, p.CurrentOffset, []string{mangodex.AuthorRel})
 	if err != nil {
 		log.Println(err.Error())
-		modal := OKModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
-		core.App.ShowModal(GenericAPIErrorModalID, modal)
+		modal := okModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
+		ShowModal(GenericAPIErrorModalID, modal)
 		return
 	}
 
@@ -121,7 +129,7 @@ func (p *MainPage) setLoggedTable() {
 
 	// Show followed manga.
 	if p.MaxOffset == 0 {
-		core.App.ViewApp.QueueUpdateDraw(func() {
+		core.App.TView.QueueUpdateDraw(func() {
 			noResCell := tview.NewTableCell("You have no followed manga!").SetSelectable(false)
 			p.Table.SetCell(1, 0, noResCell)
 		})
@@ -129,13 +137,13 @@ func (p *MainPage) setLoggedTable() {
 	}
 
 	// Update table title.
-	page, first, last := p.CalculatePaginationData()
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	page, first, last := p.calculatePaginationData()
+	core.App.TView.QueueUpdateDraw(func() {
 		p.Table.SetTitle(fmt.Sprintf("Followed manga. Page %d (%d-%d).", page, first, last))
 	})
 
 	p.Table.SetSelectedFunc(func(row, _ int) {
-		core.App.ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
+		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
 	})
 
 	// Fill in the details
@@ -149,28 +157,28 @@ func (p *MainPage) setLoggedTable() {
 		sCell := tview.NewTableCell(fmt.Sprintf("%-15s", *manga.Attributes.Status)).
 			SetMaxWidth(15).SetTextColor(LoggedMainPagePubStatusColor)
 
-		core.App.ViewApp.QueueUpdateDraw(func() {
+		core.App.TView.QueueUpdateDraw(func() {
 			p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
 		})
 	}
 }
 
-// SetGuest : Set up the main page for a guest user.
-func (p *MainPage) SetGuest() {
+// setGuest : Set up the main page for a guest user.
+func (p *MainPage) setGuest() {
 	go p.setGuestGrid()
 	go p.setGuestTable()
 }
 
 // setGuestGrid : Show guest grid title.
 func (p *MainPage) setGuestGrid() {
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		p.Grid.SetTitle("Welcome to MangaDex, [yellow]Guest!")
 	})
 }
 
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable() {
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries
 		p.Table.Clear()
 
@@ -194,7 +202,7 @@ func (p *MainPage) setGuestTable() {
 
 		// Set table title.
 		// Set table title.
-		page, first, last := p.CalculatePaginationData()
+		page, first, last := p.calculatePaginationData()
 		p.Table.SetTitle(fmt.Sprintf("Popular manga. Page %d (%d-%d). [::bu]Loading...", page, first, last))
 	})
 
@@ -217,8 +225,8 @@ func (p *MainPage) setGuestTable() {
 	list, err := core.App.Client.Manga.GetMangaList(params)
 	if err != nil {
 		log.Println(err.Error())
-		modal := OKModal(GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
-		core.App.ShowModal(GenericAPIErrorModalID, modal)
+		modal := okModal(GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
+		ShowModal(GenericAPIErrorModalID, modal)
 		return
 	}
 
@@ -227,7 +235,7 @@ func (p *MainPage) setGuestTable() {
 
 	// Show followed manga.
 	if p.MaxOffset == 0 {
-		core.App.ViewApp.QueueUpdateDraw(func() {
+		core.App.TView.QueueUpdateDraw(func() {
 			noResCell := tview.NewTableCell("No manga entry!").SetSelectable(false)
 			p.Table.SetCell(1, 0, noResCell)
 		})
@@ -235,13 +243,13 @@ func (p *MainPage) setGuestTable() {
 	}
 
 	// Update table title.
-	page, first, last := p.CalculatePaginationData()
-	core.App.ViewApp.QueueUpdateDraw(func() {
+	page, first, last := p.calculatePaginationData()
+	core.App.TView.QueueUpdateDraw(func() {
 		p.Table.SetTitle(fmt.Sprintf("Popular manga. Page %d (%d-%d).", page, first, last))
 	})
 
 	p.Table.SetSelectedFunc(func(row, _ int) {
-		core.App.ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
+		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
 	})
 
 	// Fill in the details
@@ -262,7 +270,7 @@ func (p *MainPage) setGuestTable() {
 		}
 		tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(GuestMainPageTagColor)
 
-		core.App.ViewApp.QueueUpdateDraw(func() {
+		core.App.TView.QueueUpdateDraw(func() {
 			p.Table.SetCell(index+1, 0, mtCell).
 				SetCell(index+1, 1, descCell).
 				SetCell(index+1, 2, tagCell)
@@ -270,8 +278,8 @@ func (p *MainPage) setGuestTable() {
 	}
 }
 
-// CalculatePaginationData : Calculates the current page and first/last entry number.
-func (p *MainPage) CalculatePaginationData() (int, int, int) {
+// calculatePaginationData : Calculates the current page and first/last entry number.
+func (p *MainPage) calculatePaginationData() (int, int, int) {
 	page := p.CurrentOffset/OffsetRange + 1
 	firstEntry := p.CurrentOffset + 1
 	lastEntry := page * OffsetRange

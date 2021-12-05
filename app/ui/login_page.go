@@ -1,11 +1,10 @@
-package pages
+package ui
 
 import (
 	"fmt"
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
 	"log"
-
-	"github.com/darylhjd/mangadesk/core"
 )
 
 // LoginPage : This struct contains the grid and form for the login page.
@@ -14,8 +13,17 @@ type LoginPage struct {
 	Form *tview.Form
 }
 
-// NewLoginPage : Creates a new login page.
-func NewLoginPage() *LoginPage {
+// ShowLoginPage : Make the app show the login page.
+func ShowLoginPage() {
+	// Create the new login page
+	loginPage := newLoginPage()
+
+	core.App.TView.SetFocus(loginPage.Grid)
+	core.App.PageHolder.AddAndSwitchToPage(LoginPageID, loginPage.Grid, true)
+}
+
+// newLoginPage : Creates a new login page.
+func newLoginPage() *LoginPage {
 	// Create the LoginPage
 	loginPage := &LoginPage{}
 
@@ -34,15 +42,15 @@ func NewLoginPage() *LoginPage {
 		AddPasswordField("Password", "", 0, '*', nil).
 		AddCheckbox("Remember Me", false, nil).
 		AddButton("Login", func() {
-			loginPage.AttemptLogin()
+			loginPage.attemptLogin()
 		}).
 		AddButton("Guest", func() { // Guest button
 			core.App.PageHolder.RemovePage(LoginPageID)
-			core.App.ShowMainPage()
+			ShowMainPage()
 		})
 
 	dimension := []int{0, 0, 0}
-	grid := NewGrid(dimension, dimension)
+	grid := newGrid(dimension, dimension)
 
 	grid.AddItem(form, 0, 0, 3, 3, 0, 0, true).
 		AddItem(form, 1, 1, 1, 1, 32, 70, true)
@@ -52,8 +60,8 @@ func NewLoginPage() *LoginPage {
 	return loginPage
 }
 
-// AttemptLogin : Attempts to log in with given form fields. If success, bring user to main page.
-func (p *LoginPage) AttemptLogin() {
+// attemptLogin : Attempts to log in with given form fields. If success, bring user to main page.
+func (p *LoginPage) attemptLogin() {
 	form := p.Form
 
 	// Get username and password input.
@@ -63,8 +71,8 @@ func (p *LoginPage) AttemptLogin() {
 
 	// Attempt to log in to MangaDex API.
 	if err := core.App.Client.Auth.Login(user, pwd); err != nil {
-		modal := OKModal(LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
-		core.App.ShowModal(LoginLogoutFailureModalID, modal)
+		modal := okModal(LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
+		ShowModal(LoginLogoutFailureModalID, modal)
 		return
 	}
 
@@ -76,5 +84,5 @@ func (p *LoginPage) AttemptLogin() {
 	}
 
 	core.App.PageHolder.RemovePage(LoginPageID) // Remove the login page as we no longer need it.
-	core.App.ShowMainPage()
+	ShowMainPage()
 }
