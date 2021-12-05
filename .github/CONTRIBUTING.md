@@ -1,11 +1,9 @@
 # Contributing to MangaDesk
-
 🥳 Thank you for taking the time to contribute to this project!
 
 This document lays out some general guidelines for contributing. Please take some time to read through it.
 
 ## Issues
-
 Bug reports/fixes will always take priority over feature requests.
 
 When opening a new issue, please include the following:
@@ -19,14 +17,10 @@ When opening a new issue, please include the following:
   as well.
 
 ## Pull Requests
+Try to open an issue first before submitting a Pull Request, especially if your pull request involves contributing substantial
+amounts of code. This way, there is opportunity for discussion before you dedicate time and resources.
 
-Try to open an issue first before submitting a Pull Request, especially if your pull request involves writing code. This
-way, there is opportunity for discussion before you dedicate your time and resources to writing code.
-
-- Make sure that your code follows the current structure of the project. I may reject requests that do not follow this.
-- Your code should be commented if possible. This way, I know exactly what is going on, and new contributors won't be
-  lost.
-- If your Pull Request fixes a bug, reference it in the comments, so it is closed automatically.
-- Consistency is key, and quality is a must.
+- Make sure that your code follows the current structure of the project!
+- Your code should be commented if possible. This way, future contributors know what is going on.
 
 ### Thank you for contributing!
