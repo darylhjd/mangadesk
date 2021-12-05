@@ -1,22 +1,23 @@
 ## Configurations ⚙
 
 You may change the appropriate settings in the `config.json` file, which is stored in the `mangadesk` folder within your
-OS' default configuration folder.
+OS' default configuration folder (this folder [depends](https://pkg.go.dev/os#UserConfigDir) on your OS).
+
+If no location can be found, it will instead be found in the default home directory (also [depends](https://pkg.go.dev/os#UserHomeDir) on your OS!)
 
 ### Download Folder
 
 - `downloadDir`
 
-By default, all downloads will be stored in a folder titled `downloads`. You can change this by changing
-the `downloadDir` field.
+By default, all downloads will be stored in a folder titled `downloads` relative to where the executable is run. 
+
+You may use environment variables to specify the new path. Take special note when specifying relative or absolute paths!
 
 ### Languages
 
 - `langauges`
 
-By default, only English (`en`) translated chapters will be shown.
-
-You may change your desired language(s) through the `languages` field. Please use
+By default, only English (`en`) translated chapters will be shown. Please use
 comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).
 
 ### Download Quality
