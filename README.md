@@ -35,12 +35,12 @@ Works for Windows/Linux/macOS.
 
 ## Installation 🔧
 
-This application runs as a standalone executable, and does not install itself.
+This application runs as a standalone executable, and does not need to be installed.
 
-Check out the [releases page](https://github.com/darylhjd/mangadesk/releases) for relevant files. To update, just
+Check out the [Releases Page](https://github.com/darylhjd/mangadesk/releases) for new releases. To update, just
 download the latest release.
 
-For bleeding edge 🗡 updates, you may compile from source:
+For bleeding edge 🗡 updates, you may also compile from source:
 
 ```cmd
 $ git clone https://github.com/darylhjd/mangadesk.git
@@ -51,8 +51,8 @@ $ go build
 
 ### Arch Linux
 
-Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (
-thanks @AmaanHUB!). It may be installed manually or with your preferred AUR helper:
+Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). 
+It may be installed manually or with your preferred AUR helper:
 
 ```cmd
 $ paru -S mangadesk
@@ -96,59 +96,7 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ## Settings ⚙
 
-You may change the appropriate settings in the `config.json` file, which is stored in your OS' default configuration
-folder (.i.e. `$XDG_CONFIG_HOME` on Linux, *BSD, and MacOS; `%LOCALAPPDATA%` for Windows)
-
-### Download Folder
-
-- `downloadDir`
-
-By default, all downloads will be stored in a folder titled `downloads`.
-
-You can change this by changing the `downloadDir` field.
-
-### Languages
-
-- `langauges`
-
-By default, only English (`en`) translated chapters will be shown.
-
-You may change your desired language(s) through the `languages` field. Please use
-comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-language-codes/).
-
-### Download Quality
-
-- `downloadQuality`
-
-Valid options are `data` (high quality) or `data-saver` (lower quality).
-
-Any other empty/invalid option will default to `data`.
-
-### Force Port 443
-
-- `forcePort443`
-
-Valid options are `true` or `false`. It is `false` by default.
-
-Set to `true` if you are having trouble downloading or are using networks that block traffic to non-standard ports
-(such as school/office networks).
-[More info](https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId).
-
-### As Zip
-
-- `asZip`
-
-Valid options are `true` or `false`. It is `false` by default.
-
-Set to `true` if you want your chapter downloads to be compressed into a zip folder.
-
-### Zip Type
-
-- `zipType`
-
-Valid options are `zip` or `cbz`. This is ignored if `asZip` is set to `false`.
-
-Any other empty/invalid option will default to `zip`.
+Refer to [this document](app/core/CONFIG.md) for configurable settings.
 
 ## Issues ☠
 
