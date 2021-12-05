@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"github.com/darylhjd/mangadesk/app/ui"
 	"log"
 	"os"
 
@@ -40,9 +39,6 @@ func (m *MangaDesk) Initialise() error {
 		log.Println(err.Error())
 		os.Exit(1)
 	}
-
-	// TODO : Set universal input handlers.
-	ui.SetUniversalHandlers()
 
 	// Set the page holder as the application root and focus on it.
 	m.TView.SetRoot(m.PageHolder, true).SetFocus(m.PageHolder)

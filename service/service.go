@@ -25,6 +25,9 @@ func Start() {
 		ui.ShowMainPage()
 	}
 
+	// TODO : Set universal input handlers.
+	ui.SetUniversalHandlers()
+
 	// Run the app.
 	if err := core.App.TView.Run(); err != nil {
 		log.Println(err)
