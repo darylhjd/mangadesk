@@ -14,12 +14,11 @@ import (
 
 // MangaPage : This struct contains the required primitives for the manga page.
 type MangaPage struct {
-	Manga       *mangodex.Manga
-	Grid        *tview.Grid
-	Info        *tview.TextView
-	Table       *tview.Table
-	Selected    map[int]struct{} // Keep track of which chapters have been selected by user.
-	SelectedAll bool             // Keep track of if the user wants to select all.
+	Manga    *mangodex.Manga
+	Grid     *tview.Grid
+	Info     *tview.TextView
+	Table    *tview.Table
+	Selected map[int]struct{} // Keep track of which chapters have been selected by user.
 }
 
 // ShowMangaPage : Make the app show the manga page.
@@ -171,7 +170,7 @@ func (p *MangaPage) setChapterTable() {
 		// Chapter Number
 		chapterNumCell := tview.NewTableCell(
 			fmt.Sprintf("%-6s %s", chapter.GetChapterNum(), chapter.Attributes.TranslatedLanguage)).
-			SetMaxWidth(10).SetTextColor(MangaPageChapNumColor)
+			SetMaxWidth(10).SetTextColor(MangaPageChapNumColor).SetReference(&chapter)
 
 		// Chapter title
 		titleCell := tview.NewTableCell(fmt.Sprintf("%-30s", chapter.GetTitle())).SetMaxWidth(30).
@@ -198,7 +197,9 @@ func (p *MangaPage) setChapterTable() {
 
 		// Read marker
 		var read string
-		if _, ok := markers[chapter.ID]; ok {
+		if !core.App.Client.Auth.IsLoggedIn() {
+			read = "Not logged in!"
+		} else if _, ok := markers[chapter.ID]; ok {
 			read = "Y"
 		}
 		readCell := tview.NewTableCell(read).SetTextColor(MangaPageReadStatColor)
@@ -207,8 +208,15 @@ func (p *MangaPage) setChapterTable() {
 			p.Table.SetCell(index+1, 0, chapterNumCell).
 				SetCell(index+1, 1, titleCell).
 				SetCell(index+1, 2, downloadCell).
-				SetCell(index+1, 3, scanGroupCell).
-				SetCell(index+1, 4, readCell)
+				SetCell(index+1, 3, scanGroupCell)
+
+			if !core.App.Client.Auth.IsLoggedIn() {
+				if index == 0 {
+					p.Table.SetCell(index+1, 4, readCell)
+				}
+			} else {
+				p.Table.SetCell(index+1, 4, readCell)
+			}
 		})
 	}
 }

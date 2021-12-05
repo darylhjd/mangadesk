@@ -1,24 +1,33 @@
 package ui
 
 import (
-	g "github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
 )
 
+// SearchPage : This struct contains the search bar and the table of results
+// for the search. This struct reuses the MainPage struct, specifically for the guest table.
 type SearchPage struct {
 	MainPage
-	SearchForm *tview.Form
+	Form *tview.Form
 }
 
-// ShowSearchPage : Show the search page to the user.
-func ShowSearchPage(pages *tview.Pages) {
-	// Create the base main grid.
-	// 15x15 grid.
-	var ga []int
-	for i := 0; i < 15; i++ { // This is to create 15 grids.
-		ga = append(ga, -1)
+// ShowSearchPage : Make the app show the search page.
+func ShowSearchPage() {
+	// Create the new search page
+	searchPage := newSearchPage()
+
+	core.App.TView.SetFocus(searchPage.Grid)
+	core.App.PageHolder.AddAndSwitchToPage(SearchPageID, searchPage.Grid, true)
+}
+
+// newSearchPage : Creates a new SearchPage.
+func newSearchPage() *SearchPage {
+	var dimensions []int
+	for i := 0; i < 15; i++ {
+		dimensions = append(dimensions, -1)
 	}
-	grid := tview.NewGrid().SetColumns(ga...).SetRows(ga...)
+	grid := newGrid(dimensions, dimensions)
 	// Set grid attributes
 	grid.SetTitleColor(SearchPageGridTitleColor).
 		SetBorderColor(SearchPageGridBorderColor).
@@ -43,16 +52,18 @@ func ShowSearchPage(pages *tview.Pages) {
 	search.SetButtonsAlign(tview.AlignLeft).
 		SetLabelColor(SearchFormLabelColor)
 
+	// Add search bar and result table to the grid. Search bar will have focus.
+	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).
+		AddItem(table, 4, 0, 11, 15, 0, 0, true)
+
 	// Create the SearchPage.
-	// We use the MainPage struct.
-	searchPage := SearchPage{
+	// We reuse the MainPage struct.
+	searchPage := &SearchPage{
 		MainPage: MainPage{
-			Grid:          grid,
-			Table:         table,
-			CurrentOffset: 0,
-			MaxOffset:     0,
+			Grid:  grid,
+			Table: table,
 		},
-		SearchForm: search,
+		Form: search,
 	}
 
 	// Add form fields
@@ -65,20 +76,14 @@ func ShowSearchPage(pages *tview.Pages) {
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
 			exContent := search.GetFormItemByLabel("Explicit Content?").(*tview.Checkbox).IsChecked()
-			searchPage.MainPage.SetUpGenericTable(pages, "Search Results.", searchTerm, exContent)
+			go searchPage.setGuestTable(true, exContent, searchTerm)
 
 			// Send focus to the search result table.
-			g.App.SetFocus(searchPage.Table)
-		}).SetFocus(0) // Set focus to the title field.
+			core.App.TView.SetFocus(searchPage.Table)
+		}).
+		SetFocus(0) // Set focus to the title field.
 
-	// Set up input capture for the search page.
-	SetSearchPageHandlers(pages, &searchPage)
+	// TODO : Add input captures for the search page.
 
-	// Add search bar and result table to the grid. Search bar will have focus.
-	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).
-		AddItem(table, 4, 0, 11, 15, 0, 0, true)
-
-	pages.AddPage(SearchPageID, grid, true, false)
-	g.App.SetFocus(search)
-	pages.SwitchToPage(SearchPageID)
+	return searchPage
 }

@@ -53,6 +53,7 @@ func (m *MangaDesk) Shutdown() {
 
 	// Sync the screen to make sure that the terminal screen is not corrupted.
 	App.TView.Sync()
+	App.TView.Stop()
 
 	// Stop the logging
 	if err := m.stopLogging(); err != nil {

@@ -206,13 +206,13 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
 			pages.RemovePage(SearchPageID)
 		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
-			core2.App.SetFocus(searchPage.SearchForm)
+			core2.App.SetFocus(searchPage.Form)
 		}
 		return event
 	})
 
 	// Set up input capture for the search bar.
-	searchPage.SearchForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	searchPage.Form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
 			core2.App.SetFocus(searchPage.Table)

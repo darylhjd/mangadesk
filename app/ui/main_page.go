@@ -166,7 +166,7 @@ func (p *MainPage) setLoggedTable() {
 // setGuest : Set up the main page for a guest user.
 func (p *MainPage) setGuest() {
 	go p.setGuestGrid()
-	go p.setGuestTable()
+	go p.setGuestTable(false, core.App.Config.ExplicitContent, "")
 }
 
 // setGuestGrid : Show guest grid title.
@@ -177,7 +177,7 @@ func (p *MainPage) setGuestGrid() {
 }
 
 // setGuestTable : Show guest table items and title.
-func (p *MainPage) setGuestTable() {
+func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries
 		p.Table.Clear()
@@ -201,19 +201,22 @@ func (p *MainPage) setGuestTable() {
 			SetFixed(1, 0)
 
 		// Set table title.
-		// Set table title.
 		page, first, last := p.calculatePaginationData()
-		p.Table.SetTitle(fmt.Sprintf("Popular manga. Page %d (%d-%d). [::bu]Loading...", page, first, last))
+		tableTitle := "Popular manga"
+		if isSearch {
+			tableTitle = "Search Results"
+		}
+		p.Table.SetTitle(fmt.Sprintf("%s. Page %d (%d-%d). [::bu]Loading...", tableTitle, page, first, last))
 	})
 
 	// Get list of manga.
-	// Set up search parameters
+	// Set up offset parameters
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(OffsetRange))
 	params.Set("offset", strconv.Itoa(p.CurrentOffset))
 	// If user wants explicit content.
 	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
-	if core.App.Config.ExplicitContent {
+	if explicit {
 		ratings = append(ratings, mangodex.Porn)
 	}
 	for _, rating := range ratings {
@@ -221,6 +224,10 @@ func (p *MainPage) setGuestTable() {
 	}
 	// Include Author relationship
 	params.Set("includes[]", mangodex.AuthorRel)
+	// If it is a search, then we add the search term.
+	if isSearch {
+		params.Set("title", searchTerm)
+	}
 
 	list, err := core.App.Client.Manga.GetMangaList(params)
 	if err != nil {
@@ -236,7 +243,7 @@ func (p *MainPage) setGuestTable() {
 	// Show followed manga.
 	if p.MaxOffset == 0 {
 		core.App.TView.QueueUpdateDraw(func() {
-			noResCell := tview.NewTableCell("No manga entry!").SetSelectable(false)
+			noResCell := tview.NewTableCell("No results!").SetSelectable(false)
 			p.Table.SetCell(1, 0, noResCell)
 		})
 		return
