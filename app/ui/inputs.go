@@ -179,7 +179,7 @@ func (p *MangaPage) setHandlers() {
 		if len(p.Selected) == 0 {
 			p.Selected[row] = struct{}{}
 		}
-
+		log.Println("Creating and showing confirm download modal...")
 		modal := confirmModal(DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
 			selected := p.Selected
 			go p.downloadChapters(selected, 0)

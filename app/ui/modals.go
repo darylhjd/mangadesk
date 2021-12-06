@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
+	"log"
 )
 
 // ShowModal : Make the app show a modal.
@@ -41,9 +42,9 @@ func confirmModal(id, text, confirmButton string, f func()) *tview.Modal {
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonIndex == 0 {
 				f()
-			} else {
-				core.App.PageHolder.RemovePage(id)
 			}
+			log.Printf("Removing %s modal\n", id)
+			core.App.PageHolder.RemovePage(id)
 		})
 	return modal
 }
