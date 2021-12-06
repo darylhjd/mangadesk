@@ -29,26 +29,30 @@ type Relationship struct {
 
 func (a *Relationship) UnmarshalJSON(data []byte) error {
 	// Check for the type of the relationship, then unmarshal accordingly.
-	var typ struct {
+	typ := struct {
 		ID         string          `json:"id"`
 		Type       string          `json:"type"`
 		Attributes json.RawMessage `json:"attributes"`
-	}
+	}{}
 	if err := json.Unmarshal(data, &typ); err != nil {
 		return err
 	}
 
+	var err error
 	switch typ.Type {
-	case MangaRel:
-		a.Attributes = &MangaAttributes{}
 	case AuthorRel:
 		a.Attributes = &AuthorAttributes{}
+		err = json.Unmarshal(typ.Attributes, a.Attributes)
 	case ScanlationGroupRel:
 		a.Attributes = &ScanlationGroupAttributes{}
+		err = json.Unmarshal(typ.Attributes, a.Attributes)
 	default:
 		a.Attributes = &json.RawMessage{}
 	}
-	return json.Unmarshal(data, a.Attributes)
+
+	a.ID = typ.ID
+	a.Type = typ.Type
+	return err
 }
 
 // LocalisedStrings : A struct wrapping around a map containing each localised string.
@@ -57,6 +61,8 @@ type LocalisedStrings struct {
 }
 
 func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
+	l.Values = map[string]string{}
+
 	// Check whether there is more than one localised string.
 	var locals []map[string]string
 	// If failed, means there is only 1 string, or no string.
@@ -65,7 +71,6 @@ func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	}
 
 	// If pass, then add each item in the array to flatten to one map.
-	l.Values = map[string]string{}
 	for _, entry := range locals {
 		for key, value := range entry {
 			l.Values[key] = value

@@ -157,7 +157,8 @@ func (p *MainPage) setLoggedTable() {
 	p.setHandlers(false, false, "")
 
 	// Fill in the details
-	for index, manga := range followed.Data {
+	for index := 0; index < len(followed.Data); index++ {
+		manga := followed.Data[index]
 		// Set title and publishing status cells.
 		// Title
 		mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", manga.GetTitle("en"))).
@@ -274,7 +275,8 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	p.setHandlers(isSearch, explicit, searchTerm)
 
 	// Fill in the details
-	for index, manga := range list.Data {
+	for index := 0; index < len(list.Data); index++ {
+		manga := list.Data[index]
 		// Manga title cell.
 		mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", manga.GetTitle("en"))).
 			SetMaxWidth(40).SetTextColor(GuestMainPageTitleColor).SetReference(&manga)

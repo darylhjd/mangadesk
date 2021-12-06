@@ -61,8 +61,6 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 
 	msg.WriteString("Last Download Queue finished.\n")
 	msg.WriteString(fmt.Sprintf("Manga: %s\n", p.Manga.GetTitle("en")))
-	msg.WriteString(
-		fmt.Sprintf("\nChapter(s):\n%s", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(selection)), ", "), "[]")))
 	if len(errored) != 0 {
 		// If there were errors, we ask the user whether we want to retry,
 		// but we do not retry after a certain amount of re-attempts.
@@ -212,8 +210,8 @@ func (p *MangaPage) saveAsZipFolder(chapterFolder string) error {
 // getDownloadFolder : Get the download folder for a manga's chapter.
 func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
 	mangaName := p.Manga.GetTitle("en")
-	chapterName := fmt.Sprintf("Chapter%s [%s-%s] %s_%s",
-		chapter.GetChapterNum(), strings.ToUpper(chapter.Attributes.TranslatedLanguage), core.App.Config.DownloadQuality,
+	chapterName := fmt.Sprintf("Chapter %s [%s-%s] %s - %s",
+		chapter.GetChapterNum(), chapter.Attributes.TranslatedLanguage, core.App.Config.DownloadQuality,
 		chapter.GetTitle(), strings.SplitN(chapter.ID, "-", 2)[0])
 
 	// Remove invalid characters from the folder name

@@ -181,7 +181,8 @@ func (p *MangaPage) setHandlers() {
 		}
 
 		modal := confirmModal(DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
-			p.downloadChapters(p.Selected, 0)
+			selected := p.Selected
+			go p.downloadChapters(selected, 0)
 			p.Selected = map[int]struct{}{}
 		})
 		ShowModal(DownloadChaptersModalID, modal)

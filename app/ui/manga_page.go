@@ -99,10 +99,11 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		AddItem(table, 0, 5, 15, 10, 0, 80, true)
 
 	mangaPage := &MangaPage{
-		Manga: manga,
-		Grid:  grid,
-		Info:  info,
-		Table: table,
+		Manga:    manga,
+		Grid:     grid,
+		Info:     info,
+		Table:    table,
+		Selected: map[int]struct{}{},
 	}
 
 	// Set up values
@@ -158,7 +159,7 @@ func (p *MangaPage) setChapterTable() {
 		return
 	}
 	// Get the chapter read markers.
-	var markers map[string]struct{}
+	markers := map[string]struct{}{}
 	if core.App.Client.Auth.IsLoggedIn() {
 		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
 		if err != nil {
@@ -173,7 +174,8 @@ func (p *MangaPage) setChapterTable() {
 	}
 
 	// Fill in the chapters
-	for index, chapter := range chapters {
+	for index := 0; index < len(chapters); index++ {
+		chapter := chapters[index]
 		// Chapter Number
 		chapterNumCell := tview.NewTableCell(
 			fmt.Sprintf("%-6s %s", chapter.GetChapterNum(), chapter.Attributes.TranslatedLanguage)).
@@ -193,7 +195,7 @@ func (p *MangaPage) setChapterTable() {
 
 		// Scanlation group
 		var scanGroup string
-		for _, relation := range p.Manga.Relationships {
+		for _, relation := range chapter.Relationships {
 			if relation.Type == mangodex.ScanlationGroupRel {
 				scanGroup = relation.Attributes.(*mangodex.ScanlationGroupAttributes).Name
 				break
@@ -227,7 +229,13 @@ func (p *MangaPage) setChapterTable() {
 		})
 	}
 
+	for row := 0; row < p.Table.GetRowCount(); row++ {
+		log.Printf("Printing row %d\n", row)
+		log.Println(p.Table.GetCell(row, 0).GetReference())
+	}
+
 	// Set handlers.
+
 	p.setHandlers()
 }
 
