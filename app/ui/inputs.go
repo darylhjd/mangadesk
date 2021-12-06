@@ -18,6 +18,7 @@ func SetUniversalHandlers() {
 
 	// Set universal keybindings
 	core.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		log.Printf("Received event: %v\n", event.Key())
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput()
@@ -122,6 +123,7 @@ func (p *SearchPage) setHandlers() {
 // setHandlers : Set handlers for the main page.
 func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		var reload bool
 		switch event.Key() {
 		// User wants to go to the next offset page.
 		case tcell.KeyCtrlF:
@@ -131,6 +133,7 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 				return event
 			}
 			// Update the new offset
+			reload = true
 			p.CurrentOffset += offsetRange
 		case tcell.KeyCtrlB:
 			if p.CurrentOffset == 0 {
@@ -138,20 +141,25 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 				ShowModal(OffsetErrorModalID, modal)
 				return event
 			}
+			reload = true
+			// Update the new offset
 			p.CurrentOffset = int(math.Max(0, float64(p.CurrentOffset-offsetRange)))
 		}
 
-		if isSearch {
-			p.setGuestTable(isSearch, explicit, searchTerm)
-		} else if !core.App.Client.Auth.IsLoggedIn() {
-			p.setGuestTable(false, explicit, searchTerm)
-		} else {
-			p.setLoggedTable()
+		if reload {
+			if isSearch {
+				p.setGuestTable(isSearch, explicit, searchTerm)
+			} else if !core.App.Client.Auth.IsLoggedIn() {
+				p.setGuestTable(false, explicit, searchTerm)
+			} else {
+				p.setLoggedTable()
+			}
 		}
 		return event
 	})
 
 	p.Table.SetSelectedFunc(func(row, _ int) {
+		log.Printf("Selected row %d on main page.\n", row)
 		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
 	})
 }

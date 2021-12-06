@@ -29,6 +29,7 @@ type MainPage struct {
 // ShowMainPage : Make the app show the main page.
 func ShowMainPage() {
 	// Create the new main page
+	log.Println("Creating new main page...")
 	mainPage := newMainPage()
 
 	core.App.TView.SetFocus(mainPage.Grid)
@@ -76,12 +77,14 @@ func newMainPage() *MainPage {
 
 // setLogged : Set up the MainPage for a logged user.
 func (p *MainPage) setLogged() {
+	log.Println("Using logged main page.")
 	go p.setLoggedGrid()
 	go p.setLoggedTable()
 }
 
 // setLoggedGrid : Show logged grid title.
 func (p *MainPage) setLoggedGrid() {
+	log.Println("Setting logged grid...")
 	var username string
 	if u, err := core.App.Client.User.GetLoggedUser(); err != nil {
 		log.Println(fmt.Sprintf("Error getting user info: %s", err.Error()))
@@ -92,10 +95,12 @@ func (p *MainPage) setLoggedGrid() {
 	core.App.TView.QueueUpdateDraw(func() {
 		p.Grid.SetTitle(fmt.Sprintf("Welcome to MangaDex, [lightgreen]%s!", username))
 	})
+	log.Println("Finished setting logged grid.")
 }
 
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
+	log.Println("Setting logged table...")
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries.
 		p.Table.Clear()
@@ -122,9 +127,11 @@ func (p *MainPage) setLoggedTable() {
 	followed, err := core.App.Client.User.GetUserFollowedMangaList(
 		offsetRange, p.CurrentOffset, []string{mangodex.AuthorRel})
 	if err != nil {
-		log.Println(err.Error())
-		modal := okModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
-		ShowModal(GenericAPIErrorModalID, modal)
+		log.Printf("Error getting followed manga: %s\n", err.Error())
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
+			ShowModal(GenericAPIErrorModalID, modal)
+		})
 		return
 	}
 
@@ -157,30 +164,35 @@ func (p *MainPage) setLoggedTable() {
 			SetMaxWidth(50).SetTextColor(LoggedMainPageTitleColor).SetReference(&manga)
 
 		// Publishing Status.
-		sCell := tview.NewTableCell(fmt.Sprintf("%-15s", *manga.Attributes.Status)).
+		sCell := tview.NewTableCell(strings.Title(fmt.Sprintf("%-15s", *manga.Attributes.Status))).
 			SetMaxWidth(15).SetTextColor(LoggedMainPagePubStatusColor)
 
 		core.App.TView.QueueUpdateDraw(func() {
 			p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
 		})
 	}
+	log.Println("Finished setting logged table.")
 }
 
 // setGuest : Set up the main page for a guest user.
 func (p *MainPage) setGuest() {
+	log.Println("Using guest main page.")
 	go p.setGuestGrid()
 	go p.setGuestTable(false, core.App.Config.ExplicitContent, "")
 }
 
 // setGuestGrid : Show guest grid title.
 func (p *MainPage) setGuestGrid() {
+	log.Println("Setting guest grid...")
 	core.App.TView.QueueUpdateDraw(func() {
 		p.Grid.SetTitle("Welcome to MangaDex, [yellow]Guest!")
 	})
+	log.Println("Finished setting guest grid.")
 }
 
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
+	log.Println("Setting guest table...")
 	tableTitle := "Popular manga"
 	if isSearch {
 		tableTitle = "Search Results"
@@ -285,6 +297,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 				SetCell(index+1, 2, tagCell)
 		})
 	}
+	log.Println("Finished setting guest table.")
 }
 
 // calculatePaginationData : Calculates the current page and first/last entry number.

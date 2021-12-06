@@ -24,14 +24,15 @@ func (r *Response) GetResult() string {
 type Relationship struct {
 	ID         string      `json:"id"`
 	Type       string      `json:"type"`
-	Attributes interface{} `json:"attributes,omitempty"`
+	Attributes interface{} `json:"attributes"`
 }
 
 func (a *Relationship) UnmarshalJSON(data []byte) error {
 	// Check for the type of the relationship, then unmarshal accordingly.
 	var typ struct {
-		ID   string `json:"id"`
-		Type string `json:"type"`
+		ID         string          `json:"id"`
+		Type       string          `json:"type"`
+		Attributes json.RawMessage `json:"attributes"`
 	}
 	if err := json.Unmarshal(data, &typ); err != nil {
 		return err
@@ -44,8 +45,10 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 		a.Attributes = &AuthorAttributes{}
 	case ScanlationGroupRel:
 		a.Attributes = &ScanlationGroupAttributes{}
+	default:
+		a.Attributes = &json.RawMessage{}
 	}
-	return json.Unmarshal(data, a)
+	return json.Unmarshal(data, a.Attributes)
 }
 
 // LocalisedStrings : A struct wrapping around a map containing each localised string.
@@ -60,7 +63,9 @@ func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &locals); err != nil {
 		return json.Unmarshal(data, &l.Values)
 	}
+
 	// If pass, then add each item in the array to flatten to one map.
+	l.Values = map[string]string{}
 	for _, entry := range locals {
 		for key, value := range entry {
 			l.Values[key] = value

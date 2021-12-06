@@ -1,4 +1,4 @@
-# github.com/darylhjd/mangodex v0.0.0-20211206083345-0ae6b9e90e9b
+# github.com/darylhjd/mangodex v0.0.0-20211206092812-1226e38c445e
 ## explicit
 github.com/darylhjd/mangodex
 # github.com/gdamore/encoding v1.0.0

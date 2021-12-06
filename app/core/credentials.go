@@ -44,7 +44,7 @@ func (m *MangaDesk) loadCredentials() error {
 func (m *MangaDesk) restoreSession() error {
 	// Try to read stored credential file.
 	if err := m.loadCredentials(); err != nil { // If error, then user was not originally logged in.
-		fmt.Println("No past session, using Guest account...")
+		fmt.Println("No past session, redirecting to login...")
 		time.Sleep(time.Millisecond * 750)
 		return err
 	}
