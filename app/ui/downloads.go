@@ -18,19 +18,14 @@ import (
 )
 
 // downloadChapters : Download current chapters specified by the user.
-func (p *MangaPage) downloadChapters() {
-	// Get a reference to the current selection
-	selection := p.Selected
-	// Reset.
-	p.Selected = map[int]struct{}{}
-
-	// Clear selection highlight
+func (p *MangaPage) downloadChapters(selection []int, attemptNo int) {
+	// Unmark the chapters
 	for index := range selection {
-		markChapterUnselected(p.Table, index)
+		p.markChapterUnselected(index)
 	}
 
 	// Download the selected chapters.
-	var errored bool
+	var errored []int
 	for index := range selection {
 		// Get the reference to the chapter.
 		chapter := p.Table.GetCell(index, 0).GetReference().(*mangodex.Chapter)
@@ -42,7 +37,7 @@ func (p *MangaPage) downloadChapters() {
 			msg := fmt.Sprintf("Error saving %s - Chapter: %s, %s - %s",
 				p.Manga.GetTitle("en"), chapter.GetChapterNum(), chapter.GetTitle(), err.Error())
 			log.Println(msg)
-			errored = true
+			errored = append(errored, index)
 			continue
 		}
 
@@ -52,18 +47,35 @@ func (p *MangaPage) downloadChapters() {
 		})
 	}
 
-	var msg strings.Builder
+	var (
+		msg     strings.Builder
+		modal   *tview.Modal
+		modalID string
+	)
+	// Use unique ID for this particular download.
+	modalID = fmt.Sprintf("%s - %s - %v", DownloadFinishedModalID, p.Manga.GetTitle("en"), selection)
+
 	msg.WriteString("Last Download Queue finished.\n")
-	if errored {
+	msg.WriteString(fmt.Sprintf("Manga: %s\n", p.Manga.GetTitle("en")))
+	if len(errored) != 0 {
+		// If there were errors, we ask the user whether we want to retry,
+		// but we do not retry after a certain amount of re-attempts.
 		msg.WriteString("We encountered some errors! Check the log for more details.")
+		if attemptNo < 5 {
+			msg.WriteString("\nRetry failed downloads?")
+			modal = confirmModal(modalID, msg.String(), "Retry", func() {
+				p.downloadChapters(errored, attemptNo+1)
+			})
+		} else {
+			msg.WriteString("\nMaximum retries reached.")
+			modal = okModal(modalID, msg.String())
+		}
 	} else {
 		msg.WriteString("No errors :>")
+		modal = okModal(modalID, msg.String())
 	}
-
 	core.App.TView.QueueUpdateDraw(func() {
-		// Create download finished modal.
-		modal := okModal(DownloadFinishedModalID, msg.String())
-		ShowModal(DownloadFinishedModalID, modal)
+		ShowModal(modalID, modal)
 	})
 }
 
@@ -107,8 +119,6 @@ func (p *MangaPage) saveChapter(chapter *mangodex.Chapter) error {
 	if core.App.Config.AsZip {
 		if err = p.saveAsZipFolder(downloadFolder); err != nil {
 			return err
-		} else if err = os.RemoveAll(downloadFolder); err != nil {
-			return err
 		}
 	}
 	return nil
@@ -116,20 +126,23 @@ func (p *MangaPage) saveChapter(chapter *mangodex.Chapter) error {
 
 // saveAsZipFolder : This function creates a zip folder to store a chapter download.
 func (p *MangaPage) saveAsZipFolder(chapterFolder string) error {
-	zipFile, err := os.Create(fmt.Sprintf("%s.%s", chapterFolder, core.App.Config.ZipType))
-	if err != nil {
+	// Create a temporary zip folder to store the zip files. This is because the current images
+	// are also stored in their own zip directory as returned from getDownloadFolder.
+	tempZip := fmt.Sprintf("%s.%s", chapterFolder, "temp")
+
+	var (
+		zipFile *os.File
+		err     error
+	)
+
+	// Create necessary writers
+	if zipFile, err = os.Create(tempZip); err != nil {
 		return err
 	}
-	defer func() {
-		_ = zipFile.Close()
-	}()
-
 	w := zip.NewWriter(zipFile)
-	defer func() {
-		_ = w.Close()
-	}()
 
-	return filepath.WalkDir(chapterFolder, func(path string, d fs.DirEntry, err error) error {
+	// Saving the actual files.
+	if err = filepath.WalkDir(chapterFolder, func(path string, d fs.DirEntry, err error) error {
 		// Stop walking immediately if encounter error
 		if err != nil {
 			return err
@@ -168,7 +181,26 @@ func (p *MangaPage) saveAsZipFolder(chapterFolder string) error {
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	// Close the files.
+	if err = w.Close(); err != nil {
+		return err
+	}
+	if err = zipFile.Close(); err != nil {
+		return err
+	}
+
+	// We remove the current unzipped image folder, and rename the temp zip to the real zip.
+	if err = os.RemoveAll(chapterFolder); err != nil {
+		return err
+	}
+	if err = os.Rename(tempZip, chapterFolder); err != nil {
+		return err
+	}
+	return err
 }
 
 // getDownloadFolder : Get the download folder for a manga's chapter.
@@ -181,8 +213,8 @@ func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
 	// Remove invalid characters from the folder name
 	restricted := []string{"<", ">", ":", "/", "|", "?", "*", "\"", "\\", "."}
 	for _, c := range restricted {
-		mangaName = strings.ReplaceAll(mangaName, c, "")
-		chapterName = strings.ReplaceAll(chapterName, c, "")
+		mangaName = strings.ReplaceAll(mangaName, c, "-")
+		chapterName = strings.ReplaceAll(chapterName, c, "-")
 	}
 
 	folder := filepath.Join(core.App.Config.DownloadDir, mangaName, chapterName)

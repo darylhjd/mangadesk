@@ -8,7 +8,6 @@ The 2nd section of this page contains the logic for keybindings.
 
 import (
 	"context"
-	core2 "github.com/darylhjd/mangadesk/app/core"
 	"log"
 	"strings"
 
@@ -16,17 +15,17 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"github.com/darylhjd/mangadesk/core"
+	"github.com/darylhjd/mangadesk/app/core"
 )
 
 // SetUniversalHandlers : Set input handlers for the core.
 // List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
 func SetUniversalHandlers() {
 	// Enable mouse.
-	core2.App.TView.EnableMouse(true)
+	core.App.TView.EnableMouse(true)
 
 	// Set keyboard captures
-	core2.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	core.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput()
@@ -45,7 +44,7 @@ func SetUniversalHandlers() {
 // This input enables user to toggle login/logout.
 func ctrlLInput() {
 	// Do not allow pop up when on login screen.
-	if page, _ := core2.App.Pager.GetFrontPage(); page == LoginPageID {
+	if page, _ := core.App.Pager.GetFrontPage(); page == LoginPageID {
 		return
 	}
 
@@ -109,7 +108,7 @@ func ctrlSInput() {
 // This sends an interrupt signal to the application.
 func ctrlCInput() {
 	log.Println("TView stopped by Ctrl-C interrupt.")
-	core2.App.TView.Stop()
+	core.App.TView.Stop()
 }
 
 // SetMainPageTableHandlers : Set input handler for main page table.
@@ -206,7 +205,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
 			pages.RemovePage(SearchPageID)
 		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
-			core2.App.SetFocus(searchPage.Form)
+			core.App.SetFocus(searchPage.Form)
 		}
 		return event
 	})
@@ -215,7 +214,7 @@ func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
 	searchPage.Form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
-			core2.App.SetFocus(searchPage.Table)
+			core.App.SetFocus(searchPage.Table)
 		}
 		return event
 	})

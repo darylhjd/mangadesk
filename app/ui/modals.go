@@ -24,3 +24,24 @@ func okModal(id, text string) *tview.Modal {
 		})
 	return modal
 }
+
+// confirmModal : Creates a new modal for confirmation.
+// The user specifies the function to do when confirming.
+// If the user cancels, then the modal is removed from the view.
+func confirmModal(id, text, confirmButton string, f func()) *tview.Modal {
+	// Create new modal
+	modal := tview.NewModal()
+
+	// Set modal attributes
+	modal.SetText(text).
+		AddButtons([]string{confirmButton, "Cancel"}).
+		SetFocus(0).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonIndex == 0 {
+				f()
+			} else {
+				core.App.PageHolder.RemovePage(id)
+			}
+		})
+	return modal
+}

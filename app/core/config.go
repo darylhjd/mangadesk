@@ -106,8 +106,8 @@ func getConfDir() string {
 	configDir, err := os.UserConfigDir()
 	if err != nil { // If there is an error, then we use the home appDir.
 		configDir, err = os.UserHomeDir()
-		if err != nil { // If still fail, then we use `usr` folder in current appDir.
-			configDir = "usr"
+		if err != nil { // If still fail, we just save in current working directory.
+			configDir = ""
 		}
 	}
 

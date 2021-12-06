@@ -10,15 +10,18 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"sync"
 )
 
 // MangaPage : This struct contains the required primitives for the manga page.
 type MangaPage struct {
-	Manga    *mangodex.Manga
-	Grid     *tview.Grid
-	Info     *tview.TextView
-	Table    *tview.Table
-	Selected map[int]struct{} // Keep track of which chapters have been selected by user.
+	Manga *mangodex.Manga
+	Grid  *tview.Grid
+	Info  *tview.TextView
+	Table *tview.Table
+
+	Selected      []int // Keep track of which chapters have been selected by user.
+	SelectedMutex *sync.Mutex
 }
 
 // ShowMangaPage : Make the app show the manga page.
@@ -90,10 +93,12 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		AddItem(table, 0, 5, 15, 10, 0, 80, true)
 
 	mangaPage := &MangaPage{
-		Manga: manga,
-		Grid:  grid,
-		Info:  info,
-		Table: table,
+		Manga:         manga,
+		Grid:          grid,
+		Info:          info,
+		Table:         table,
+		Selected:      []int{},
+		SelectedMutex: &sync.Mutex{},
 	}
 
 	// Set up values
@@ -263,13 +268,13 @@ func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
 }
 
 // MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.
-func markChapterSelected(table *tview.Table, row int) {
-	chapterCell := table.GetCell(row, 0)
+func (p *MangaPage) markChapterSelected(row int) {
+	chapterCell := p.Table.GetCell(row, 0)
 	chapterCell.SetTextColor(tcell.ColorBlack).SetBackgroundColor(MangaPageHighlightColor)
 }
 
 // MarkChapterUnselected : Mark a chapter as being unselected by the user on the main page table.
-func markChapterUnselected(table *tview.Table, row int) {
-	chapterCell := table.GetCell(row, 0)
+func (p *MangaPage) markChapterUnselected(row int) {
+	chapterCell := p.Table.GetCell(row, 0)
 	chapterCell.SetTextColor(MangaPageChapNumColor).SetBackgroundColor(tcell.ColorBlack)
 }
