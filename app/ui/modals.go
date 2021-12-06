@@ -17,6 +17,7 @@ func okModal(id, text string) *tview.Modal {
 
 	// Set modal attributes
 	modal.SetText(text).
+		SetBackgroundColor(ModalColor).
 		AddButtons([]string{"OK"}).
 		SetFocus(0).
 		SetDoneFunc(func(_ int, _ string) {
@@ -34,6 +35,7 @@ func confirmModal(id, text, confirmButton string, f func()) *tview.Modal {
 
 	// Set modal attributes
 	modal.SetText(text).
+		SetBackgroundColor(ModalColor).
 		AddButtons([]string{confirmButton, "Cancel"}).
 		SetFocus(0).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {

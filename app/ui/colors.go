@@ -52,3 +52,7 @@ const ( // Search page colors
 const ( // Help page colors
 	HelpPageBorderColor = tcell.ColorLightGrey
 )
+
+const ( // Modal colors
+	ModalColor = tcell.ColorDarkSlateGrey
+)
