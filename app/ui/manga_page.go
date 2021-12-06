@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -128,7 +129,7 @@ func (p *MangaPage) setMangaInfo() {
 	}
 
 	// Status
-	status := *p.Manga.Attributes.Status
+	status := strings.Title(*p.Manga.Attributes.Status)
 
 	// Description
 	desc := tview.Escape(p.Manga.GetDescription("en"))
@@ -229,13 +230,7 @@ func (p *MangaPage) setChapterTable() {
 		})
 	}
 
-	for row := 0; row < p.Table.GetRowCount(); row++ {
-		log.Printf("Printing row %d\n", row)
-		log.Println(p.Table.GetCell(row, 0).GetReference())
-	}
-
 	// Set handlers.
-
 	p.setHandlers()
 }
 
