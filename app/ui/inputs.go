@@ -1,11 +1,5 @@
 package ui
 
-/*
-This file contains the input handlers for the Holder.
-
-The 2nd section of this page contains the logic for keybindings.
-*/
-
 import (
 	"context"
 	"log"

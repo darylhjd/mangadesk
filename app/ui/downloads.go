@@ -17,6 +17,10 @@ import (
 	"github.com/rivo/tview"
 )
 
+const (
+	maxRetries = 5
+)
+
 // downloadChapters : Download current chapters specified by the user.
 func (p *MangaPage) downloadChapters(selection []int, attemptNo int) {
 	// Unmark the chapters
@@ -57,11 +61,13 @@ func (p *MangaPage) downloadChapters(selection []int, attemptNo int) {
 
 	msg.WriteString("Last Download Queue finished.\n")
 	msg.WriteString(fmt.Sprintf("Manga: %s\n", p.Manga.GetTitle("en")))
+	msg.WriteString(
+		fmt.Sprintf("\nChapter(s):\n%s", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(selection)), ", "), "[]")))
 	if len(errored) != 0 {
 		// If there were errors, we ask the user whether we want to retry,
 		// but we do not retry after a certain amount of re-attempts.
 		msg.WriteString("We encountered some errors! Check the log for more details.")
-		if attemptNo < 5 {
+		if attemptNo < maxRetries {
 			msg.WriteString("\nRetry failed downloads?")
 			modal = confirmModal(modalID, msg.String(), "Retry", func() {
 				p.downloadChapters(errored, attemptNo+1)

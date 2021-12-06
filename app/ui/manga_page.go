@@ -13,6 +13,10 @@ import (
 	"sync"
 )
 
+const (
+	chapterOffsetRange = 500
+)
+
 // MangaPage : This struct contains the required primitives for the manga page.
 type MangaPage struct {
 	Manga *mangodex.Manga
@@ -230,7 +234,7 @@ func (p *MangaPage) setChapterTable() {
 func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
 	// Set up query parameters.
 	params := url.Values{}
-	params.Set("limit", "500")
+	params.Set("limit", strconv.Itoa(chapterOffsetRange))
 	// Get all chapters with user's specified languages
 	for _, lang := range core.App.Config.Languages {
 		params.Add("translatedLanguage[]", lang)

@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+const (
+	offsetRange = 100
+)
+
 // MainPage : This struct contains the grid and the entry table.
 // In addition, it also keeps track of whether to show followed/popular manga based on login status
 // as well as the entry offset.
@@ -116,7 +120,7 @@ func (p *MainPage) setLoggedTable() {
 
 	// Get the list of the user's followed manga.
 	followed, err := core.App.Client.User.GetUserFollowedMangaList(
-		OffsetRange, p.CurrentOffset, []string{mangodex.AuthorRel})
+		offsetRange, p.CurrentOffset, []string{mangodex.AuthorRel})
 	if err != nil {
 		log.Println(err.Error())
 		modal := okModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
@@ -212,7 +216,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	// Get list of manga.
 	// Set up offset parameters
 	params := url.Values{}
-	params.Set("limit", strconv.Itoa(OffsetRange))
+	params.Set("limit", strconv.Itoa(offsetRange))
 	params.Set("offset", strconv.Itoa(p.CurrentOffset))
 	// If user wants explicit content.
 	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
@@ -287,9 +291,9 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 
 // calculatePaginationData : Calculates the current page and first/last entry number.
 func (p *MainPage) calculatePaginationData() (int, int, int) {
-	page := p.CurrentOffset/OffsetRange + 1
+	page := p.CurrentOffset/offsetRange + 1
 	firstEntry := p.CurrentOffset + 1
-	lastEntry := page * OffsetRange
+	lastEntry := page * offsetRange
 
 	if lastEntry > p.MaxOffset {
 		lastEntry = p.MaxOffset
