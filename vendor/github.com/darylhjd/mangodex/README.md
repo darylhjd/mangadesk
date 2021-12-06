@@ -17,7 +17,7 @@ package main
 import (
 	"fmt"
 	
-	m "github.com/darylhjd/mangodex@essential"
+	m "github.com/darylhjd/mangodex@simple"
 )
 
 func main() {
