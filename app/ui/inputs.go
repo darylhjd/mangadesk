@@ -1,9 +1,8 @@
 package ui
 
 import (
-	"context"
 	"log"
-	"strings"
+	"math"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
@@ -12,13 +11,12 @@ import (
 	"github.com/darylhjd/mangadesk/app/core"
 )
 
-// SetUniversalHandlers : Set input handlers for the core.
-// List of input captures: Ctrl+L, Ctrl+K, Ctrl+S
+// SetUniversalHandlers : Set universal inputs for the app.
 func SetUniversalHandlers() {
-	// Enable mouse.
+	// Enable mouse inputs.
 	core.App.TView.EnableMouse(true)
 
-	// Set keyboard captures
+	// Set universal keybindings
 	core.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
@@ -34,227 +32,190 @@ func SetUniversalHandlers() {
 	})
 }
 
-// ctrlLInput : Handler for Ctrl+L input.
-// This input enables user to toggle login/logout.
+// ctrlLInput : Enables user to toggle login/logout.
 func ctrlLInput() {
 	// Do not allow pop up when on login screen.
-	if page, _ := core.App.Pager.GetFrontPage(); page == LoginPageID {
+	if page, _ := core.App.PageHolder.GetFrontPage(); page == LoginPageID {
 		return
 	}
 
 	// Create the modal to prompt user confirmation.
-	var (
-		buttonFn func()
-		title    string
-	)
-
-	// This will decide the function of the modal by checking whether user is logged in or out.
-	switch core.DexClient.Auth.IsLoggedIn() {
-	case true: // Show LogoutModal
-		title = "Logout\nStored credentials will be deleted.\n\n"
-		buttonFn = func() { // Set the function.
-			// Attempt logout
-			if err := core.DexClient.Auth.Logout(); err != nil {
-				okModal(pages, LoginLogoutFailureModalID, "Error logging out!")
+	var modal *tview.Modal
+	// Decide whether the modal is to log in or logout.
+	switch core.App.Client.Auth.IsLoggedIn() {
+	case true:
+		text := "Logout?\nStored credentials will be deleted."
+		modal = confirmModal(LoginLogoutCfmModalID, text, "Logout", func() {
+			// Attempt to logout
+			if err := core.App.Client.Auth.Logout(); err != nil {
+				okM := okModal(LoginLogoutFailureModalID, "Error logging out!")
+				ShowModal(LoginLogoutFailureModalID, okM)
 				return
 			}
-			// Remove the credentials file.
-			core.DeleteCredentials()
-			// Then we redirect the user to the guest main page
-			ShowMainPage(pages)
-		}
-	case false: // User wants to login.
-		title = "Login\n"
-		buttonFn = func() {
-			ShowLoginPage(pages)
-		}
+			// If logged out successfully, then delete stored credentials and direct user to main page (guest).
+			core.App.DeleteCredentials()
+			ShowMainPage()
+		})
+	case false:
+		text := "Login?"
+		modal = confirmModal(LoginLogoutCfmModalID, text, "Login", func() {
+			ShowLoginPage()
+		})
 	}
 
-	// Create the modal for the user.
-	ShowModal(pages, LoginLogoutCfmModalID, title+"Are you sure?", []string{"Yes", "No"},
-		func(i int, label string) {
-			// If user confirms the modal.
-			if label == "Yes" {
-				buttonFn()
-			}
-			// We remove the modal from the page.
-			pages.RemovePage(LoginLogoutCfmModalID)
-		})
+	ShowModal(LoginLogoutCfmModalID, modal)
 }
 
-// ctrlKInput : Handler for Ctrl+K input.
-// This shows the help page to the user.
+// ctrlKInput : Shows the help page to the user.
 func ctrlKInput() {
-	ShowHelpPage(pages)
+	ShowHelpPage()
 }
 
-// ctrlSInput : Handler for Ctrl+S input.
-// THis shows search page to the user.
+// ctrlSInput : Shows search page to the user.
 func ctrlSInput() {
 	// Do not allow when on login screen.
-	if page, _ := pages.GetFrontPage(); page == LoginPageID {
+	if page, _ := core.App.PageHolder.GetFrontPage(); page == LoginPageID {
 		return
 	}
-	ShowSearchPage(pages)
+	ShowSearchPage()
 }
 
-// ctrlCInput : Handler for Ctrl+C input.
-// This sends an interrupt signal to the application.
+// ctrlCInput : Sends an interrupt signal to the application to stop.
 func ctrlCInput() {
 	log.Println("TView stopped by Ctrl-C interrupt.")
 	core.App.TView.Stop()
 }
 
-// SetMainPageTableHandlers : Set input handler for main page table.
-// List of input captures : Ctrl+F. Ctrl+B
-func SetMainPageTableHandlers(cancel context.CancelFunc, pages *tview.Pages, mp *MainPage, searchTitle string, exContent bool) {
-	// Pagination logic.
-	mp.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		changePage := false
+// setHandlers : Set handlers for the help page.
+func (p *HelpPage) setHandlers() {
+	p.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyCtrlF: // User wants to go to next offset page.
-			if mp.CurrentOffset+core.OffsetRange >= mp.MaxOffset {
-				okModal(pages, OffsetErrorModalID, "No more results to show.")
-				break
-			}
-			mp.CurrentOffset += core.OffsetRange
-			changePage = true
-		case tcell.KeyCtrlB: // User wants to go back to previous offset page.
-			if mp.CurrentOffset == 0 {
-				okModal(pages, OffsetErrorModalID, "Already on first page.")
-				break
-			}
-			mp.CurrentOffset -= core.OffsetRange
-			if mp.CurrentOffset < 0 {
-				mp.CurrentOffset = 0
-			}
-			changePage = true
-		}
-
-		if changePage {
-			cancel() // Cancel current goroutine.
-			if mp.LoggedPage {
-				mp.SetUpLoggedTable(pages)
-			} else {
-				// Get titles
-				tableTitle := strings.SplitN(mp.Table.GetTitle(), ".", 2)[0] + "."
-				mp.SetUpGenericTable(pages, tableTitle, searchTitle, exContent)
-			}
+		case tcell.KeyEsc:
+			core.App.PageHolder.RemovePage(HelpPageID)
 		}
 		return event
 	})
 }
 
-// SetMangaPageHandlers : Set input handlers for the manga page.
-// List of input captures : ESC
-func SetMangaPageHandlers(cancel context.CancelFunc, pages *tview.Pages, grid *tview.Grid) {
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyEsc: // User wants to go back.
-			pages.RemovePage(MangaPageID)
-			cancel()
-		}
-		return event
-	})
-}
-
-// SetMangaPageTableHandlers : Set input handlers for the manga page table.
-// List of input captures : Ctrl+E
-func SetMangaPageTableHandlers(pages *tview.Pages, mangaPage *MangaPage, m *mangodex.Manga, chaps *[]mangodex.Chapter) {
-	// When user presses ENTER to confirm selected.
-	mangaPage.ChapterTable.SetSelectedFunc(func(row, column int) {
-		// We add the current selection if the there are no selected rows currently.
-		if len(*mangaPage.Selected) == 0 {
-			(*mangaPage.Selected)[row] = struct{}{}
-		}
-		// Show modal to confirm download.
-		ShowModal(pages, DownloadChaptersModalID, "Download selection(s)?", []string{"Yes", "No"},
-			func(i int, label string) {
-				if label == "Yes" {
-					// If user confirms to download, then we download the chapters.
-					downloadChapters(pages, mangaPage, m, chaps)
-				}
-				pages.RemovePage(DownloadChaptersModalID)
-			})
-	})
-
-	// For custom input.
-	mangaPage.ChapterTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyCtrlE: // User selects this manga row.
-			ctrlEInput(mangaPage)
-		case tcell.KeyCtrlA: // User wants to toggle select all.
-			ctrlAInput(mangaPage, len(*chaps))
-		}
-		return event
-	})
-}
-
-// SetSearchPageHandlers : Set input handlers for the search page.
-// List of input captures : ESC, Tab, KeyDown
-func SetSearchPageHandlers(pages *tview.Pages, searchPage *SearchPage) {
-	// Set up input capture for the grid.
-	searchPage.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+// setHandlers : Set handlers for the search page.
+func (p *SearchPage) setHandlers() {
+	p.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc: // When user presses ESC, then we remove the Search page.
-			pages.RemovePage(SearchPageID)
+			core.App.PageHolder.RemovePage(SearchPageID)
 		case tcell.KeyTab: // When user presses Tab, they are sent back to the search form.
-			core.App.SetFocus(searchPage.Form)
+			core.App.TView.SetFocus(p.Form)
 		}
 		return event
 	})
 
 	// Set up input capture for the search bar.
-	searchPage.Form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	p.Form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDown: // When user presses KeyDown, they are sent to the search results table.
-			core.App.SetFocus(searchPage.Table)
+			core.App.TView.SetFocus(p.Table)
 		}
 		return event
 	})
 }
 
-// SetHelpPageHandlers : Set input handlers for the help page.
-// List of input captures : ESC
-func SetHelpPageHandlers(pages *tview.Pages, grid *tview.Grid) {
-	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+// setHandlers : Set handlers for the main page.
+func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
+	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyEsc: // When user presses ESC, then we remove the Help Page.
-			pages.RemovePage(HelpPageID)
+		// User wants to go to the next offset page.
+		case tcell.KeyCtrlF:
+			if p.CurrentOffset+offsetRange >= p.MaxOffset {
+				modal := okModal(OffsetErrorModalID, "No more results to show.")
+				ShowModal(OffsetErrorModalID, modal)
+				return event
+			}
+			// Update the new offset
+			p.CurrentOffset += offsetRange
+		case tcell.KeyCtrlB:
+			if p.CurrentOffset == 0 {
+				modal := okModal(OffsetErrorModalID, "Already on first page.")
+				ShowModal(OffsetErrorModalID, modal)
+				return event
+			}
+			p.CurrentOffset = int(math.Max(0, float64(p.CurrentOffset-offsetRange)))
+		}
+
+		if isSearch {
+			p.setGuestTable(isSearch, explicit, searchTerm)
+		} else if !core.App.Client.Auth.IsLoggedIn() {
+			p.setGuestTable(false, explicit, searchTerm)
+		} else {
+			p.setLoggedTable()
+		}
+		return event
+	})
+
+	p.Table.SetSelectedFunc(func(row, _ int) {
+		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
+	})
+}
+
+// setHandlers : Set handlers for the manga page.
+func (p *MangaPage) setHandlers() {
+	p.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEsc:
+			core.App.PageHolder.RemovePage(MangaPageID)
+		}
+		return event
+	})
+
+	p.Table.SetSelectedFunc(func(row, _ int) {
+		// We add the current selection if the there are no selected rows currently.
+		if len(p.Selected) == 0 {
+			p.Selected[row] = struct{}{}
+		}
+
+		modal := confirmModal(DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
+			p.downloadChapters(p.Selected, 0)
+			p.Selected = map[int]struct{}{}
+		})
+		ShowModal(DownloadChaptersModalID, modal)
+	})
+
+	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyCtrlE: // User selects this manga row.
+			p.ctrlEInput()
+		case tcell.KeyCtrlA: // User wants to toggle select all.
+			p.ctrlAInput()
 		}
 		return event
 	})
 }
 
-// ctrlEInput : Handler for Ctrl+E input.
-// This input enables user to select a chapter table row without activating the select action.
-// This is done by using a int map to keep track of the selected row indexes.
-func ctrlEInput(mangaPage *MangaPage) {
-	// Get the current row (and col, but we do not need that)
-	row, _ := mangaPage.ChapterTable.GetSelection()
-	if _, ok := (*mangaPage.Selected)[row]; ok { // If the row already exists in the map, then we remove it!
-		markChapterUnselected(mangaPage.ChapterTable, row)
-		delete(*mangaPage.Selected, row)
-	} else { // Else, we add the row into the map.
-		markChapterSelected(mangaPage.ChapterTable, row)
-		(*mangaPage.Selected)[row] = struct{}{}
+// ctrlEInput : Enables user to select a chapter table row without activating the select action.
+func (p *MangaPage) ctrlEInput() {
+	row, _ := p.Table.GetSelection()
+	// If the row is already in the selection, we deselect.
+	if _, ok := p.Selected[row]; ok {
+		p.markChapterUnselected(row)
+		delete(p.Selected, row)
+	} else {
+		p.markChapterSelected(row)
+		p.Selected[row] = struct{}{}
 	}
 }
 
-// ctrlAInput : Handler for Ctrl+A.
-// This input enables users to select all chapters in the table.
-func ctrlAInput(mangaPage *MangaPage, numChaps int) {
-	// Note that the row is indexed with respect to the table.
-	if mangaPage.SelectedAll { // If user has already selected all, then pressing again deselects all.
-		mangaPage.Selected = &map[int]struct{}{} // Empty the map
-		for r := 0; r < numChaps; r++ {
-			markChapterUnselected(mangaPage.ChapterTable, r+1)
+// ctrlAInput : Enables user to select/deselect ALL chapters at once.
+func (p *MangaPage) ctrlAInput() {
+	// If user previously selected all, then we will deselect all.
+	if p.SelectedAll {
+		p.Selected = map[int]struct{}{}
+		for index := 1; index < p.Table.GetRowCount(); index++ {
+			p.markChapterUnselected(index)
 		}
 	} else {
-		for r := 0; r < numChaps; r++ {
-			(*mangaPage.Selected)[r+1] = struct{}{}
-			markChapterSelected(mangaPage.ChapterTable, r+1)
+		for index := 1; index < p.Table.GetRowCount(); index++ {
+			p.Selected[index] = struct{}{}
+			p.markChapterSelected(index)
 		}
 	}
-	mangaPage.SelectedAll = !mangaPage.SelectedAll
+	p.SelectedAll = !p.SelectedAll
 }

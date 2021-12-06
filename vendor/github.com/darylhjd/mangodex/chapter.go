@@ -103,7 +103,10 @@ func (s *ChapterService) GetReadMangaChapters(id string) (*ChapterReadMarkers, e
 
 // GetReadMangaChaptersContext : GetReadMangaChapters with custom context.
 func (s *ChapterService) GetReadMangaChaptersContext(ctx context.Context, id string) (*ChapterReadMarkers, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(MangaReadMarkersPath, id)
+
 	var rmr ChapterReadMarkers
-	err := s.client.RequestAndDecode(ctx, http.MethodGet, fmt.Sprintf(MangaReadMarkersPath, id), nil, &rmr)
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &rmr)
 	return &rmr, err
 }

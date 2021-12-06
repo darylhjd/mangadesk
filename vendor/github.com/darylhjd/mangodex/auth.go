@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -42,6 +43,9 @@ func (s *AuthService) Login(user, pwd string) error {
 
 // LoginContext : Login with custom context.
 func (s *AuthService) LoginContext(ctx context.Context, user, pwd string) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = LoginPath
+
 	// Create required request body.
 	req := map[string]string{
 		"username": user,
@@ -53,7 +57,7 @@ func (s *AuthService) LoginContext(ctx context.Context, user, pwd string) error 
 	}
 
 	var ar AuthResponse
-	if err = s.client.RequestAndDecode(ctx, http.MethodPost, LoginPath, bytes.NewBuffer(rBytes), &ar); err != nil {
+	if err = s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), bytes.NewBuffer(rBytes), &ar); err != nil {
 		return err
 	}
 
@@ -71,8 +75,11 @@ func (s *AuthService) Logout() error {
 
 // LogoutContext : Logout with custom context.
 func (s *AuthService) LogoutContext(ctx context.Context) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = LogoutPath
+
 	var r Response
-	if err := s.client.RequestAndDecode(ctx, http.MethodPost, LogoutPath, nil, &r); err != nil {
+	if err := s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), nil, &r); err != nil {
 		return err
 	}
 
@@ -90,6 +97,9 @@ func (s *AuthService) RefreshSessionToken() error {
 
 // RefreshSessionTokenContext : refreshToken with custom context.
 func (s *AuthService) RefreshSessionTokenContext(ctx context.Context) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = RefreshTokenPath
+
 	// Create required request body.
 	req := map[string]string{
 		"token": s.client.refreshToken,
@@ -100,7 +110,7 @@ func (s *AuthService) RefreshSessionTokenContext(ctx context.Context) error {
 	}
 
 	var ar AuthResponse
-	if err = s.client.RequestAndDecode(ctx, http.MethodPost, RefreshTokenPath, bytes.NewBuffer(rBytes), &ar); err != nil {
+	if err = s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), bytes.NewBuffer(rBytes), &ar); err != nil {
 		return err
 	}
 

@@ -76,14 +76,19 @@ func newSearchPage() *SearchPage {
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
 			exContent := search.GetFormItemByLabel("Explicit Content?").(*tview.Checkbox).IsChecked()
-			go searchPage.setGuestTable(true, exContent, searchTerm)
+			go searchPage.setSearchTable(exContent, searchTerm)
 
 			// Send focus to the search result table.
 			core.App.TView.SetFocus(searchPage.Table)
 		}).
 		SetFocus(0) // Set focus to the title field.
 
-	// TODO : Add input captures for the search page.
+	// Set handlers.
+	searchPage.setHandlers()
 
 	return searchPage
+}
+
+func (p *SearchPage) setSearchTable(exContent bool, searchTerm string) {
+	p.MainPage.setGuestTable(true, exContent, searchTerm)
 }

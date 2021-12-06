@@ -146,9 +146,8 @@ func (p *MainPage) setLoggedTable() {
 		p.Table.SetTitle(fmt.Sprintf("Followed manga. Page %d (%d-%d).", page, first, last))
 	})
 
-	p.Table.SetSelectedFunc(func(row, _ int) {
-		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
-	})
+	// Set handlers
+	p.setHandlers(false, false, "")
 
 	// Fill in the details
 	for index, manga := range followed.Data {
@@ -182,6 +181,10 @@ func (p *MainPage) setGuestGrid() {
 
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
+	tableTitle := "Popular manga"
+	if isSearch {
+		tableTitle = "Search Results"
+	}
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries
 		p.Table.Clear()
@@ -206,10 +209,6 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 
 		// Set table title.
 		page, first, last := p.calculatePaginationData()
-		tableTitle := "Popular manga"
-		if isSearch {
-			tableTitle = "Search Results"
-		}
 		p.Table.SetTitle(fmt.Sprintf("%s. Page %d (%d-%d). [::bu]Loading...", tableTitle, page, first, last))
 	})
 
@@ -256,12 +255,11 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	// Update table title.
 	page, first, last := p.calculatePaginationData()
 	core.App.TView.QueueUpdateDraw(func() {
-		p.Table.SetTitle(fmt.Sprintf("Popular manga. Page %d (%d-%d).", page, first, last))
+		p.Table.SetTitle(fmt.Sprintf("%s. Page %d (%d-%d).", tableTitle, page, first, last))
 	})
 
-	p.Table.SetSelectedFunc(func(row, _ int) {
-		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
-	})
+	// Set the handlers
+	p.setHandlers(isSearch, explicit, searchTerm)
 
 	// Fill in the details
 	for index, manga := range list.Data {

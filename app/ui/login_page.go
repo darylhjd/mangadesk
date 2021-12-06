@@ -71,6 +71,7 @@ func (p *LoginPage) attemptLogin() {
 
 	// Attempt to log in to MangaDex API.
 	if err := core.App.Client.Auth.Login(user, pwd); err != nil {
+		log.Printf("Error trying to login: %ss\n", err.Error())
 		modal := okModal(LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
 		ShowModal(LoginLogoutFailureModalID, modal)
 		return

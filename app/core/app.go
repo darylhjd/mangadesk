@@ -59,5 +59,5 @@ func (m *MangaDesk) Shutdown() {
 	if err := m.stopLogging(); err != nil {
 		fmt.Println("Error while closing log file!")
 	}
-	fmt.Println("TView stopped.")
+	fmt.Println("Application shutdown.")
 }

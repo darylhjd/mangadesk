@@ -22,14 +22,14 @@ const (
 )
 
 // downloadChapters : Download current chapters specified by the user.
-func (p *MangaPage) downloadChapters(selection []int, attemptNo int) {
+func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) {
 	// Unmark the chapters
 	for index := range selection {
 		p.markChapterUnselected(index)
 	}
 
 	// Download the selected chapters.
-	var errored []int
+	var errored map[int]struct{}
 	for index := range selection {
 		// Get the reference to the chapter.
 		chapter := p.Table.GetCell(index, 0).GetReference().(*mangodex.Chapter)
@@ -41,7 +41,7 @@ func (p *MangaPage) downloadChapters(selection []int, attemptNo int) {
 			msg := fmt.Sprintf("Error saving %s - Chapter: %s, %s - %s",
 				p.Manga.GetTitle("en"), chapter.GetChapterNum(), chapter.GetTitle(), err.Error())
 			log.Println(msg)
-			errored = append(errored, index)
+			errored[index] = struct{}{}
 			continue
 		}
 

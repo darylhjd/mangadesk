@@ -74,7 +74,10 @@ func (s *UserService) GetLoggedUser() (*UserResponse, error) {
 
 // GetLoggedUserContext : GetLoggedUser with custom context.
 func (s *UserService) GetLoggedUserContext(ctx context.Context) (*UserResponse, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = GetLoggedUserPath
+
 	var r UserResponse
-	err := s.client.RequestAndDecode(ctx, http.MethodGet, GetLoggedUserPath, nil, &r)
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
 	return &r, err
 }

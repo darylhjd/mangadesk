@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"sync"
 )
 
 const (
@@ -24,12 +23,15 @@ type MangaPage struct {
 	Info  *tview.TextView
 	Table *tview.Table
 
-	Selected      []int // Keep track of which chapters have been selected by user.
-	SelectedMutex *sync.Mutex
+	Selected    map[int]struct{} // Keep track of which chapters have been selected by user.
+	SelectedAll bool             // Keep track of whether user has selected all or not.
 }
 
 // ShowMangaPage : Make the app show the manga page.
 func ShowMangaPage(manga *mangodex.Manga) {
+	if manga == nil {
+		return
+	}
 	mangaPage := newMangaPage(manga)
 
 	core.App.TView.SetFocus(mangaPage.Grid)
@@ -97,12 +99,10 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		AddItem(table, 0, 5, 15, 10, 0, 80, true)
 
 	mangaPage := &MangaPage{
-		Manga:         manga,
-		Grid:          grid,
-		Info:          info,
-		Table:         table,
-		Selected:      []int{},
-		SelectedMutex: &sync.Mutex{},
+		Manga: manga,
+		Grid:  grid,
+		Info:  info,
+		Table: table,
 	}
 
 	// Set up values
@@ -172,8 +172,6 @@ func (p *MangaPage) setChapterTable() {
 		}
 	}
 
-	// TODO: Add manga page input handlers
-
 	// Fill in the chapters
 	for index, chapter := range chapters {
 		// Chapter Number
@@ -228,6 +226,9 @@ func (p *MangaPage) setChapterTable() {
 			}
 		})
 	}
+
+	// Set handlers.
+	p.setHandlers()
 }
 
 // getAllChapters : Get all chapters for the manga.

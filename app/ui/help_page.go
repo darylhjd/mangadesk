@@ -49,7 +49,10 @@ func newHelpPage() *HelpPage {
 		AddItem(help, 0, 0, 4, 4, 0, 0, false).
 		AddItem(help, 1, 1, 2, 2, 45, 100, false)
 
-	return &HelpPage{
+	helpPage := &HelpPage{
 		Grid: grid,
 	}
+	helpPage.setHandlers()
+
+	return helpPage
 }
