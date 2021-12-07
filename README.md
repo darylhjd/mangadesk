@@ -1,37 +1,25 @@
-# <p align="center">mangadesk - Terminal client for MangaDex 📖</p>
+<div align="center">
+  
+# mangadesk 📖
 
-**<div align="center">Note: Repository is in maintenance mode. No new features will be worked on and will be postponed
-to a later date.</div>**
+  [![Top Language](https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square)](https://github.com/darylhjd/mangadesk/search?l=go)
+  [![License](https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue)](https://github.com/darylhjd/mangadesk/blob/master/LICENSE.md)
+  [![Go Report](https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
+  [![Downloads](https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square&color=success)](https://github.com/darylhjd/mangadesk/releases)
 
-
-<p align="center">
-  <img alt="Top Language" src="https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square">
-  <img alt="License" src="https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue">
-  <img alt="Go Report" src="https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square">  
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square&color=success">
-</p>
-
-<p align="center">
-  Download manga directly from your terminal to read!<br><br>
+  <h3>The ultimate MangaDex terminal client!</h3>
   <img src=".github/assets/demo.gif" alt="demo.gif">
-</p>
-
-<p align="center">
-  This client retrieves information straight from MangaDex v5's API.<br>
-  As the API is still a WIP, some changes (probably breaking) might be expected.
-</p>
+</div>
 
 ## Features ✨
 
 - Download chapters straight to your computer.
 - Login to keep track of your followed manga.
-- Keep track of already downloaded manga.
 - Download multiple chapters together.
 - Searching!
-- Responsive UI (kind of)
 - Written in Golang :)
 
-Works for Windows/Linux/macOS.
+<b>Works for Windows/Linux/macOS.</b>
 
 ## Installation 🔧
 
@@ -113,4 +101,4 @@ Please take some time to familiarise yourself with the [contributing guidelines]
 - Creating TUIs with tview/tcell.
 - Working with the filesystem in Golang.
 - Goroutines & Context.
-- Go Project structure.
+- Go project structure.
