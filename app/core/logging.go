@@ -2,10 +2,16 @@ package core
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+)
+
+const (
+	dateFormat    = "2006-01-02 15-04-05"
+	hoursPerMonth = float64(24 * 31)
 )
 
 // loggingDir : The logging directory to store the logs.
@@ -18,8 +24,20 @@ func (m *MangaDesk) setUpLogging() error {
 		return err
 	}
 
+	// Remove old logging files (at least one-month-old)
+	now := time.Now()
+	_ = filepath.Walk(loggingDir, func(path string, info fs.FileInfo, err error) error {
+		// Remove files that were modified more than 1 month ago.
+		fileDate := info.ModTime()
+		// Ignore folders, even though there should not be any in this folder.
+		if !info.IsDir() && now.Sub(fileDate).Hours() >= hoursPerMonth {
+			_ = os.Remove(path)
+		}
+		return nil
+	})
+
 	// Create file for current session logging
-	formattedDate := time.Now().Format("2006-01-02 15-04-05")
+	formattedDate := now.Format(dateFormat)
 	logFilePath := filepath.Join(loggingDir, fmt.Sprintf("%s.log", formattedDate))
 
 	var err error

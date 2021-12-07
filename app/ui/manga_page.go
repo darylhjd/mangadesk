@@ -35,9 +35,6 @@ type MangaPage struct {
 
 // ShowMangaPage : Make the app show the manga page.
 func ShowMangaPage(manga *mangodex.Manga) {
-	if manga == nil {
-		return
-	}
 	mangaPage := newMangaPage(manga)
 
 	core.App.TView.SetFocus(mangaPage.Grid)
