@@ -16,7 +16,7 @@ import (
 
 const (
 	offsetRange = 100
-	loadDelay   = time.Millisecond * 30
+	loadDelay   = time.Millisecond * 50
 	maxOffset   = 10000
 )
 
@@ -110,8 +110,9 @@ func (p *MainPage) setLoggedGrid() {
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
-	time.Sleep(loadDelay)
 	ctx, cancel := p.ctx, p.cancel
+	p.ctx, p.cancel = context.WithCancel(context.Background())
+	time.Sleep(loadDelay)
 	defer cancel()
 
 	// Set handlers
@@ -215,8 +216,9 @@ func (p *MainPage) setGuestGrid() {
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	log.Println("Setting guest table...")
-	time.Sleep(loadDelay)
 	ctx, cancel := p.ctx, p.cancel
+	p.ctx, p.cancel = context.WithCancel(context.Background())
+	time.Sleep(loadDelay)
 	defer cancel()
 
 	// Set the handlers
@@ -271,6 +273,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	params.Set("includes[]", mangodex.AuthorRel)
 	// If it is a search, then we add the search term.
 	if isSearch {
+		log.Printf("Settings guest table for search: \"%s\"\n", searchTerm)
 		params.Set("title", searchTerm)
 	}
 

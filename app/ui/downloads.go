@@ -74,7 +74,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		if attemptNo < maxRetries {
 			msg.WriteString("\nRetry failed downloads?")
 			modal = confirmModal(modalID, msg.String(), "Retry", func() {
-				p.downloadChapters(errored, attemptNo+1)
+				go p.downloadChapters(errored, attemptNo+1)
 			})
 		} else {
 			msg.WriteString("\nMaximum retries reached.")

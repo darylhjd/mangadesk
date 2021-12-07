@@ -3,7 +3,7 @@
 # mangadesk 📖
 
   [![Top Language](https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square)](https://github.com/darylhjd/mangadesk/search?l=go)
-  [![License](https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue)](https://github.com/darylhjd/mangadesk/blob/master/LICENSE.md)
+  [![License](https://img.shields.io/github/license/darylhjd/mangadesk?style=flat-square&color=blue)](https://github.com/darylhjd/mangadesk/blob/main/LICENSE)
   [![Go Report](https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
   [![Downloads](https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square&color=success)](https://github.com/darylhjd/mangadesk/releases)
 

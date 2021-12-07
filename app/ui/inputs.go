@@ -150,7 +150,6 @@ func (p *MainPage) setHandlers(cancel context.CancelFunc, isSearch, explicit boo
 		if reload {
 			// Cancel any current loading, and create a new one.
 			cancel()
-			p.ctx, p.cancel = context.WithCancel(context.Background())
 			if isSearch {
 				go p.setGuestTable(isSearch, explicit, searchTerm)
 			} else if !core.App.Client.Auth.IsLoggedIn() {

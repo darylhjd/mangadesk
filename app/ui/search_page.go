@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
+	"log"
 )
 
 // SearchPage : This struct contains the search bar and the table of results
@@ -74,13 +75,10 @@ func newSearchPage() *SearchPage {
 	search.AddInputField("Search Manga:", "", 0, nil, nil).
 		AddCheckbox("Explicit Content?", false, nil).
 		AddButton("Search", func() { // Search button.
-			// Remove all current search results
-			searchPage.Table.Clear()
-
 			// When user presses button, we initiate the search.
 			searchTerm := search.GetFormItemByLabel("Search Manga:").(*tview.InputField).GetText()
 			exContent := search.GetFormItemByLabel("Explicit Content?").(*tview.Checkbox).IsChecked()
-			go searchPage.setSearchTable(exContent, searchTerm)
+			searchPage.setSearchTable(exContent, searchTerm)
 
 			// Send focus to the search result table.
 			core.App.TView.SetFocus(searchPage.Table)
@@ -95,5 +93,6 @@ func newSearchPage() *SearchPage {
 
 // setSearchTable : Sets the table for search results.
 func (p *SearchPage) setSearchTable(exContent bool, searchTerm string) {
-	p.MainPage.setGuestTable(true, exContent, searchTerm)
+	log.Println("Setting new search results...")
+	go p.MainPage.setGuestTable(true, exContent, searchTerm)
 }

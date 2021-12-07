@@ -1,4 +1,10 @@
-/.idea
-/.vscode
-/usr
-/downloads
+# IDE related
+*.idea
+*.vscode
+
+# Compiled executables
+/mangadesk_*
+
+# Testing files
+/usr/
+/downloads/
