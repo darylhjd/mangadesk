@@ -148,11 +148,11 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 
 		if reload {
 			if isSearch {
-				p.setGuestTable(isSearch, explicit, searchTerm)
+				go p.setGuestTable(isSearch, explicit, searchTerm)
 			} else if !core.App.Client.Auth.IsLoggedIn() {
-				p.setGuestTable(false, explicit, searchTerm)
+				go p.setGuestTable(false, explicit, searchTerm)
 			} else {
-				p.setLoggedTable()
+				go p.setLoggedTable()
 			}
 		}
 		return event
