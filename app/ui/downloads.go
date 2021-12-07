@@ -32,7 +32,13 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 	var errored map[int]struct{}
 	for index := range selection {
 		// Get the reference to the chapter.
-		chapter := p.Table.GetCell(index, 0).GetReference().(*mangodex.Chapter)
+		var (
+			chapter *mangodex.Chapter
+			ok      bool
+		)
+		if chapter, ok = p.Table.GetCell(index, 0).GetReference().(*mangodex.Chapter); !ok {
+			return
+		}
 
 		// Save the current chapter.
 		err := p.saveChapter(chapter)

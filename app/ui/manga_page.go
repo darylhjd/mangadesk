@@ -256,24 +256,22 @@ func (p *MangaPage) setChapterTable() {
 		}
 		readCell := tview.NewTableCell(read).SetTextColor(MangaPageReadStatColor)
 
-		core.App.TView.QueueUpdateDraw(func() {
-			p.Table.SetCell(index+1, 0, chapterNumCell).
-				SetCell(index+1, 1, titleCell).
-				SetCell(index+1, 2, downloadCell).
-				SetCell(index+1, 3, scanGroupCell)
-
-			if !core.App.Client.Auth.IsLoggedIn() {
-				if index == 0 {
-					p.Table.SetCell(index+1, 4, readCell)
-				}
-			} else {
+		p.Table.SetCell(index+1, 0, chapterNumCell).
+			SetCell(index+1, 1, titleCell).
+			SetCell(index+1, 2, downloadCell).
+			SetCell(index+1, 3, scanGroupCell)
+		if !core.App.Client.Auth.IsLoggedIn() {
+			if index == 0 {
 				p.Table.SetCell(index+1, 4, readCell)
 			}
-
-			p.Table.Select(1, 0)
-			p.Table.ScrollToBeginning()
-		})
+		} else {
+			p.Table.SetCell(index+1, 4, readCell)
+		}
 	}
+	core.App.TView.QueueUpdateDraw(func() {
+		p.Table.Select(1, 0)
+		p.Table.ScrollToBeginning()
+	})
 }
 
 // getAllChapters : Get all chapters for the manga.

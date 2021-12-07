@@ -187,13 +187,12 @@ func (p *MainPage) setLoggedTable() {
 		sCell := tview.NewTableCell(strings.Title(fmt.Sprintf("%-15s", *manga.Attributes.Status))).
 			SetMaxWidth(15).SetTextColor(LoggedMainPagePubStatusColor)
 
-		core.App.TView.QueueUpdateDraw(func() {
-			p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
-
-			p.Table.Select(1, 0)
-			p.Table.ScrollToBeginning()
-		})
+		p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
 	}
+	core.App.TView.QueueUpdateDraw(func() {
+		p.Table.Select(1, 0)
+		p.Table.ScrollToBeginning()
+	})
 	log.Println("Finished setting logged table.")
 }
 
@@ -328,15 +327,14 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 		}
 		tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(GuestMainPageTagColor)
 
-		core.App.TView.QueueUpdateDraw(func() {
-			p.Table.SetCell(index+1, 0, mtCell).
-				SetCell(index+1, 1, descCell).
-				SetCell(index+1, 2, tagCell)
-
-			p.Table.Select(1, 0)
-			p.Table.ScrollToBeginning()
-		})
+		p.Table.SetCell(index+1, 0, mtCell).
+			SetCell(index+1, 1, descCell).
+			SetCell(index+1, 2, tagCell)
 	}
+	core.App.TView.QueueUpdateDraw(func() {
+		p.Table.Select(1, 0)
+		p.Table.ScrollToBeginning()
+	})
 	log.Println("Finished setting guest table.")
 }
 

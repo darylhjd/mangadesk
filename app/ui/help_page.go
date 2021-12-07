@@ -31,7 +31,7 @@ func newHelpPage() *HelpPage {
 		"Manga Page\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + E", "Select mult.") +
 		fmt.Sprintf("%-15s:%15s\n", "Ctrl + A", "Toggle All") +
-		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Initialise download") +
+		fmt.Sprintf("%-15s:%15s\n\n", "Enter", "Start download") +
 		"Others\n" +
 		fmt.Sprintf("%-15s:%15s\n", "Esc", "Go back") +
 		fmt.Sprintf("%-15s:%15s\n\n", "Ctrl + F/B", "Next/Prev Page")
