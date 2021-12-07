@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangodex"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -26,6 +28,9 @@ type MangaPage struct {
 
 	Selected    map[int]struct{} // Keep track of which chapters have been selected by user.
 	SelectedAll bool             // Keep track of whether user has selected all or not.
+
+	ctx    context.Context // For pagination
+	cancel context.CancelFunc
 }
 
 // ShowMangaPage : Make the app show the manga page.
@@ -99,12 +104,15 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		AddItem(info, 0, 0, 15, 5, 0, 80, false).
 		AddItem(table, 0, 5, 15, 10, 0, 80, true)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	mangaPage := &MangaPage{
 		Manga:    manga,
 		Grid:     grid,
 		Info:     info,
 		Table:    table,
 		Selected: map[int]struct{}{},
+		ctx:      ctx,
+		cancel:   cancel,
 	}
 
 	// Set up values
@@ -129,7 +137,11 @@ func (p *MangaPage) setMangaInfo() {
 	}
 
 	// Status
-	status := strings.Title(*p.Manga.Attributes.Status)
+	status := ""
+	if p.Manga.Attributes.Status != nil {
+		status = *p.Manga.Attributes.Status
+	}
+	status = strings.Title(status)
 
 	// Description
 	desc := tview.Escape(p.Manga.GetDescription("en"))
@@ -145,8 +157,13 @@ func (p *MangaPage) setMangaInfo() {
 
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
+	log.Println("Setting up manga page chapter table...")
+	time.Sleep(loadDelay)
+	ctx, cancel := p.ctx, p.cancel
+	defer cancel()
+
 	// Set handlers.
-	p.setHandlers()
+	p.setHandlers(cancel)
 
 	// Show loading status so user knows it's loading.
 	core.App.TView.QueueUpdateDraw(func() {
@@ -155,8 +172,14 @@ func (p *MangaPage) setChapterTable() {
 	})
 
 	// Get all chapters
-	chapters, err := p.getAllChapters()
+	if toCancel(ctx) {
+		return
+	}
+	chapters, err := p.getAllChapters(ctx)
 	if err != nil {
+		if strings.Contains(err.Error(), "CANCELLED") {
+			return
+		}
 		log.Println(fmt.Sprintf("Error getting manga chapters: %s", err.Error()))
 		core.App.TView.QueueUpdateDraw(func() {
 			modal := okModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
@@ -173,6 +196,9 @@ func (p *MangaPage) setChapterTable() {
 	// Get the chapter read markers.
 	markers := map[string]struct{}{}
 	if core.App.Client.Auth.IsLoggedIn() {
+		if toCancel(ctx) {
+			return
+		}
 		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error getting chapter read markers: %s", err.Error()))
@@ -189,6 +215,9 @@ func (p *MangaPage) setChapterTable() {
 
 	// Fill in the chapters
 	for index := 0; index < len(chapters); index++ {
+		if toCancel(ctx) {
+			return
+		}
 		chapter := chapters[index]
 		// Chapter Number
 		chapterNumCell := tview.NewTableCell(
@@ -248,7 +277,7 @@ func (p *MangaPage) setChapterTable() {
 }
 
 // getAllChapters : Get all chapters for the manga.
-func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
+func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, error) {
 	// Set up query parameters.
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(chapterOffsetRange))
@@ -274,6 +303,9 @@ func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
 		currOffset = 0
 	)
 	for {
+		if toCancel(ctx) {
+			return []mangodex.Chapter{}, fmt.Errorf("CANCELLED")
+		}
 		params.Set("offset", strconv.Itoa(currOffset))
 		list, err := core.App.Client.Chapter.GetMangaChapters(p.Manga.ID, params)
 		if err != nil {

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"log"
 	"math"
 
@@ -121,7 +122,7 @@ func (p *SearchPage) setHandlers() {
 }
 
 // setHandlers : Set handlers for the main page.
-func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
+func (p *MainPage) setHandlers(cancel context.CancelFunc, isSearch, explicit bool, searchTerm string) {
 	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		var reload bool
 		switch event.Key() {
@@ -147,6 +148,9 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 		}
 
 		if reload {
+			// Cancel any current loading, and create a new one.
+			cancel()
+			p.ctx, p.cancel = context.WithCancel(context.Background())
 			if isSearch {
 				go p.setGuestTable(isSearch, explicit, searchTerm)
 			} else if !core.App.Client.Auth.IsLoggedIn() {
@@ -170,10 +174,11 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 }
 
 // setHandlers : Set handlers for the manga page.
-func (p *MangaPage) setHandlers() {
+func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 	p.Grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEsc:
+			cancel()
 			core.App.PageHolder.RemovePage(MangaPageID)
 		}
 		return event

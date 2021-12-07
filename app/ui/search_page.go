@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
 )
@@ -58,10 +59,13 @@ func newSearchPage() *SearchPage {
 
 	// Create the SearchPage.
 	// We reuse the MainPage struct.
+	ctx, cancel := context.WithCancel(context.Background())
 	searchPage := &SearchPage{
 		MainPage: MainPage{
-			Grid:  grid,
-			Table: table,
+			Grid:   grid,
+			Table:  table,
+			ctx:    ctx,
+			cancel: cancel,
 		},
 		Form: search,
 	}

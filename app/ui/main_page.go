@@ -1,18 +1,23 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 	"log"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
 	offsetRange = 100
+	loadDelay   = time.Millisecond * 30
+	maxOffset   = 10000
 )
 
 // MainPage : This struct contains the grid and the entry table.
@@ -21,9 +26,11 @@ const (
 type MainPage struct {
 	Grid          *tview.Grid  // The page grid.
 	Table         *tview.Table // The table that contains the list of manga.
-	LoggedPage    bool         // To track whether the page is for logged user or not.
 	CurrentOffset int
 	MaxOffset     int
+
+	ctx    context.Context // For pagination
+	cancel context.CancelFunc
 }
 
 // ShowMainPage : Make the app show the main page.
@@ -60,14 +67,16 @@ func newMainPage() *MainPage {
 	// Add the table to the grid. Table spans the whole page.
 	grid.AddItem(table, 0, 0, 15, 15, 0, 0, true)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	mainPage := &MainPage{
-		Grid:  grid,
-		Table: table,
+		Grid:   grid,
+		Table:  table,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	// Check what kind of main page to show to the user.
 	if core.App.Client.Auth.IsLoggedIn() {
-		mainPage.LoggedPage = true
 		mainPage.setLogged()
 	} else {
 		mainPage.setGuest()
@@ -101,8 +110,12 @@ func (p *MainPage) setLoggedGrid() {
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
+	time.Sleep(loadDelay)
+	ctx, cancel := p.ctx, p.cancel
+	defer cancel()
+
 	// Set handlers
-	p.setHandlers(false, false, "")
+	p.setHandlers(cancel, false, false, "")
 
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries.
@@ -127,6 +140,9 @@ func (p *MainPage) setLoggedTable() {
 	})
 
 	// Get the list of the user's followed manga.
+	if toCancel(ctx) {
+		return
+	}
 	followed, err := core.App.Client.User.GetUserFollowedMangaList(
 		offsetRange, p.CurrentOffset, []string{mangodex.AuthorRel})
 	if err != nil {
@@ -139,7 +155,7 @@ func (p *MainPage) setLoggedTable() {
 	}
 
 	// Update offset details.
-	p.MaxOffset = followed.Total
+	p.MaxOffset = int(math.Min(float64(followed.Total), maxOffset))
 
 	// Show followed manga.
 	if p.MaxOffset == 0 {
@@ -158,6 +174,9 @@ func (p *MainPage) setLoggedTable() {
 
 	// Fill in the details
 	for index := 0; index < len(followed.Data); index++ {
+		if toCancel(ctx) {
+			return
+		}
 		manga := followed.Data[index]
 		// Set title and publishing status cells.
 		// Title
@@ -197,12 +216,17 @@ func (p *MainPage) setGuestGrid() {
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	log.Println("Setting guest table...")
+	time.Sleep(loadDelay)
+	ctx, cancel := p.ctx, p.cancel
+	defer cancel()
+
+	// Set the handlers
+	p.setHandlers(cancel, isSearch, explicit, searchTerm)
+
 	tableTitle := "Popular manga"
 	if isSearch {
 		tableTitle = "Search Results"
 	}
-	// Set the handlers
-	p.setHandlers(isSearch, explicit, searchTerm)
 
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries
@@ -251,6 +275,9 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 		params.Set("title", searchTerm)
 	}
 
+	if toCancel(ctx) {
+		return
+	}
 	list, err := core.App.Client.Manga.GetMangaList(params)
 	if err != nil {
 		log.Println(err.Error())
@@ -262,7 +289,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	}
 
 	// Update offset details.
-	p.MaxOffset = list.Total
+	p.MaxOffset = int(math.Min(float64(list.Total), maxOffset))
 
 	// Show followed manga.
 	if p.MaxOffset == 0 {
@@ -281,6 +308,9 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 
 	// Fill in the details
 	for index := 0; index < len(list.Data); index++ {
+		if toCancel(ctx) {
+			return
+		}
 		manga := list.Data[index]
 		// Manga title cell.
 		mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", manga.GetTitle("en"))).

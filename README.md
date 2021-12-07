@@ -9,6 +9,7 @@
 
   <h3>The ultimate MangaDex terminal client!</h3>
   <img src=".github/assets/demo.gif" alt="demo.gif">
+
 </div>
 
 ## Features ✨

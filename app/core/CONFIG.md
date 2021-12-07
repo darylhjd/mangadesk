@@ -3,7 +3,7 @@
 You may change the appropriate settings in the `config.json` file, which is stored in the `mangadesk` folder within your
 OS' default configuration folder (this folder [depends](https://pkg.go.dev/os#UserConfigDir) on your OS).
 
-If no location can be found, it will instead be found in the default home directory (also 
+If no location can be found, it will instead be found in the default home directory (also
 [depends](https://pkg.go.dev/os#UserHomeDir) on your OS!)
 
 ### Download Folder
