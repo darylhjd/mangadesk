@@ -40,18 +40,21 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 
 	var err error
 	switch typ.Type {
+	case MangaRel:
+		a.Attributes = &MangaAttributes{}
 	case AuthorRel:
 		a.Attributes = &AuthorAttributes{}
-		err = json.Unmarshal(typ.Attributes, a.Attributes)
 	case ScanlationGroupRel:
 		a.Attributes = &ScanlationGroupAttributes{}
-		err = json.Unmarshal(typ.Attributes, a.Attributes)
 	default:
 		a.Attributes = &json.RawMessage{}
 	}
 
 	a.ID = typ.ID
 	a.Type = typ.Type
+	if typ.Attributes != nil {
+		err = json.Unmarshal(typ.Attributes, a.Attributes)
+	}
 	return err
 }
 
