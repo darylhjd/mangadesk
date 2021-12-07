@@ -101,6 +101,9 @@ func (p *MainPage) setLoggedGrid() {
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
+	// Set handlers
+	p.setHandlers(false, false, "")
+
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries.
 		p.Table.Clear()
@@ -153,9 +156,6 @@ func (p *MainPage) setLoggedTable() {
 		p.Table.SetTitle(fmt.Sprintf("Followed manga. Page %d (%d-%d).", page, first, last))
 	})
 
-	// Set handlers
-	p.setHandlers(false, false, "")
-
 	// Fill in the details
 	for index := 0; index < len(followed.Data); index++ {
 		manga := followed.Data[index]
@@ -170,6 +170,9 @@ func (p *MainPage) setLoggedTable() {
 
 		core.App.TView.QueueUpdateDraw(func() {
 			p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
+
+			p.Table.Select(1, 0)
+			p.Table.ScrollToBeginning()
 		})
 	}
 	log.Println("Finished setting logged table.")
@@ -198,6 +201,9 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	if isSearch {
 		tableTitle = "Search Results"
 	}
+	// Set the handlers
+	p.setHandlers(isSearch, explicit, searchTerm)
+
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries
 		p.Table.Clear()
@@ -273,9 +279,6 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 		p.Table.SetTitle(fmt.Sprintf("%s. Page %d (%d-%d).", tableTitle, page, first, last))
 	})
 
-	// Set the handlers
-	p.setHandlers(isSearch, explicit, searchTerm)
-
 	// Fill in the details
 	for index := 0; index < len(list.Data); index++ {
 		manga := list.Data[index]
@@ -299,6 +302,9 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 			p.Table.SetCell(index+1, 0, mtCell).
 				SetCell(index+1, 1, descCell).
 				SetCell(index+1, 2, tagCell)
+
+			p.Table.Select(1, 0)
+			p.Table.ScrollToBeginning()
 		})
 	}
 	log.Println("Finished setting guest table.")

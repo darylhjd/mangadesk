@@ -145,6 +145,9 @@ func (p *MangaPage) setMangaInfo() {
 
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
+	// Set handlers.
+	p.setHandlers()
+
 	// Show loading status so user knows it's loading.
 	core.App.TView.QueueUpdateDraw(func() {
 		loadingCell := tview.NewTableCell("Loading...").SetSelectable(false)
@@ -155,8 +158,16 @@ func (p *MangaPage) setChapterTable() {
 	chapters, err := p.getAllChapters()
 	if err != nil {
 		log.Println(fmt.Sprintf("Error getting manga chapters: %s", err.Error()))
-		modal := okModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
-		ShowModal(GenericAPIErrorModalID, modal)
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
+			ShowModal(GenericAPIErrorModalID, modal)
+		})
+		return
+	} else if len(chapters) == 0 {
+		core.App.TView.QueueUpdateDraw(func() {
+			noResultsCell := tview.NewTableCell("No chapters!").SetSelectable(false)
+			p.Table.SetCell(1, 1, noResultsCell)
+		})
 		return
 	}
 	// Get the chapter read markers.
@@ -165,8 +176,10 @@ func (p *MangaPage) setChapterTable() {
 		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error getting chapter read markers: %s", err.Error()))
-			modal := okModal(GenericAPIErrorModalID, "Error getting chapter read markers.\nCheck log for details.")
-			ShowModal(GenericAPIErrorModalID, modal)
+			core.App.TView.QueueUpdateDraw(func() {
+				modal := okModal(GenericAPIErrorModalID, "Error getting chapter read markers.\nCheck log for details.")
+				ShowModal(GenericAPIErrorModalID, modal)
+			})
 			return
 		}
 		for _, marker := range markerResponse.Data {
@@ -227,11 +240,11 @@ func (p *MangaPage) setChapterTable() {
 			} else {
 				p.Table.SetCell(index+1, 4, readCell)
 			}
+
+			p.Table.Select(1, 0)
+			p.Table.ScrollToBeginning()
 		})
 	}
-
-	// Set handlers.
-	p.setHandlers()
 }
 
 // getAllChapters : Get all chapters for the manga.
@@ -266,6 +279,7 @@ func (p *MangaPage) getAllChapters() ([]mangodex.Chapter, error) {
 		if err != nil {
 			return []mangodex.Chapter{}, err
 		}
+		log.Printf("Got %d of %d chapters\n", currOffset, list.Total)
 		chapters = append(chapters, list.Data...)
 		currOffset += 500
 		if currOffset >= list.Total {

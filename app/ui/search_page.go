@@ -89,6 +89,7 @@ func newSearchPage() *SearchPage {
 	return searchPage
 }
 
+// setSearchTable : Sets the table for search results.
 func (p *SearchPage) setSearchTable(exContent bool, searchTerm string) {
 	p.MainPage.setGuestTable(true, exContent, searchTerm)
 }
