@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/darylhjd/mangadesk/service"
+	"github.com/darylhjd/mangadesk/app/service"
 )
 
 // Initialise the program.

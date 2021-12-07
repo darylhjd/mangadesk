@@ -18,7 +18,6 @@ func SetUniversalHandlers() {
 
 	// Set universal keybindings
 	core.App.TView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		log.Printf("Received event: %v\n", event.Key())
 		switch event.Key() {
 		case tcell.KeyCtrlL: // Login/Logout
 			ctrlLInput()
@@ -35,6 +34,7 @@ func SetUniversalHandlers() {
 
 // ctrlLInput : Enables user to toggle login/logout.
 func ctrlLInput() {
+	log.Println("Received toggle login/logout event.")
 	// Do not allow pop up when on login screen.
 	if page, _ := core.App.PageHolder.GetFrontPage(); page == LoginPageID {
 		return
