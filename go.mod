@@ -4,10 +4,10 @@ go 1.16
 
 require (
 	github.com/darylhjd/mangodex v0.0.0-20211207022035-32c47a44cfa1
-	github.com/gdamore/tcell/v2 v2.3.3
+	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/rivo/tview v0.0.0-20210529093604-435b99e1dfdf
-	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect
-	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	github.com/rivo/tview v0.0.0-20211202162923-2a6de950f73b
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
 )
