@@ -29,7 +29,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 	}
 
 	// Download the selected chapters.
-	var errored map[int]struct{}
+	errored := map[int]struct{}{}
 	for index := range selection {
 		// Get the reference to the chapter.
 		var (
