@@ -18,8 +18,8 @@ func ShowSearchPage() {
 	// Create the new search page
 	searchPage := newSearchPage()
 
-	core.App.TView.SetFocus(searchPage.Form)
 	core.App.PageHolder.AddAndSwitchToPage(SearchPageID, searchPage.Grid, true)
+	core.App.TView.SetFocus(searchPage.Form)
 }
 
 // newSearchPage : Creates a new SearchPage.
