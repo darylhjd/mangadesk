@@ -81,6 +81,8 @@ func (p *LoginPage) attemptLogin() {
 	if remember {
 		if err := core.App.StoreCredentials(); err != nil {
 			log.Println(fmt.Sprintf("Error storing credentials: %s", err.Error()))
+			modal := okModal(StoreCredentialErrorModalID, "Failed to store login token.\nCheck logs for details.")
+			ShowModal(StoreCredentialErrorModalID, modal)
 		}
 	}
 
