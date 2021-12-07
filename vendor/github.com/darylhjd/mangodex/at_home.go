@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -18,67 +19,55 @@ const (
 	MDHomeReportURL  = "https://api.mangadex.network/report"
 )
 
-type MDHomeClient struct {
-	Client  http.Client
-	BaseURL string
-	Quality string
-	Hash    string
+// AtHomeService : Provides MangaDex@Home services provided by the API.
+type AtHomeService service
+
+// MDHomeServerResponse : A response for getting a server URL to get chapters.
+type MDHomeServerResponse struct {
+	Result  string `json:"result"`
+	BaseURL string `json:"baseUrl"`
 }
 
-type ReportPayload struct {
-	URL      string
-	Success  bool
-	Cached   bool
-	Bytes    int
-	Duration int64
+func (r *MDHomeServerResponse) GetResult() string {
+	return r.Result
 }
 
 // NewMDHomeClient : Get MangaDex@Home client for a chapter.
 // https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId
-func (dc *DexClient) NewMDHomeClient(chapId, quality, hash string, forcePort443 bool) (*MDHomeClient, error) {
-	return dc.NewMDHomeClientContext(context.Background(), chapId, quality, hash, forcePort443)
+func (s *AtHomeService) NewMDHomeClient(c *Chapter, quality string, forcePort443 bool) (*MDHomeClient, error) {
+	return s.NewMDHomeClientContext(context.Background(), c, quality, forcePort443)
 }
 
 // NewMDHomeClientContext : NewMDHomeClient with custom context.
-func (dc *DexClient) NewMDHomeClientContext(ctx context.Context, chapId, quality, hash string, forcePort443 bool) (*MDHomeClient, error) {
+func (s *AtHomeService) NewMDHomeClientContext(ctx context.Context, c *Chapter, quality string, forcePort443 bool) (*MDHomeClient, error) {
 	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(GetMDHomeURLPath, chapId)
+	u.Path = fmt.Sprintf(GetMDHomeURLPath, c.ID)
 
 	// Set query parameters
 	q := u.Query()
-	q.Add("forcePort443", strconv.FormatBool(forcePort443))
+	q.Set("forcePort443", strconv.FormatBool(forcePort443))
 	u.RawQuery = q.Encode()
 
-	var r map[string]string
-	_, err := dc.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
+	var r MDHomeServerResponse
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MDHomeClient{
-		Client:  http.Client{},
-		BaseURL: r["baseUrl"],
-		Quality: quality,
-		Hash:    hash,
+		client:  &http.Client{},
+		baseURL: r.BaseURL,
+		quality: quality,
+		hash:    c.Attributes.Hash,
 	}, nil
 }
 
-// Report : Report success of getting chapter page data.
-func (c *MDHomeClient) Report(r ReportPayload) (*http.Response, error) {
-	return c.ReportContext(context.Background(), r)
-}
-
-// ReportContext : Report with custom context.
-func (c *MDHomeClient) ReportContext(ctx context.Context, r ReportPayload) (*http.Response, error) {
-	rBytes, err := json.Marshal(&r)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
-	if err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+// MDHomeClient : Client for interfacing with MangaDex@Home.
+type MDHomeClient struct {
+	client  *http.Client
+	baseURL string
+	quality string
+	hash    string
 }
 
 // GetChapterPage : Return page data for a chapter with the filename of that page.
@@ -88,40 +77,66 @@ func (c *MDHomeClient) GetChapterPage(filename string) ([]byte, error) {
 
 // GetChapterPageWithContext : GetChapterPage with custom context.
 func (c *MDHomeClient) GetChapterPageWithContext(ctx context.Context, filename string) ([]byte, error) {
-	path := strings.Join([]string{c.BaseURL, c.Quality, c.Hash, filename}, "/")
+	path := strings.Join([]string{c.baseURL, c.quality, c.hash, filename}, "/")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	r := ReportPayload{
-		URL:      path,
-		Success:  true,
-		Cached:   false,
-		Bytes:    0,
-		Duration: 0,
-	}
-
+	// Start timing how long to get all bytes for the file.
 	start := time.Now()
-	resp, err := c.Client.Do(req)
+	resp, err := c.client.Do(req)
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	var fileData []byte
+	// If we cannot not get chapter successfully
 	if err != nil || resp.StatusCode != 200 {
-		var errM string
-		if err != nil {
-			errM = err.Error()
-		} else {
-			errM = fmt.Sprintf("%d status code", resp.StatusCode)
+		if err == nil {
+			err = fmt.Errorf("%d status code", resp.StatusCode)
 		}
-		r.Success = false
-		r.Duration = time.Since(start).Milliseconds()
-		_, _ = c.ReportContext(ctx, r) // Make report
-		return nil, fmt.Errorf("unable to get chapter data: %s", errM)
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	r.Duration = time.Since(start).Milliseconds()
-	r.Bytes = len(b)
-	r.Cached = resp.Header.Get("X-Cache") == "HIT"
-	_, _ = c.ReportContext(ctx, r) // Make report
-	return b, err
+	// Read file data.
+	fileData, err = ioutil.ReadAll(resp.Body)
+
+	// Send report in the background.
+	go func() {
+		// Create the payload to send.
+		r := &reportPayload{
+			URL:      path,
+			Success:  err == nil,
+			Bytes:    len(fileData),
+			Duration: time.Since(start).Milliseconds(),
+			Cached:   strings.HasPrefix(resp.Header.Get("X-Cache"), "HIT"),
+		}
+
+		_, _ = c.reportContext(ctx, r) // Send report
+	}()
+
+	return fileData, err
+}
+
+// reportPayload : Required fields for reporting page download result.
+type reportPayload struct {
+	URL      string
+	Success  bool
+	Bytes    int
+	Duration int64
+	Cached   bool
+}
+
+// reportContext : Report success of getting chapter page data.
+func (c *MDHomeClient) reportContext(ctx context.Context, r *reportPayload) (*http.Response, error) {
+	rBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, MDHomeReportURL, bytes.NewBuffer(rBytes))
+	if err != nil {
+		return nil, err
+	}
+	return c.client.Do(req)
 }

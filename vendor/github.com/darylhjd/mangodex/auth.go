@@ -11,41 +11,41 @@ import (
 
 const (
 	LoginPath        = "auth/login"
-	CheckTokenPath   = "auth/check"
 	LogoutPath       = "auth/logout"
 	RefreshTokenPath = "auth/refresh"
 )
 
+// AuthService : Provides Auth services provided by the API.
+type AuthService service
+
+// AuthResponse : Typical AuthService response.
 type AuthResponse struct {
 	Result  string  `json:"result"`
-	Token   Token   `json:"token"`
-	Message *string `json:"message"`
+	Token   token   `json:"token"`
+	Message *string `json:"message,omitempty"`
 }
 
 func (ar AuthResponse) GetResult() string {
 	return ar.Result
 }
 
-type Token struct {
+// token : MangaDex token. Includes session and refresh token.
+type token struct {
 	Session string `json:"session"`
 	Refresh string `json:"refresh"`
 }
 
-type TokenCheckResponse struct {
-	OK              string   `json:"ok"`
-	IsAuthenticated bool     `json:"isAuthenticated"`
-	Roles           []string `json:"roles"`
-	Permissions     []string `json:"permissions"`
-}
-
 // Login : Login to MangaDex.
 // https://api.mangadex.org/docs.html#operation/post-auth-login
-func (dc *DexClient) Login(user, pwd string) error {
-	return dc.LoginContext(context.Background(), user, pwd)
+func (s *AuthService) Login(user, pwd string) error {
+	return s.LoginContext(context.Background(), user, pwd)
 }
 
 // LoginContext : Login with custom context.
-func (dc *DexClient) LoginContext(ctx context.Context, user, pwd string) error {
+func (s *AuthService) LoginContext(ctx context.Context, user, pwd string) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = LoginPath
+
 	// Create required request body.
 	req := map[string]string{
 		"username": user,
@@ -57,84 +57,80 @@ func (dc *DexClient) LoginContext(ctx context.Context, user, pwd string) error {
 	}
 
 	var ar AuthResponse
-	if err := dc.responseOp(ctx, http.MethodPost, LoginPath, bytes.NewBuffer(rBytes), &ar); err != nil {
+	if err = s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), bytes.NewBuffer(rBytes), &ar); err != nil {
 		return err
 	}
 
-	// Set client Token and header for authorization.
-	dc.isLoggedIn = true
-	dc.RefreshToken = ar.Token.Refresh
-	dc.header.Set("Authorization", fmt.Sprintf("Bearer %s", ar.Token.Session))
+	// Set client token and header for authorization.
+	s.SetRefreshToken(ar.Token.Refresh)
+	s.client.header.Set("Authorization", fmt.Sprintf("Bearer %s", ar.Token.Session))
 	return nil
-}
-
-// CheckToken : Check session token validity.
-// https://api.mangadex.org/docs.html#operation/get-auth-check
-func (dc *DexClient) CheckToken() (bool, error) {
-	return dc.CheckTokenContext(context.Background())
-}
-
-// CheckTokenContext : CheckToken with custom context.
-func (dc *DexClient) CheckTokenContext(ctx context.Context) (bool, error) {
-	u, _ := url.Parse(BaseAPI)
-	u.Path = CheckTokenPath
-
-	var c TokenCheckResponse
-	_, err := dc.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &c)
-	return c.IsAuthenticated, err
 }
 
 // Logout : Logout of MangaDex and invalidates all tokens.
 // https://api.mangadex.org/docs.html#operation/post-auth-logout
-func (dc *DexClient) Logout() error {
-	return dc.LogoutContext(context.Background())
+func (s *AuthService) Logout() error {
+	return s.LogoutContext(context.Background())
 }
 
 // LogoutContext : Logout with custom context.
-func (dc *DexClient) LogoutContext(ctx context.Context) error {
-	if err := dc.responseOp(ctx, http.MethodPost, LogoutPath, nil, nil); err != nil {
-		return nil
+func (s *AuthService) LogoutContext(ctx context.Context) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = LogoutPath
+
+	var r Response
+	if err := s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), nil, &r); err != nil {
+		return err
 	}
 
-	// Remove the stored client token and also authorization header if ok.
-	dc.isLoggedIn = false
-	dc.RefreshToken = ""
-	dc.header.Del("Authorization")
+	// Remove the stored client token and also authorization header.
+	s.SetRefreshToken("")
+	s.client.header.Del("Authorization")
 	return nil
 }
 
 // RefreshSessionToken : Refresh session token using refresh token.
 // https://api.mangadex.org/docs.html#operation/post-auth-refresh
-func (dc *DexClient) RefreshSessionToken() error {
-	return dc.RefreshSessionTokenContext(context.Background())
+func (s *AuthService) RefreshSessionToken() error {
+	return s.RefreshSessionTokenContext(context.Background())
 }
 
-// RefreshSessionTokenContext : RefreshToken with custom context.
-func (dc *DexClient) RefreshSessionTokenContext(ctx context.Context) error {
+// RefreshSessionTokenContext : refreshToken with custom context.
+func (s *AuthService) RefreshSessionTokenContext(ctx context.Context) error {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = RefreshTokenPath
+
 	// Create required request body.
 	req := map[string]string{
-		"token": dc.RefreshToken,
+		"token": s.client.refreshToken,
 	}
 	rBytes, err := json.Marshal(&req)
 	if err != nil {
-		dc.isLoggedIn = false
 		return err
 	}
 
 	var ar AuthResponse
-	if err := dc.responseOp(ctx, http.MethodPost, RefreshTokenPath, bytes.NewBuffer(rBytes), &ar); err != nil {
-		dc.isLoggedIn = false
+	if err = s.client.RequestAndDecode(ctx, http.MethodPost, u.String(), bytes.NewBuffer(rBytes), &ar); err != nil {
 		return err
 	}
 
 	// Update tokens
-	dc.isLoggedIn = true
-	dc.RefreshToken = ar.Token.Refresh
-	dc.header.Set("Authorization", fmt.Sprintf("Bearer %s", ar.Token.Session))
+	s.SetRefreshToken(ar.Token.Refresh)
+	s.client.header.Set("Authorization", fmt.Sprintf("Bearer %s", ar.Token.Session))
 	return nil
 }
 
 // IsLoggedIn : Return true when client logged in and false otherwise.
-func (dc *DexClient) IsLoggedIn() bool {
-	return dc.isLoggedIn
+func (s *AuthService) IsLoggedIn() bool {
+	return s.client.header.Get("Authorization") != ""
+}
+
+// GetRefreshToken : Get the current refresh token of the client.
+func (s *AuthService) GetRefreshToken() string {
+	return s.client.refreshToken
+}
+
+// SetRefreshToken : Set the refresh token for the client.
+func (s *AuthService) SetRefreshToken(refreshToken string) {
+	s.client.refreshToken = refreshToken
 }

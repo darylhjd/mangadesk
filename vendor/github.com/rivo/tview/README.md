@@ -92,6 +92,13 @@ For a presentation highlighting this package, compile and run the program found 
 - [Scriptable TUI music player](https://github.com/issadarkthing/gomu)
 - [MangaDesk : TUI Client for downloading manga to your computer](https://github.com/darylhjd/mangadesk)
 - [Go How Much? a Crypto coin price tracking from terminal](https://github.com/ledongthuc/gohowmuch)
+- [dbui: Universal CLI for Database Connections](https://github.com/KenanBek/dbui)
+- [ssmbrowse: Simple and elegant cli AWS SSM parameter browser](https://github.com/bnaydenov/ssmbrowse)
+- [gobit: binance intelligence terminal](https://github.com/infl00p/gobit)
+- [viddy: A modern watch command](https://github.com/sachaos/viddy)
+- [s3surfer: CLI tool for browsing S3 bucket and download objects interactively](https://github.com/hirose31/s3surfer)
+- [libgen-tui: A terminal UI for downloading books from Library Genesis](https://github.com/audstanley/libgen-tui)
+- [kubectl-lazy: kubectl plugin to easy to view pod](https://github.com/togettoyou/kubectl-lazy)
 
 ## Documentation
 
@@ -112,3 +119,7 @@ I try really hard to keep this project backwards compatible. Your software shoul
 ## Your Feedback
 
 Add your issue here on GitHub. Feel free to get in touch if you have any questions.
+
+## Code of Conduct
+
+We follow Golang's Code of Conduct which you can find [here](https://golang.org/conduct).

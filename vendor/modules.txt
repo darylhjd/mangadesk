@@ -1,9 +1,9 @@
-# github.com/darylhjd/mangodex v0.0.0-20211008013420-b6ddd75d45bf
+# github.com/darylhjd/mangodex v0.0.0-20211207022035-32c47a44cfa1
 ## explicit
 github.com/darylhjd/mangodex
 # github.com/gdamore/encoding v1.0.0
 github.com/gdamore/encoding
-# github.com/gdamore/tcell/v2 v2.3.3
+# github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 ## explicit
 github.com/gdamore/tcell/v2
 github.com/gdamore/tcell/v2/terminfo
@@ -17,6 +17,7 @@ github.com/gdamore/tcell/v2/terminfo/d/dtterm
 github.com/gdamore/tcell/v2/terminfo/dynamic
 github.com/gdamore/tcell/v2/terminfo/e/emacs
 github.com/gdamore/tcell/v2/terminfo/extended
+github.com/gdamore/tcell/v2/terminfo/f/foot
 github.com/gdamore/tcell/v2/terminfo/g/gnome
 github.com/gdamore/tcell/v2/terminfo/h/hpterm
 github.com/gdamore/tcell/v2/terminfo/k/konsole
@@ -48,21 +49,21 @@ github.com/lucasb-eyer/go-colorful
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit
 github.com/mattn/go-runewidth
-# github.com/rivo/tview v0.0.0-20210529093604-435b99e1dfdf
+# github.com/rivo/tview v0.0.0-20211202162923-2a6de950f73b
 ## explicit
 github.com/rivo/tview
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea
+# golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210503060354-a79de5458b56
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 ## explicit
 golang.org/x/term
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 ## explicit
 golang.org/x/text/encoding
 golang.org/x/text/encoding/internal/identifier

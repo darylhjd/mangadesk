@@ -3,35 +3,32 @@ package mangodex
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
+	"net/url"
 )
 
 const (
-	DeleteChapterPath     = "chapter/%s"
-	GetChapterPath        = DeleteChapterPath
-	UpdateChapterPath     = DeleteChapterPath
-	MarkChapterReadPath   = "chapter/%s/read"
-	MarkChapterUnreadPath = MarkChapterReadPath
+	MangaChaptersPath = "manga/%s/feed"
 )
 
+// ChapterService : Provides Chapter services provided by the API.
+type ChapterService service
+
+// ChapterList : A response for getting a list of chapters.
 type ChapterList struct {
-	Data   []Chapter `json:"data"`
-	Limit  int       `json:"limit"`
-	Offset int       `json:"offset"`
-	Total  int       `json:"total"`
+	Result   string    `json:"result"`
+	Response string    `json:"response"`
+	Data     []Chapter `json:"data"`
+	Limit    int       `json:"limit"`
+	Offset   int       `json:"offset"`
+	Total    int       `json:"total"`
 }
 
-type ChapterResponse struct {
-	Result        string         `json:"result"`
-	Data          Chapter        `json:"data"`
-	Relationships []Relationship `json:"relationships"`
+func (cl *ChapterList) GetResult() string {
+	return cl.Result
 }
 
-func (r *ChapterResponse) GetResult() string {
-	return r.Result
-}
-
+// Chapter : Struct containing information on a manga.
 type Chapter struct {
 	ID            string            `json:"id"`
 	Type          string            `json:"type"`
@@ -39,6 +36,20 @@ type Chapter struct {
 	Relationships []Relationship    `json:"relationships"`
 }
 
+// GetTitle : Get a title for the chapter.
+func (c *Chapter) GetTitle() string {
+	return c.Attributes.Title
+}
+
+// GetChapterNum : Get the chapter's chapter number.
+func (c *Chapter) GetChapterNum() string {
+	if num := c.Attributes.Chapter; num != nil {
+		return *num
+	}
+	return "-"
+}
+
+// ChapterAttributes : Attributes for a Chapter.
 type ChapterAttributes struct {
 	Title              string   `json:"title"`
 	Volume             *string  `json:"volume"`
@@ -48,67 +59,54 @@ type ChapterAttributes struct {
 	Data               []string `json:"data"`
 	DataSaver          []string `json:"dataSaver"`
 	Uploader           string   `json:"uploader"`
+	ExternalURL        *string  `json:"externalUrl"`
 	Version            int      `json:"version"`
 	CreatedAt          string   `json:"createdAt"`
 	UpdatedAt          string   `json:"updatedAt"`
 	PublishAt          string   `json:"publishAt"`
 }
 
-// DeleteChapter : Remove a chapter by ID.
-// https://api.mangadex.org/docs.html#operation/delete-chapter-id
-func (dc *DexClient) DeleteChapter(id string) error {
-	return dc.DeleteChapterContext(context.Background(), id)
+// GetMangaChapters : Get a list of chapters for a manga.
+// https://api.mangadex.org/docs.html#operation/get-manga-id-feed
+func (s *ChapterService) GetMangaChapters(id string, params url.Values) (*ChapterList, error) {
+	return s.GetMangaChaptersContext(context.Background(), id, params)
 }
 
-// DeleteChapterContext : DeleteChapter with custom context.
-func (dc *DexClient) DeleteChapterContext(ctx context.Context, id string) error {
-	return dc.responseOp(ctx, http.MethodDelete, fmt.Sprintf(DeleteChapterPath, id), nil, nil)
+// GetMangaChaptersContext : GetMangaChapters with custom context.
+func (s *ChapterService) GetMangaChaptersContext(ctx context.Context, id string, params url.Values) (*ChapterList, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(MangaChaptersPath, id)
+
+	// Set request parameters
+	u.RawQuery = params.Encode()
+
+	var l ChapterList
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &l)
+	return &l, err
 }
 
-// GetChapter : Get a chapter by ID.
-// https://api.mangadex.org/docs.html#operation/get-chapter-id
-func (dc *DexClient) GetChapter(id string) (*ChapterResponse, error) {
-	return dc.GetChapterContext(context.Background(), id)
+// ChapterReadMarkers : A response for getting a list of read chapters.
+type ChapterReadMarkers struct {
+	Result string   `json:"result"`
+	Data   []string `json:"data"`
 }
 
-// GetChapterContext : GetChapter with custom context.
-func (dc *DexClient) GetChapterContext(ctx context.Context, id string) (*ChapterResponse, error) {
-	var r ChapterResponse
-	err := dc.responseOp(ctx, http.MethodGet, fmt.Sprintf(GetChapterPath, id), nil, &r)
-	return &r, err
+func (rmr *ChapterReadMarkers) GetResult() string {
+	return rmr.Result
 }
 
-// UpdateChapter : Update a chapter by ID
-// https://api.mangadex.org/docs.html#operation/put-chapter-id
-func (dc *DexClient) UpdateChapter(id string, upChapter io.Reader) (*ChapterResponse, error) {
-	return dc.UpdateChapterContext(context.Background(), id, upChapter)
+// GetReadMangaChapters : Get list of Chapter IDs that are marked as read for a specified manga ID.
+// https://api.mangadex.org/docs.html#operation/get-manga-chapter-readmarkers
+func (s *ChapterService) GetReadMangaChapters(id string) (*ChapterReadMarkers, error) {
+	return s.GetReadMangaChaptersContext(context.Background(), id)
 }
 
-// UpdateChapterContext : UpdateChapter with custom context.
-func (dc *DexClient) UpdateChapterContext(ctx context.Context, id string, upChapter io.Reader) (*ChapterResponse, error) {
-	var r ChapterResponse
-	err := dc.responseOp(ctx, http.MethodPut, fmt.Sprintf(UpdateChapterPath, id), upChapter, &r)
-	return &r, err
-}
+// GetReadMangaChaptersContext : GetReadMangaChapters with custom context.
+func (s *ChapterService) GetReadMangaChaptersContext(ctx context.Context, id string) (*ChapterReadMarkers, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(MangaReadMarkersPath, id)
 
-// MarkChapterRead : Mark chapter as read.
-// https://api.mangadex.org/docs.html#operation/chapter-id-read
-func (dc *DexClient) MarkChapterRead(id string) error {
-	return dc.MarkChapterReadContext(context.Background(), id)
-}
-
-// MarkChapterReadContext : MarkChapterRead with custom context.
-func (dc *DexClient) MarkChapterReadContext(ctx context.Context, id string) error {
-	return dc.responseOp(ctx, http.MethodPost, fmt.Sprintf(MarkChapterReadPath, id), nil, nil)
-}
-
-// MarkChapterUnread : Mark chapter as unread.
-// https://api.mangadex.org/docs.html#operation/chapter-id-unread
-func (dc *DexClient) MarkChapterUnread(id string) error {
-	return dc.MarkChapterUnreadContext(context.Background(), id)
-}
-
-// MarkChapterUnreadContext : MarkChapterUnread with custom context.
-func (dc *DexClient) MarkChapterUnreadContext(ctx context.Context, id string) error {
-	return dc.responseOp(ctx, http.MethodDelete, fmt.Sprintf(MarkChapterUnreadPath, id), nil, nil)
+	var rmr ChapterReadMarkers
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &rmr)
+	return &rmr, err
 }

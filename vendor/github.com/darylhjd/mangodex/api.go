@@ -3,26 +3,34 @@ package mangodex
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"net/url"
-	"os"
 )
 
 const (
-	BaseAPI  = "https://api.mangadex.org"
-	PingPath = "ping"
+	BaseAPI = "https://api.mangadex.org"
 )
 
+// DexClient : The MangaDex client.
 type DexClient struct {
-	client       http.Client
-	header       http.Header
-	logger       *log.Logger
-	RefreshToken string
-	isLoggedIn   bool
+	client *http.Client
+	header http.Header
+
+	common       service
+	refreshToken string
+
+	// Services for MangaDex API
+	Auth    *AuthService
+	Manga   *MangaService
+	Chapter *ChapterService
+	User    *UserService
+	AtHome  *AtHomeService
+}
+
+// service : Wrapper for DexClient.
+type service struct {
+	client *DexClient
 }
 
 // NewDexClient : New anonymous client. To login as an authenticated user, use DexClient.Login.
@@ -32,72 +40,68 @@ func NewDexClient() *DexClient {
 
 	// Create header
 	header := http.Header{}
-	header.Add("Accept", "application/json")       // Set default accepted encoding
-	header.Add("Content-Type", "application/json") // Set default content type.
+	header.Set("Content-Type", "application/json") // Set default content type.
 
-	// Create default logger for the client
-	logger := log.New(os.Stderr, "mango", log.LstdFlags|log.Lshortfile)
-
-	return &DexClient{
-		client:     client,
-		header:     header,
-		logger:     logger,
-		isLoggedIn: false,
+	// Create the new client
+	dex := &DexClient{
+		client: &client,
+		header: header,
 	}
-}
+	// Set the common client
+	dex.common.client = dex
 
-// Ping : Ping the API server.
-func (dc *DexClient) Ping(ctx context.Context) error {
-	u, _ := url.Parse(BaseAPI)
-	u.Path = PingPath
+	// Reuse the common client for the other services
+	dex.Auth = (*AuthService)(&dex.common)
+	dex.Manga = (*MangaService)(&dex.common)
+	dex.Chapter = (*ChapterService)(&dex.common)
+	dex.User = (*UserService)(&dex.common)
+	dex.AtHome = (*AtHomeService)(&dex.common)
 
-	var res string
-	_, err := dc.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &res)
-	switch {
-	case err != nil:
-		return err
-	case res != "pong":
-		return errors.New("unexpected response for ping")
-	default:
-		return nil
-	}
+	return dex
 }
 
 // Request : Sends a request to the MangaDex API.
-func (dc *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+func (c *DexClient) Request(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+	// Create the request
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	// Set header for HTTP Authentication
-	req.Header = dc.header
 
-	// Send request
-	resp, err := dc.client.Do(req)
+	// Set header for request.
+	req.Header = c.header
+
+	// Send request.
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
-	} else if resp.StatusCode >= 300 || resp.StatusCode < 200 {
-		return nil, fmt.Errorf("non-2xx status code -> %d", resp.StatusCode)
+	} else if resp.StatusCode != 200 {
+		// Decode to an ErrorResponse struct.
+		var er ErrorResponse
+		if err = json.NewDecoder(resp.Body).Decode(&er); err != nil {
+			return nil, err
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(resp.Body)
+		return nil, fmt.Errorf("non-200 status code -> %s", er.GetErrors())
 	}
-
 	return resp, nil
 }
 
 // RequestAndDecode : Convenience wrapper to also decode response to required data type
-func (dc *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader, s interface{}) (*http.Response, error) {
-	resp, err := dc.Request(ctx, method, url, body)
+func (c *DexClient) RequestAndDecode(ctx context.Context, method, url string, body io.Reader, rt ResponseType) error {
+	// Get the response of the request.
+	resp, err := c.Request(ctx, method, url, body)
 	if err != nil {
-		return resp, err
-	} else if resp.StatusCode != 200 {
-		return resp, nil
+		return err
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(s)
+	// Decode the request into the specified ResponseType.
+	err = json.NewDecoder(resp.Body).Decode(rt)
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			dc.logger.Println("could not close response body.")
-		}
+		_ = Body.Close()
 	}(resp.Body)
-	return resp, err
+
+	return err
 }

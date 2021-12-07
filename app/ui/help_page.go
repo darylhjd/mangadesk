@@ -1,19 +1,26 @@
-package pages
-
-/*
-Help Page shows the keybindings for the application.
-*/
+package ui
 
 import (
 	"fmt"
-
+	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/rivo/tview"
-
-	g "github.com/darylhjd/mangadesk/globals"
 )
 
-// ShowHelpPage : Show the help page to the user.
-func ShowHelpPage(pages *tview.Pages) {
+// HelpPage : This struct contains the grid for the help page.
+type HelpPage struct {
+	Grid *tview.Grid
+}
+
+// ShowHelpPage : Make the app show the help page.
+func ShowHelpPage() {
+	helpPage := newHelpPage()
+
+	core.App.TView.SetFocus(helpPage.Grid)
+	core.App.PageHolder.AddPage(HelpPageID, helpPage.Grid, true, true)
+}
+
+// newHelpPage : Creates a new help page.
+func newHelpPage() *HelpPage {
 	// Set up the help text.
 	helpText := "Keyboard Mappings\n" +
 		"-----------------------------\n\n" +
@@ -34,18 +41,18 @@ func ShowHelpPage(pages *tview.Pages) {
 	// Set TextView attributes.
 	help.SetText(helpText).
 		SetTextAlign(tview.AlignCenter).
-		SetBorderColor(g.HelpPageBorderColor).
+		SetBorderColor(HelpPageBorderColor).
 		SetBorder(true)
 
-	// Create a new grid for the text view so we can align it to the center.
+	// Create a new grid for the text view, so we can align it to the center.
 	grid := tview.NewGrid().SetColumns(0, 0, 0, 0).SetRows(0, 0, 0, 0).
 		AddItem(help, 0, 0, 4, 4, 0, 0, false).
 		AddItem(help, 1, 1, 2, 2, 45, 100, false)
 
-	// Set up input capture for the help page.
-	SetHelpPageHandlers(pages, grid)
+	helpPage := &HelpPage{
+		Grid: grid,
+	}
+	helpPage.setHandlers()
 
-	pages.AddPage(g.HelpPageID, grid, true, false)
-	g.App.SetFocus(grid)
-	pages.SwitchToPage(g.HelpPageID)
+	return helpPage
 }

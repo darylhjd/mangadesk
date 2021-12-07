@@ -638,7 +638,7 @@ func (t *tScreen) drawCell(x, y int) int {
 			t.TPuts(ti.TGoto(x-1, y))
 			t.TPuts(ti.InsertChar)
 			t.cy = y
-			t.cx = x-1
+			t.cx = x - 1
 			t.cells.SetDirty(x-1, y, true)
 			_ = t.drawCell(x-1, y)
 			t.TPuts(t.ti.TGoto(0, 0))
@@ -939,6 +939,26 @@ func (t *tScreen) Colors() int {
 // always be a small number. (<= 256)
 func (t *tScreen) nColors() int {
 	return t.ti.Colors
+}
+
+func (t *tScreen) ChannelEvents(ch chan<- Event, quit <-chan struct{}) {
+	defer close(ch)
+	for {
+		select {
+		case <-quit:
+			return
+		case <-t.quit:
+			return
+		case ev := <-t.evch:
+			select {
+			case <-quit:
+				return
+			case <-t.quit:
+				return
+			case ch <- ev:
+			}
+		}
+	}
 }
 
 func (t *tScreen) PollEvent() Event {
@@ -1527,7 +1547,12 @@ func (t *tScreen) inputLoop(stopQ chan struct{}) {
 		switch e {
 		case nil:
 		default:
-			_ = t.PostEvent(NewEventError(e))
+			t.Lock()
+			running := t.running
+			t.Unlock()
+			if running {
+				_ = t.PostEvent(NewEventError(e))
+			}
 			return
 		}
 		if n > 0 {
@@ -1682,6 +1707,7 @@ func (t *tScreen) disengage() {
 	ti := t.ti
 	t.cells.Resize(0, 0)
 	t.TPuts(ti.ShowCursor)
+	t.TPuts(ti.ResetFgBg)
 	t.TPuts(ti.AttrOff)
 	t.TPuts(ti.Clear)
 	t.TPuts(ti.ExitCA)
