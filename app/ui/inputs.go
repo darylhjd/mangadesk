@@ -160,7 +160,12 @@ func (p *MainPage) setHandlers(isSearch, explicit bool, searchTerm string) {
 
 	p.Table.SetSelectedFunc(func(row, _ int) {
 		log.Printf("Selected row %d on main page.\n", row)
-		ShowMangaPage((p.Table.GetCell(row, 0).GetReference()).(*mangodex.Manga))
+		mangaRef := p.Table.GetCell(row, 0).GetReference()
+		if mangaRef == nil {
+			return
+		} else if manga, ok := mangaRef.(*mangodex.Manga); ok {
+			ShowMangaPage(manga)
+		}
 	})
 }
 

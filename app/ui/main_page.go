@@ -248,8 +248,10 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	list, err := core.App.Client.Manga.GetMangaList(params)
 	if err != nil {
 		log.Println(err.Error())
-		modal := okModal(GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
-		ShowModal(GenericAPIErrorModalID, modal)
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
+			ShowModal(GenericAPIErrorModalID, modal)
+		})
 		return
 	}
 
