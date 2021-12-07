@@ -305,6 +305,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 }
 
 // calculatePaginationData : Calculates the current page and first/last entry number.
+// Returns (pageNo, firstEntry, lastEntry).
 func (p *MainPage) calculatePaginationData() (int, int, int) {
 	page := p.CurrentOffset/offsetRange + 1
 	firstEntry := p.CurrentOffset + 1

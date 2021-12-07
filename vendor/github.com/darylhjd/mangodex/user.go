@@ -44,7 +44,7 @@ func (s *UserService) GetUserFollowedMangaListContext(ctx context.Context, limit
 type UserResponse struct {
 	Result   string `json:"result"`
 	Response string `json:"response"`
-	Data     User   `json:"user"`
+	Data     User   `json:"data"`
 }
 
 func (ur *UserResponse) GetResult() string {

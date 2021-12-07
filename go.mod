@@ -3,7 +3,7 @@ module github.com/darylhjd/mangadesk
 go 1.16
 
 require (
-	github.com/darylhjd/mangodex v0.0.0-20211207014327-b8e4ae1ce22d
+	github.com/darylhjd/mangodex v0.0.0-20211207022035-32c47a44cfa1
 	github.com/gdamore/tcell/v2 v2.3.3
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/rivo/tview v0.0.0-20210529093604-435b99e1dfdf
