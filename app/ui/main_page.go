@@ -112,11 +112,11 @@ func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
 	ctx, cancel := p.ctx, p.cancel
 	p.ctx, p.cancel = context.WithCancel(context.Background())
-	time.Sleep(loadDelay)
-	defer cancel()
-
 	// Set handlers
 	p.setHandlers(cancel, false, false, "")
+	
+	time.Sleep(loadDelay)
+	defer cancel()
 
 	core.App.TView.QueueUpdateDraw(func() {
 		// Clear current entries.
@@ -218,11 +218,11 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	log.Println("Setting guest table...")
 	ctx, cancel := p.ctx, p.cancel
 	p.ctx, p.cancel = context.WithCancel(context.Background())
-	time.Sleep(loadDelay)
-	defer cancel()
-
 	// Set the handlers
 	p.setHandlers(cancel, isSearch, explicit, searchTerm)
+
+	time.Sleep(loadDelay)
+	defer cancel()
 
 	tableTitle := "Popular manga"
 	if isSearch {
