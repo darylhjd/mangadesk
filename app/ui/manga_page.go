@@ -308,7 +308,7 @@ func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, err
 		}
 		log.Printf("Got %d of %d chapters\n", currOffset, list.Total)
 		chapters = append(chapters, list.Data...)
-		currOffset += 500
+		currOffset += chapterOffsetRange
 		if currOffset >= list.Total {
 			break
 		}
