@@ -155,12 +155,13 @@ func (p *MangaPage) setMangaInfo() {
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
 	log.Println("Setting up manga page chapter table...")
-	time.Sleep(loadDelay)
 	ctx, cancel := p.ctx, p.cancel
-	defer cancel()
-
+	p.ctx, p.cancel = context.WithCancel(context.Background())
 	// Set handlers.
 	p.setHandlers(cancel)
+
+	time.Sleep(loadDelay)
+	defer cancel()
 
 	// Show loading status so user knows it's loading.
 	core.App.TView.QueueUpdateDraw(func() {

@@ -114,7 +114,7 @@ func (p *MainPage) setLoggedTable() {
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	// Set handlers
 	p.setHandlers(cancel, false, false, "")
-	
+
 	time.Sleep(loadDelay)
 	defer cancel()
 
@@ -268,6 +268,12 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	}
 	for _, rating := range ratings {
 		params.Add("contentRating[]", rating)
+	}
+	// Set better search results if using table for search, else popular otherwise.
+	if isSearch {
+		params.Set("order[relevance]", "desc")
+	} else {
+		params.Set("order[followedCount]", "desc")
 	}
 	// Include Author relationship
 	params.Set("includes[]", mangodex.AuthorRel)
