@@ -122,7 +122,7 @@ func (p *SearchPage) setHandlers() {
 }
 
 // setHandlers : Set handlers for the main page.
-func (p *MainPage) setHandlers(cancel context.CancelFunc, isSearch, explicit bool, searchTerm string) {
+func (p *MainPage) setHandlers(cancel context.CancelFunc, searchParams *SearchParams) {
 	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		var reload bool
 		switch event.Key() {
@@ -150,10 +150,10 @@ func (p *MainPage) setHandlers(cancel context.CancelFunc, isSearch, explicit boo
 		if reload {
 			// Cancel any current loading, and create a new one.
 			cancel()
-			if isSearch {
-				go p.setGuestTable(isSearch, explicit, searchTerm)
+			if searchParams != nil {
+				go p.setGuestTable(searchParams)
 			} else if !core.App.Client.Auth.IsLoggedIn() {
-				go p.setGuestTable(false, explicit, searchTerm)
+				go p.setGuestTable(nil)
 			} else {
 				go p.setLoggedTable()
 			}

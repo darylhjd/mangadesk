@@ -14,6 +14,12 @@ type SearchPage struct {
 	Form *tview.Form
 }
 
+// SearchParams : Convenience struct to hold parameters for setting up a search table.
+type SearchParams struct {
+	term     string // The term to search for.
+	explicit bool   // Whether to include explicit material in results.
+}
+
 // ShowSearchPage : Make the app show the search page.
 func ShowSearchPage() {
 	// Create the new search page
@@ -96,5 +102,10 @@ func newSearchPage() *SearchPage {
 // setSearchTable : Sets the table for search results.
 func (p *SearchPage) setSearchTable(exContent bool, searchTerm string) {
 	log.Println("Setting new search results...")
-	go p.MainPage.setGuestTable(true, exContent, searchTerm)
+	// Create the search param struct
+	s := &SearchParams{
+		term:     searchTerm,
+		explicit: exContent,
+	}
+	go p.MainPage.setGuestTable(s)
 }

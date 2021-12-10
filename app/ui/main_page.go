@@ -113,7 +113,7 @@ func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
 	ctx, cancel := p.cWrap.resetContext()
 	// Set handlers
-	p.setHandlers(cancel, false, false, "")
+	p.setHandlers(cancel, nil)
 
 	time.Sleep(loadDelay)
 	defer cancel()
@@ -201,7 +201,7 @@ func (p *MainPage) setLoggedTable() {
 func (p *MainPage) setGuest() {
 	log.Println("Using guest main page.")
 	go p.setGuestGrid()
-	go p.setGuestTable(false, core.App.Config.ExplicitContent, "")
+	go p.setGuestTable(nil)
 }
 
 // setGuestGrid : Show guest grid title.
@@ -213,18 +213,20 @@ func (p *MainPage) setGuestGrid() {
 	log.Println("Finished setting guest grid.")
 }
 
-// setGuestTable : Show guest table items and title.
-func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
+// setGuestTable : Show guest table items and title. This function is also used to create a search table.
+// Whether we are setting up the table for the guest main page or a search page depends on whether
+// searchParams is nil. If it is nil, then it is not a search, otherwise we are searching.
+func (p *MainPage) setGuestTable(searchParams *SearchParams) {
 	log.Println("Setting guest table...")
 	ctx, cancel := p.cWrap.resetContext()
 	// Set the handlers
-	p.setHandlers(cancel, isSearch, explicit, searchTerm)
+	p.setHandlers(cancel, searchParams)
 
 	time.Sleep(loadDelay)
 	defer cancel()
 
 	tableTitle := "Popular manga"
-	if isSearch {
+	if searchParams != nil {
 		tableTitle = "Search Results"
 	}
 
@@ -256,36 +258,11 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	})
 
 	// Get list of manga.
-	// Set up offset parameters
-	params := url.Values{}
-	params.Set("limit", strconv.Itoa(offsetRange))
-	params.Set("offset", strconv.Itoa(p.CurrentOffset))
-	// If user wants explicit content.
-	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
-	if explicit {
-		ratings = append(ratings, mangodex.Porn)
-	}
-	for _, rating := range ratings {
-		params.Add("contentRating[]", rating)
-	}
-	// Set better search results if using table for search, else popular.
-	if isSearch {
-		params.Set("order[relevance]", "desc")
-	} else {
-		params.Set("order[followedCount]", "desc")
-	}
-	// Include Author relationship
-	params.Set("includes[]", mangodex.AuthorRel)
-	// If it is a search, then we add the search term.
-	if isSearch {
-		log.Printf("Settings guest table for search: \"%s\"\n", searchTerm)
-		params.Set("title", searchTerm)
-	}
-
+	params := p.setGuestSearchParams(searchParams)
 	if p.cWrap.toCancel(ctx) {
 		return
 	}
-	list, err := core.App.Client.Manga.GetMangaList(params)
+	list, err := core.App.Client.Manga.GetMangaList(*params)
 	if err != nil {
 		log.Println(err.Error())
 		core.App.TView.QueueUpdateDraw(func() {
@@ -344,6 +321,49 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 		p.Table.ScrollToBeginning()
 	})
 	log.Println("Finished setting guest table.")
+}
+
+// setGuestSearchParams : Helper function to set up query parameters for the guest table.
+func (p *MainPage) setGuestSearchParams(searchParams *SearchParams) *url.Values {
+	// Set up offset parameters
+	params := url.Values{}
+
+	// Set limits and offset
+	params.Set("limit", strconv.Itoa(offsetRange))
+	params.Set("offset", strconv.Itoa(p.CurrentOffset))
+
+	// Set content ratings
+	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
+	switch searchParams != nil {
+	case true: // If it is a search, then we follow settings for this search.
+		if !searchParams.explicit {
+			ratings = append(ratings, mangodex.Porn)
+		}
+	case false: // Else, we follow the configuration settings set by the user.
+		if core.App.Config.ExplicitContent {
+			ratings = append(ratings, mangodex.Porn)
+		}
+	}
+	for _, rating := range ratings {
+		params.Add("contentRating[]", rating)
+	}
+
+	// Set order of results.
+	if searchParams != nil { // If fpr searching, we sort by relevancy.
+		params.Set("order[relevance]", "desc")
+	} else { // Else, we sort by popular manga (based on follow count)
+		params.Set("order[followedCount]", "desc")
+	}
+
+	// Set search term (if for search)
+	if searchParams != nil {
+		log.Printf("Settings guest table for search: \"%s\"\n", searchParams.term)
+		params.Set("title", searchParams.term)
+	}
+
+	// Include Author relationship
+	params.Set("includes[]", mangodex.AuthorRel)
+	return &params
 }
 
 // calculatePaginationData : Calculates the current page and first/last entry number.
