@@ -29,8 +29,7 @@ type MainPage struct {
 	CurrentOffset int
 	MaxOffset     int
 
-	ctx    context.Context // For pagination
-	cancel context.CancelFunc
+	cWrap *ContextWrapper // For context cancellation.
 }
 
 // ShowMainPage : Make the app show the main page.
@@ -69,10 +68,12 @@ func newMainPage() *MainPage {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	mainPage := &MainPage{
-		Grid:   grid,
-		Table:  table,
-		ctx:    ctx,
-		cancel: cancel,
+		Grid:  grid,
+		Table: table,
+		cWrap: &ContextWrapper{
+			ctx:    ctx,
+			cancel: cancel,
+		},
 	}
 
 	// Check what kind of main page to show to the user.
@@ -110,8 +111,7 @@ func (p *MainPage) setLoggedGrid() {
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
-	ctx, cancel := p.ctx, p.cancel
-	p.ctx, p.cancel = context.WithCancel(context.Background())
+	ctx, cancel := p.cWrap.resetContext()
 	// Set handlers
 	p.setHandlers(cancel, false, false, "")
 
@@ -141,7 +141,7 @@ func (p *MainPage) setLoggedTable() {
 	})
 
 	// Get the list of the user's followed manga.
-	if toCancel(ctx) {
+	if p.cWrap.toCancel(ctx) {
 		return
 	}
 	followed, err := core.App.Client.User.GetUserFollowedMangaList(
@@ -175,7 +175,7 @@ func (p *MainPage) setLoggedTable() {
 
 	// Fill in the details
 	for index := 0; index < len(followed.Data); index++ {
-		if toCancel(ctx) {
+		if p.cWrap.toCancel(ctx) {
 			return
 		}
 		manga := followed.Data[index]
@@ -216,8 +216,7 @@ func (p *MainPage) setGuestGrid() {
 // setGuestTable : Show guest table items and title.
 func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	log.Println("Setting guest table...")
-	ctx, cancel := p.ctx, p.cancel
-	p.ctx, p.cancel = context.WithCancel(context.Background())
+	ctx, cancel := p.cWrap.resetContext()
 	// Set the handlers
 	p.setHandlers(cancel, isSearch, explicit, searchTerm)
 
@@ -269,7 +268,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 	for _, rating := range ratings {
 		params.Add("contentRating[]", rating)
 	}
-	// Set better search results if using table for search, else popular otherwise.
+	// Set better search results if using table for search, else popular.
 	if isSearch {
 		params.Set("order[relevance]", "desc")
 	} else {
@@ -283,7 +282,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 		params.Set("title", searchTerm)
 	}
 
-	if toCancel(ctx) {
+	if p.cWrap.toCancel(ctx) {
 		return
 	}
 	list, err := core.App.Client.Manga.GetMangaList(params)
@@ -316,7 +315,7 @@ func (p *MainPage) setGuestTable(isSearch, explicit bool, searchTerm string) {
 
 	// Fill in the details
 	for index := 0; index < len(list.Data); index++ {
-		if toCancel(ctx) {
+		if p.cWrap.toCancel(ctx) {
 			return
 		}
 		manga := list.Data[index]

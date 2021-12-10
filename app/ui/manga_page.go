@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	chapterOffsetRange = 500
+	chapterOffsetRange    = 500
+	contextCancelledError = "CANCELLED"
 )
 
 // MangaPage : This struct contains the required primitives for the manga page.
@@ -29,8 +30,7 @@ type MangaPage struct {
 	Selected    map[int]struct{} // Keep track of which chapters have been selected by user.
 	SelectedAll bool             // Keep track of whether user has selected all or not.
 
-	ctx    context.Context // For pagination
-	cancel context.CancelFunc
+	cWrap *ContextWrapper // For context cancellation.
 }
 
 // ShowMangaPage : Make the app show the manga page.
@@ -108,8 +108,10 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		Info:     info,
 		Table:    table,
 		Selected: map[int]struct{}{},
-		ctx:      ctx,
-		cancel:   cancel,
+		cWrap: &ContextWrapper{
+			ctx:    ctx,
+			cancel: cancel,
+		},
 	}
 
 	// Set up values
@@ -155,8 +157,7 @@ func (p *MangaPage) setMangaInfo() {
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
 	log.Println("Setting up manga page chapter table...")
-	ctx, cancel := p.ctx, p.cancel
-	p.ctx, p.cancel = context.WithCancel(context.Background())
+	ctx, cancel := p.cWrap.resetContext()
 	// Set handlers.
 	p.setHandlers(cancel)
 
@@ -170,12 +171,12 @@ func (p *MangaPage) setChapterTable() {
 	})
 
 	// Get all chapters
-	if toCancel(ctx) {
+	if p.cWrap.toCancel(ctx) {
 		return
 	}
 	chapters, err := p.getAllChapters(ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "CANCELLED") {
+		if strings.Contains(err.Error(), contextCancelledError) {
 			return
 		}
 		log.Println(fmt.Sprintf("Error getting manga chapters: %s", err.Error()))
@@ -194,7 +195,7 @@ func (p *MangaPage) setChapterTable() {
 	// Get the chapter read markers.
 	markers := map[string]struct{}{}
 	if core.App.Client.Auth.IsLoggedIn() {
-		if toCancel(ctx) {
+		if p.cWrap.toCancel(ctx) {
 			return
 		}
 		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
@@ -213,7 +214,7 @@ func (p *MangaPage) setChapterTable() {
 
 	// Fill in the chapters
 	for index := 0; index < len(chapters); index++ {
-		if toCancel(ctx) {
+		if p.cWrap.toCancel(ctx) {
 			return
 		}
 		chapter := chapters[index]
@@ -299,8 +300,8 @@ func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, err
 		currOffset = 0
 	)
 	for {
-		if toCancel(ctx) {
-			return []mangodex.Chapter{}, fmt.Errorf("CANCELLED")
+		if p.cWrap.toCancel(ctx) {
+			return []mangodex.Chapter{}, fmt.Errorf(contextCancelledError)
 		}
 		params.Set("offset", strconv.Itoa(currOffset))
 		list, err := core.App.Client.Chapter.GetMangaChapters(p.Manga.ID, params)

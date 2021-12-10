@@ -63,10 +63,12 @@ func newSearchPage() *SearchPage {
 	ctx, cancel := context.WithCancel(context.Background())
 	searchPage := &SearchPage{
 		MainPage: MainPage{
-			Grid:   grid,
-			Table:  table,
-			ctx:    ctx,
-			cancel: cancel,
+			Grid:  grid,
+			Table: table,
+			cWrap: &ContextWrapper{
+				ctx:    ctx,
+				cancel: cancel,
+			},
 		},
 		Form: search,
 	}
