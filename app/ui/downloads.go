@@ -23,11 +23,6 @@ const (
 
 // downloadChapters : Download current chapters specified by the user.
 func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) {
-	// Unmark the chapters
-	for index := range selection {
-		p.markChapterUnselected(index)
-	}
-
 	// Download the selected chapters.
 	errored := map[int]struct{}{}
 	for index := range selection {

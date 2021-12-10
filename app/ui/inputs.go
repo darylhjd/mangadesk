@@ -185,14 +185,19 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 	p.Table.SetSelectedFunc(func(row, _ int) {
 		// We add the current selection if the there are no selected rows currently.
-		if len(p.Selected) == 0 {
-			p.Selected[row] = struct{}{}
+		if !p.sWrap.hasSelections() {
+			p.sWrap.addSelection(row)
 		}
 		log.Println("Creating and showing confirm download modal...")
 		modal := confirmModal(DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
-			selected := p.Selected
+			// Create a copy of the selection.
+			selected := p.sWrap.copySelection()
+			// Set selected rows as unselected.
+			for row := range selected {
+				p.markUnselected(row)
+			}
+			// Download selected chapters.
 			go p.downloadChapters(selected, 0)
-			p.Selected = map[int]struct{}{}
 		})
 		ShowModal(DownloadChaptersModalID, modal)
 	})
@@ -211,29 +216,17 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 // ctrlEInput : Enables user to select a chapter table row without activating the select action.
 func (p *MangaPage) ctrlEInput() {
 	row, _ := p.Table.GetSelection()
-	// If the row is already in the selection, we deselect.
-	if _, ok := p.Selected[row]; ok {
-		p.markChapterUnselected(row)
-		delete(p.Selected, row)
+	// If the row is already in the selection, we deselect. Else, we add.
+	if p.sWrap.hasSelection(row) {
+		p.markUnselected(row)
 	} else {
-		p.markChapterSelected(row)
-		p.Selected[row] = struct{}{}
+		p.markSelected(row)
 	}
 }
 
 // ctrlAInput : Enables user to select/deselect ALL chapters at once.
 func (p *MangaPage) ctrlAInput() {
-	// If user previously selected all, then we will deselect all.
-	if p.SelectedAll {
-		p.Selected = map[int]struct{}{}
-		for index := 1; index < p.Table.GetRowCount(); index++ {
-			p.markChapterUnselected(index)
-		}
-	} else {
-		for index := 1; index < p.Table.GetRowCount(); index++ {
-			p.Selected[index] = struct{}{}
-			p.markChapterSelected(index)
-		}
-	}
-	p.SelectedAll = !p.SelectedAll
+	// Toggle selection.
+	p.markAll(!p.sWrap.all)
+	p.sWrap.all = !p.sWrap.all
 }

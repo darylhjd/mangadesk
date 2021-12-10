@@ -27,9 +27,7 @@ type MangaPage struct {
 	Info  *tview.TextView
 	Table *tview.Table
 
-	Selected    map[int]struct{} // Keep track of which chapters have been selected by user.
-	SelectedAll bool             // Keep track of whether user has selected all or not.
-
+	sWrap *SelectorWrapper
 	cWrap *ContextWrapper // For context cancellation.
 }
 
@@ -103,11 +101,13 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	mangaPage := &MangaPage{
-		Manga:    manga,
-		Grid:     grid,
-		Info:     info,
-		Table:    table,
-		Selected: map[int]struct{}{},
+		Manga: manga,
+		Grid:  grid,
+		Info:  info,
+		Table: table,
+		sWrap: &SelectorWrapper{
+			selection: map[int]struct{}{},
+		},
 		cWrap: &ContextWrapper{
 			ctx:    ctx,
 			cancel: cancel,
@@ -175,7 +175,7 @@ func (p *MangaPage) setChapterTable() {
 		return
 	}
 	chapters, err := p.getAllChapters(ctx)
-	if err != nil {
+	if err != nil { // If error getting chapters.
 		if strings.Contains(err.Error(), contextCancelledError) {
 			return
 		}
@@ -185,13 +185,14 @@ func (p *MangaPage) setChapterTable() {
 			ShowModal(GenericAPIErrorModalID, modal)
 		})
 		return
-	} else if len(chapters) == 0 {
+	} else if len(chapters) == 0 { // If there are no chapters.
 		core.App.TView.QueueUpdateDraw(func() {
 			noResultsCell := tview.NewTableCell("No chapters!").SetSelectable(false)
 			p.Table.SetCell(1, 1, noResultsCell)
 		})
 		return
 	}
+
 	// Get the chapter read markers.
 	markers := map[string]struct{}{}
 	if core.App.Client.Auth.IsLoggedIn() {
@@ -275,27 +276,8 @@ func (p *MangaPage) setChapterTable() {
 
 // getAllChapters : Get all chapters for the manga.
 func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, error) {
-	// Set up query parameters.
-	params := url.Values{}
-	params.Set("limit", strconv.Itoa(chapterOffsetRange))
-	// Get all chapters with user's specified languages
-	for _, lang := range core.App.Config.Languages {
-		params.Add("translatedLanguage[]", lang)
-	}
-	// Show the latest chapters first.
-	params.Set("order[chapter]", "desc")
-	// Show required explicit chapters
-	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
-	if p.Manga.Attributes.ContentRating != nil && *p.Manga.Attributes.ContentRating == mangodex.Porn {
-		ratings = append(ratings, mangodex.Porn)
-	}
-	for _, rating := range ratings {
-		params.Add("contentRating[]", rating)
-	}
-	// Also get the scanlation group for the chapter
-	params.Add("includes[]", mangodex.ScanlationGroupRel)
-
 	var (
+		params     = p.setGetChaptersParams()
 		chapters   []mangodex.Chapter
 		currOffset = 0
 	)
@@ -304,7 +286,7 @@ func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, err
 			return []mangodex.Chapter{}, fmt.Errorf(contextCancelledError)
 		}
 		params.Set("offset", strconv.Itoa(currOffset))
-		list, err := core.App.Client.Chapter.GetMangaChapters(p.Manga.ID, params)
+		list, err := core.App.Client.Chapter.GetMangaChapters(p.Manga.ID, *params)
 		if err != nil {
 			return []mangodex.Chapter{}, err
 		}
@@ -318,14 +300,64 @@ func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, err
 	return chapters, nil
 }
 
-// MarkChapterSelected : Mark a chapter as being selected by the user on the main page table.
-func (p *MangaPage) markChapterSelected(row int) {
-	chapterCell := p.Table.GetCell(row, 0)
-	chapterCell.SetTextColor(tcell.ColorBlack).SetBackgroundColor(MangaPageHighlightColor)
+// setGetChaptersParams : Helper function to set up query parameters for getting chapters.
+func (p *MangaPage) setGetChaptersParams() *url.Values {
+	// Set up query parameters.
+	params := url.Values{}
+
+	// Set limits
+	params.Set("limit", strconv.Itoa(chapterOffsetRange))
+
+	// Set all chapters with user's specified languages
+	for _, lang := range core.App.Config.Languages {
+		params.Add("translatedLanguage[]", lang)
+	}
+
+	// Show the latest chapters first.
+	params.Set("order[chapter]", "desc")
+
+	// Show required explicit chapters
+	ratings := []string{mangodex.Safe, mangodex.Suggestive, mangodex.Erotica}
+	if p.Manga.Attributes.ContentRating != nil && *p.Manga.Attributes.ContentRating == mangodex.Porn {
+		ratings = append(ratings, mangodex.Porn)
+	}
+	for _, rating := range ratings {
+		params.Add("contentRating[]", rating)
+	}
+
+	// Also get the scanlation group for the chapter
+	params.Add("includes[]", mangodex.ScanlationGroupRel)
+
+	return &params
 }
 
-// MarkChapterUnselected : Mark a chapter as being unselected by the user on the main page table.
-func (p *MangaPage) markChapterUnselected(row int) {
+// markSelected : Mark a chapter as being selected by the user on the main page table.
+func (p *MangaPage) markSelected(row int) {
+	chapterCell := p.Table.GetCell(row, 0)
+	chapterCell.SetTextColor(tcell.ColorBlack).SetBackgroundColor(MangaPageHighlightColor)
+
+	// Add to the selection wrapper
+	p.sWrap.addSelection(row)
+}
+
+// markUnselected : Mark a chapter as being unselected by the user on the main page table.
+func (p *MangaPage) markUnselected(row int) {
 	chapterCell := p.Table.GetCell(row, 0)
 	chapterCell.SetTextColor(MangaPageChapNumColor).SetBackgroundColor(tcell.ColorBlack)
+
+	// Remove from the selection wrapper
+	p.sWrap.removeSelection(row)
+}
+
+// markAll : Marks all rows as selected or unselected.
+func (p *MangaPage) markAll(selected bool) {
+	if selected {
+		for row := 1; row < p.Table.GetRowCount(); row++ {
+			p.markSelected(row)
+		}
+	} else {
+		for row := 1; row < p.Table.GetRowCount(); row++ {
+			p.markUnselected(row)
+		}
+	}
 }
