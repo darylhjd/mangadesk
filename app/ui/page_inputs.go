@@ -135,16 +135,15 @@ func (p *MainPage) setHandlers(cancel context.CancelFunc, searchParams *SearchPa
 			if p.CurrentOffset+offsetRange >= p.MaxOffset {
 				modal := okModal(utils.OffsetErrorModalID, "No more results to show.")
 				ShowModal(utils.OffsetErrorModalID, modal)
-				return event
+			} else {
+				// Update the new offset
+				p.CurrentOffset += offsetRange
 			}
-			// Update the new offset
 			reload = true
-			p.CurrentOffset += offsetRange
 		case tcell.KeyCtrlB:
 			if p.CurrentOffset == 0 {
 				modal := okModal(utils.OffsetErrorModalID, "Already on first page.")
 				ShowModal(utils.OffsetErrorModalID, modal)
-				return event
 			}
 			reload = true
 			// Update the new offset
