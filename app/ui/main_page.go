@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -155,6 +156,11 @@ func (p *MainPage) setLoggedTable() {
 		})
 		return
 	}
+
+	// Sort the list based on manga title.
+	sort.Slice(followed.Data, func(i, j int) bool {
+		return followed.Data[i].GetTitle("en") < followed.Data[j].GetTitle("en")
+	})
 
 	// Update offset details.
 	p.MaxOffset = int(math.Min(float64(followed.Total), maxOffset))
