@@ -47,7 +47,6 @@ github.com/gdamore/tcell/v2/terminfo/x/xterm_termite
 # github.com/lucasb-eyer/go-colorful v1.2.0
 github.com/lucasb-eyer/go-colorful
 # github.com/mattn/go-runewidth v0.0.13
-## explicit
 github.com/mattn/go-runewidth
 # github.com/rivo/tview v0.0.0-20211202162923-2a6de950f73b
 ## explicit
