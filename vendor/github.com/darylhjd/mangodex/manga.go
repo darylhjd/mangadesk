@@ -10,10 +10,6 @@ const (
 	MangaListPath = "manga"
 )
 
-const (
-	MangaReadMarkersPath = "manga/%s/read"
-)
-
 // MangaService : Provides Manga services provided by the API.
 type MangaService service
 

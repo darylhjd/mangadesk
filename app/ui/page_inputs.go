@@ -199,10 +199,6 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 		modal := confirmModal(utils.DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
 			// Create a copy of the Selection.
 			selected := p.sWrap.CopySelection()
-			// Set selected rows as unselected.
-			for row := range selected {
-				p.markUnselected(row)
-			}
 			// Download selected chapters.
 			go p.downloadChapters(selected, 0)
 		})
@@ -225,9 +221,13 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 // ctrlRInput : Allows user to toggle read status for a chapter.
 func (p *MangaPage) ctrlRInput() {
-	// TODO : Do read marker API calls.
-	modal := okModal("ToggleReadMarkers", "Input for toggling read markers...")
-	ShowModal("ToggleReadMarkers", modal)
+	modal := confirmModal(utils.ToggleReadChapterModalID,
+		"Toggle read status for selected chapter(s)?", "Toggle", func() {
+			selected := p.sWrap.CopySelection()
+			// Toggle read markers
+			go p.toggleReadMarkers(selected)
+		})
+	ShowModal(utils.ToggleReadChapterModalID, modal)
 }
 
 // ctrlEInput : Enables user to select a chapter table row without activating the select action.

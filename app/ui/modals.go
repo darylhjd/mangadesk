@@ -40,7 +40,7 @@ func confirmModal(id, text, confirmButton string, f func()) *tview.Modal {
 		SetBackgroundColor(utils.ModalColor).
 		AddButtons([]string{confirmButton, "Cancel"}).
 		SetFocus(0).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		SetDoneFunc(func(buttonIndex int, _ string) {
 			if buttonIndex == 0 {
 				f()
 			}

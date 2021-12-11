@@ -48,7 +48,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		}
 
 		core.App.TView.QueueUpdateDraw(func() {
-			downloadCell := tview.NewTableCell("Y").SetTextColor(utils.MangaPageDownloadStatColor)
+			downloadCell := tview.NewTableCell(readStatus).SetTextColor(utils.MangaPageDownloadStatColor)
 			p.Table.SetCell(index, 2, downloadCell)
 		})
 	}
@@ -229,4 +229,52 @@ func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
 		folder = fmt.Sprintf("%s.%s", folder, core.App.Config.ZipType)
 	}
 	return folder
+}
+
+// toggleReadMarkers : Toggle read status for selected chapters.
+func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
+	// Check if the user is logged in. If they are not, we tell them that they cannot toggle without logging in.
+	if !core.App.Client.Auth.IsLoggedIn() {
+		log.Printf("Attmpted toggling read marker while not logged in. Informing user...")
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.ToggleReadChapterModalErrorID, "You need to log in to toggle read status!")
+			ShowModal(utils.ToggleReadChapterModalErrorID, modal)
+		})
+		return
+	}
+
+	// For each selection, we separate into make-read, make-unread bins.
+	var read, unRead []string
+	for row := range selection {
+		var (
+			chapter *mangodex.Chapter
+			ok      bool
+		)
+		// Get the chapter for this row.
+		if chapter, ok = p.Table.GetCell(row, 0).GetReference().(*mangodex.Chapter); !ok {
+			return
+		}
+
+		// Get the read/unread status, and split accordingly.
+		statusCell := p.Table.GetCell(row, 4)
+		if statusCell.Text == readStatus { // If it was originally read, we toggle to unread.
+			unRead = append(unRead, chapter.ID)
+			statusCell.SetText("")
+		} else {
+			read = append(read, chapter.ID)
+			statusCell.SetText(readStatus)
+		}
+	}
+
+	// TODO : Wait for API fix.
+	// Send the request.
+	if _, err := core.App.Client.Chapter.SetReadUnreadMangaChapters(p.Manga.ID, read, unRead); err != nil {
+		// Error sending request, tell the user.
+		log.Printf("Unable to update read markers: %s\n", err.Error())
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.ToggleReadChapterModalErrorID,
+				"Error updating read markers.\n\nCheck log for details.")
+			ShowModal(utils.ToggleReadChapterModalErrorID, modal)
+		})
+	}
 }

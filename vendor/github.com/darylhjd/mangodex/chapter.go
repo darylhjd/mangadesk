@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	MangaChaptersPath = "manga/%s/feed"
+	MangaChaptersPath    = "manga/%s/feed"
+	MangaReadMarkersPath = "manga/%s/read"
 )
 
 // ChapterService : Provides Chapter services provided by the API.

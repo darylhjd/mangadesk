@@ -19,6 +19,7 @@ import (
 const (
 	chapterOffsetRange    = 500
 	contextCancelledError = "CANCELLED"
+	readStatus            = "Y"
 )
 
 // MangaPage : This struct contains the required primitives for the manga page.
@@ -253,7 +254,7 @@ func (p *MangaPage) setChapterTable() {
 		if !core.App.Client.Auth.IsLoggedIn() {
 			read = "Not logged in!"
 		} else if _, ok := markers[chapter.ID]; ok {
-			read = "Y"
+			read = readStatus
 		}
 		readCell := tview.NewTableCell(read).SetTextColor(utils.MangaPageReadStatColor)
 
@@ -354,11 +355,11 @@ func (p *MangaPage) markUnselected(row int) {
 func (p *MangaPage) markAll() {
 	if p.sWrap.All {
 		for row := 1; row < p.Table.GetRowCount(); row++ {
-			p.markSelected(row)
+			p.markUnselected(row)
 		}
 	} else {
 		for row := 1; row < p.Table.GetRowCount(); row++ {
-			p.markUnselected(row)
+			p.markSelected(row)
 		}
 	}
 	p.sWrap.All = !p.sWrap.All
