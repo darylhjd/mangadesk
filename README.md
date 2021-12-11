@@ -50,7 +50,7 @@ $ paru -S mangadesk
 
 ## Uninstall ❌
 
-To uninstall, simply delete the executable and its related folders and files (namely, the `usr` folder).
+To uninstall, simply delete the executable and its related folders and files.
 
 Your downloads will not be removed by deleting the executable.
 
@@ -74,15 +74,17 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ### Keybindings ⌨
 
-| Operation                 | Binding                          | Page       |
-|---------------------------|----------------------------------|------------|
-| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   | All        |
-| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   | All        |
-| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   | All        |
-| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> | Some       |
-| Escape                    | <kbd>Esc</kbd>                   | Some       |
-| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   | Manga Page |
-| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   | Manga Page |
+| Operation                 | Binding                          | 
+|---------------------------|----------------------------------|
+| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
+| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
+| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
+| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
+| Escape                    | <kbd>Esc</kbd>                   |
+| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
+| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
+| Toggle chapter read mark  | <kbd>Ctrl</kbd> + <kbd>R</kbd>   |
+| Toggle manga following    | <kbd>Ctrl</kbd> + <kbd>Q</kbd>   |
 
 ## Settings ⚙
 
