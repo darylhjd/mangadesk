@@ -18,6 +18,7 @@
 - Login to keep track of your followed manga.
 - Download multiple chapters together.
 - Searching!
+- (Yes, you can use this to scrape manga).
 - Written in Golang :)
 
 <b>Works for Windows/Linux/macOS.</b>

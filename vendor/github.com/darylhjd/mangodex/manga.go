@@ -2,12 +2,16 @@ package mangodex
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 const (
-	MangaListPath = "manga"
+	MangaListPath            = "manga"
+	CheckIfMangaFollowedPath = "user/follows/manga/%s"
+	ToggleMangaFollowPath    = "manga/%s/follow"
 )
 
 // MangaService : Provides Manga services provided by the API.
@@ -86,4 +90,45 @@ func (s *MangaService) GetMangaListContext(ctx context.Context, params url.Value
 	var l MangaList
 	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &l)
 	return &l, err
+}
+
+// CheckIfMangaFollowed : Check if a user follows a manga.
+func (s *MangaService) CheckIfMangaFollowed(id string) (bool, error) {
+	return s.CheckIfMangaFollowedContext(context.Background(), id)
+}
+
+// CheckIfMangaFollowedContext : CheckIfMangaFollowed with custom context.
+func (s *MangaService) CheckIfMangaFollowedContext(ctx context.Context, id string) (bool, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(CheckIfMangaFollowedPath, id)
+
+	var r Response
+	err := s.client.RequestAndDecode(ctx, http.MethodGet, u.String(), nil, &r)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+// ToggleMangaFollowStatus :Toggle follow status for a manga.
+func (s *MangaService) ToggleMangaFollowStatus(id string, toFollow bool) (*Response, error) {
+	return s.ToggleMangaFollowStatusContext(context.Background(), id, toFollow)
+}
+
+// ToggleMangaFollowStatusContext  ToggleMangaFollowStatus with custom context.
+func (s *MangaService) ToggleMangaFollowStatusContext(ctx context.Context, id string, toFollow bool) (*Response, error) {
+	u, _ := url.Parse(BaseAPI)
+	u.Path = fmt.Sprintf(ToggleMangaFollowPath, id)
+
+	method := http.MethodPost // To follow
+	if !toFollow {
+		method = http.MethodDelete // To unfollow
+	}
+
+	var r Response
+	err := s.client.RequestAndDecode(ctx, method, u.String(), nil, &r)
+	return &r, err
 }
