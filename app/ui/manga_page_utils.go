@@ -237,8 +237,8 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 	if !core.App.Client.Auth.IsLoggedIn() {
 		log.Printf("Attmpted toggling read marker while not logged in. Informing user...")
 		core.App.TView.QueueUpdateDraw(func() {
-			modal := okModal(utils.ToggleReadChapterModalErrorID, "You need to log in to toggle read status!")
-			ShowModal(utils.ToggleReadChapterModalErrorID, modal)
+			modal := okModal(utils.NotLoggedInErrorModalID, "You need to log in to toggle read status!")
+			ShowModal(utils.NotLoggedInErrorModalID, modal)
 		})
 		return
 	}
@@ -272,9 +272,80 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 		// Error sending request, tell the user.
 		log.Printf("Unable to update read markers: %s\n", err.Error())
 		core.App.TView.QueueUpdateDraw(func() {
-			modal := okModal(utils.ToggleReadChapterModalErrorID,
+			modal := okModal(utils.GenericAPIErrorModalID,
 				"Error updating read markers.\n\nCheck log for details.")
-			ShowModal(utils.ToggleReadChapterModalErrorID, modal)
+			ShowModal(utils.GenericAPIErrorModalID, modal)
 		})
 	}
+}
+
+// toggleFollowManga : Toggle follow/unfollow of a manga.
+func (p *MangaPage) toggleFollowManga() {
+	// Check if the user is logged in. If they are not, we tell them that they cannot toggle without logging in.
+	if !core.App.Client.Auth.IsLoggedIn() {
+		log.Printf("Attmpted toggling follow while not logged in. Informing user...")
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.NotLoggedInErrorModalID, "You need to log in to follow/unfollow a manga!")
+			ShowModal(utils.NotLoggedInErrorModalID, modal)
+		})
+		return
+	}
+
+	// Check whether the manga is currently being followed or not.
+	log.Println("Checking manga follow status...")
+	following, err := core.App.Client.Manga.CheckIfMangaFollowed(p.Manga.ID)
+	if err != nil {
+		log.Printf("Error getting manga follow status: %s\n", err.Error())
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.GenericAPIErrorModalID,
+				"Error checking manga follow status.\nCheck log for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
+		})
+		return
+	}
+
+	// Show a follow/unfollow modal based on current follow status
+	var (
+		text          string
+		confirmButton string
+		fn            func()
+	)
+	if following {
+		log.Println("Manga was followed.")
+		text = "You are already following this manga.\n\nUnfollow manga?"
+		confirmButton = "Unfollow"
+	} else {
+		log.Println("Manga was not followed.")
+		text = "You are not currently following this manga.\n\nFollow manga?"
+		confirmButton = "Follow"
+	}
+
+	// Set up the function to do.
+	fn = func() {
+		var (
+			id    string
+			modal *tview.Modal
+		)
+		// Toggle follow and set up the result modal.
+		if _, err = core.App.Client.Manga.ToggleMangaFollowStatus(p.Manga.ID, !following); err != nil {
+			id = utils.GenericAPIErrorModalID
+			modal = okModal(utils.GenericAPIErrorModalID,
+				"Error following/unfollowing manga.\nCheck log for details.")
+		} else {
+			log.Println("Successfully toggled following of manga.")
+			id = utils.ToggleFollowMangaDoneModalID
+			msg := "Successfully followed manga."
+			if following {
+				msg = "Successfully unfollowed manga."
+			}
+			modal = okModal(utils.ToggleFollowMangaDoneModalID, msg)
+		}
+		ShowModal(id, modal)
+	}
+
+	// Show the modal to confirm toggling of follow.
+	core.App.TView.QueueUpdateDraw(func() {
+		modal := confirmModal(utils.ToggleFollowMangaModalID, text, confirmButton, fn)
+		ShowModal(utils.ToggleFollowMangaModalID, modal)
+	})
 }

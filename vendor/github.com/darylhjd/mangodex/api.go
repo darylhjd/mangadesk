@@ -84,7 +84,7 @@ func (c *DexClient) Request(ctx context.Context, method, url string, body io.Rea
 		defer func(Body io.ReadCloser) {
 			_ = Body.Close()
 		}(resp.Body)
-		return nil, fmt.Errorf("non-200 status code -> %s", er.GetErrors())
+		return nil, fmt.Errorf("non-200 status code -> (%d) %s", resp.StatusCode, er.GetErrors())
 	}
 	return resp, nil
 }

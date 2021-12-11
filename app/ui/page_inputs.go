@@ -51,8 +51,8 @@ func ctrlLInput() {
 		modal = confirmModal(utils.LoginLogoutCfmModalID, text, "Logout", func() {
 			// Attempt to logout
 			if err := core.App.Client.Auth.Logout(); err != nil {
-				okM := okModal(utils.LoginLogoutFailureModalID, "Error logging out!")
-				ShowModal(utils.LoginLogoutFailureModalID, okM)
+				okM := okModal(utils.GenericAPIErrorModalID, "Error logging out!")
+				ShowModal(utils.GenericAPIErrorModalID, okM)
 				return
 			}
 			// If logged out successfully, then delete stored credentials and direct user to main page (guest).
@@ -213,20 +213,11 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 			p.ctrlAInput()
 		case tcell.KeyCtrlR: // User wants to toggle read status for Selection.
 			p.ctrlRInput()
+		case tcell.KeyCtrlQ:
+			p.ctrlQInput()
 		}
 		return event
 	})
-}
-
-// ctrlRInput : Allows user to toggle read status for a chapter.
-func (p *MangaPage) ctrlRInput() {
-	modal := confirmModal(utils.ToggleReadChapterModalID,
-		"Toggle read status for selected chapter(s)?", "Toggle", func() {
-			selected := p.sWrap.CopySelection()
-			// Toggle read markers
-			go p.toggleReadMarkers(selected)
-		})
-	ShowModal(utils.ToggleReadChapterModalID, modal)
 }
 
 // ctrlEInput : Enables user to select a chapter table row without activating the select action.
@@ -244,4 +235,20 @@ func (p *MangaPage) ctrlEInput() {
 func (p *MangaPage) ctrlAInput() {
 	// Toggle Selection.
 	p.markAll()
+}
+
+// ctrlRInput : Allows user to toggle read status for a chapter.
+func (p *MangaPage) ctrlRInput() {
+	modal := confirmModal(utils.ToggleReadChapterModalID,
+		"Toggle read status for selected chapter(s)?", "Toggle", func() {
+			selected := p.sWrap.CopySelection()
+			// Toggle read markers
+			go p.toggleReadMarkers(selected)
+		})
+	ShowModal(utils.ToggleReadChapterModalID, modal)
+}
+
+// ctrlQInput : Allows user to toggle following/unfollowing of a manga.
+func (p *MangaPage) ctrlQInput() {
+	go p.toggleFollowManga()
 }

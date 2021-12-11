@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
@@ -72,17 +71,18 @@ func (p *LoginPage) attemptLogin() {
 
 	// Attempt to log in to MangaDex API.
 	if err := core.App.Client.Auth.Login(user, pwd); err != nil {
-		log.Printf("Error trying to login: %ss\n", err.Error())
-		modal := okModal(utils.LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
-		ShowModal(utils.LoginLogoutFailureModalID, modal)
+		log.Printf("Error trying to login: %s\n", err.Error())
+		modal := okModal(utils.GenericAPIErrorModalID, "Authentication failed.\nTry again!")
+		ShowModal(utils.GenericAPIErrorModalID, modal)
 		return
 	}
 
 	// Remember the user's login credentials if user wants it.
 	if remember {
 		if err := core.App.StoreCredentials(); err != nil {
-			log.Println(fmt.Sprintf("Error storing credentials: %s", err.Error()))
-			modal := okModal(utils.StoreCredentialErrorModalID, "Failed to store login token.\nCheck logs for details.")
+			log.Printf("Error storing credentials: %s\n", err.Error())
+			modal := okModal(utils.StoreCredentialErrorModalID,
+				"Failed to store login token.\nCheck logs for details.")
 			ShowModal(utils.StoreCredentialErrorModalID, modal)
 		}
 	}

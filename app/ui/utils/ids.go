@@ -7,13 +7,14 @@ const (
 	HelpPageID   = "help_page"
 	SearchPageID = "search_page"
 
-	LoginLogoutFailureModalID     = "login_failure_modal" // Modal IDs
-	LoginLogoutCfmModalID         = "logout_modal"
-	StoreCredentialErrorModalID   = "store_cred_error_modal"
-	DownloadChaptersModalID       = "download_chapters_modal"
-	DownloadFinishedModalID       = "download_error_modal"
-	ToggleReadChapterModalID      = "toggle_read_chapters_modal"
-	ToggleReadChapterModalErrorID = "toggle_read_chapters_error_modal"
-	GenericAPIErrorModalID        = "api_error_modal"
-	OffsetErrorModalID            = "offset_error_modal"
+	LoginLogoutCfmModalID        = "logout_modal" // Modal IDs
+	StoreCredentialErrorModalID  = "store_cred_error_modal"
+	DownloadChaptersModalID      = "download_chapters_modal"
+	DownloadFinishedModalID      = "download_error_modal"
+	ToggleReadChapterModalID     = "toggle_read_chapters_modal"
+	ToggleFollowMangaModalID     = "toggle_follow_manga_modal"
+	ToggleFollowMangaDoneModalID = "toggle_follow_manga_done_modal"
+	GenericAPIErrorModalID       = "api_error_modal"
+	NotLoggedInErrorModalID      = "not_logged_in_error_modal"
+	OffsetErrorModalID           = "offset_error_modal"
 )
