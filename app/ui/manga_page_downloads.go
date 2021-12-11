@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -47,7 +48,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		}
 
 		core.App.TView.QueueUpdateDraw(func() {
-			downloadCell := tview.NewTableCell("Y").SetTextColor(MangaPageDownloadStatColor)
+			downloadCell := tview.NewTableCell("Y").SetTextColor(utils.MangaPageDownloadStatColor)
 			p.Table.SetCell(index, 2, downloadCell)
 		})
 	}
@@ -58,7 +59,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		modalID string
 	)
 	// Use unique ID for this particular download.
-	modalID = fmt.Sprintf("%s - %s - %v", DownloadFinishedModalID, p.Manga.GetTitle("en"), selection)
+	modalID = fmt.Sprintf("%s - %s - %v", utils.DownloadFinishedModalID, p.Manga.GetTitle("en"), selection)
 
 	msg.WriteString("Last Download Queue finished.\n")
 	msg.WriteString(fmt.Sprintf("Manga: %s\n", p.Manga.GetTitle("en")))

@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
 	"log"
 )
@@ -25,7 +26,7 @@ func ShowSearchPage() {
 	// Create the new search page
 	searchPage := newSearchPage()
 
-	core.App.PageHolder.AddAndSwitchToPage(SearchPageID, searchPage.Grid, true)
+	core.App.PageHolder.AddAndSwitchToPage(utils.SearchPageID, searchPage.Grid, true)
 	core.App.TView.SetFocus(searchPage.Form)
 }
 
@@ -35,10 +36,10 @@ func newSearchPage() *SearchPage {
 	for i := 0; i < 15; i++ {
 		dimensions = append(dimensions, -1)
 	}
-	grid := newGrid(dimensions, dimensions)
+	grid := utils.NewGrid(dimensions, dimensions)
 	// Set grid attributes
-	grid.SetTitleColor(SearchPageGridTitleColor).
-		SetBorderColor(SearchPageGridBorderColor).
+	grid.SetTitleColor(utils.SearchPageGridTitleColor).
+		SetBorderColor(utils.SearchPageGridBorderColor).
 		SetTitle("Search Manga. " +
 			"[yellow]Press ↓ on search bar to switch to table. " +
 			"[green]Press Tab on table to switch to search bar.").
@@ -49,8 +50,8 @@ func newSearchPage() *SearchPage {
 	// Set table attributes
 	table.SetSelectable(true, false).
 		SetSeparator('|').
-		SetBordersColor(SearchPageTableBorderColor).
-		SetTitleColor(SearchPageTableTitleColor).
+		SetBordersColor(utils.SearchPageTableBorderColor).
+		SetTitleColor(utils.SearchPageTableTitleColor).
 		SetTitle("The curious cat peeks into the database...🐈").
 		SetBorder(true)
 
@@ -58,7 +59,7 @@ func newSearchPage() *SearchPage {
 	search := tview.NewForm()
 	// Set form attributes
 	search.SetButtonsAlign(tview.AlignLeft).
-		SetLabelColor(SearchFormLabelColor)
+		SetLabelColor(utils.SearchFormLabelColor)
 
 	// Add search bar and result table to the grid. Search bar will have focus.
 	grid.AddItem(search, 0, 0, 4, 15, 0, 0, false).
@@ -71,9 +72,9 @@ func newSearchPage() *SearchPage {
 		MainPage: MainPage{
 			Grid:  grid,
 			Table: table,
-			cWrap: &ContextWrapper{
-				ctx:    ctx,
-				cancel: cancel,
+			cWrap: &utils.ContextWrapper{
+				Ctx:    ctx,
+				Cancel: cancel,
 			},
 		},
 		Form: search,

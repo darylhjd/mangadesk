@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -27,8 +28,8 @@ type MangaPage struct {
 	Info  *tview.TextView
 	Table *tview.Table
 
-	sWrap *SelectorWrapper
-	cWrap *ContextWrapper // For context cancellation.
+	sWrap *utils.SelectorWrapper
+	cWrap *utils.ContextWrapper // For context cancellation.
 }
 
 // ShowMangaPage : Make the app show the manga page.
@@ -36,7 +37,7 @@ func ShowMangaPage(manga *mangodex.Manga) {
 	mangaPage := newMangaPage(manga)
 
 	core.App.TView.SetFocus(mangaPage.Grid)
-	core.App.PageHolder.AddAndSwitchToPage(MangaPageID, mangaPage.Grid, true)
+	core.App.PageHolder.AddAndSwitchToPage(utils.MangaPageID, mangaPage.Grid, true)
 }
 
 // newMangaPage : Creates a new manga page.
@@ -45,10 +46,10 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 	for i := 0; i < 15; i++ {
 		dimensions = append(dimensions, -1)
 	}
-	grid := newGrid(dimensions, dimensions)
+	grid := utils.NewGrid(dimensions, dimensions)
 	// Set grid attributes
-	grid.SetTitleColor(MangaPageGridTitleColor).
-		SetBorderColor(MangaPageGridBorderColor).
+	grid.SetTitleColor(utils.MangaPageGridTitleColor).
+		SetBorderColor(utils.MangaPageGridBorderColor).
 		SetTitle("Manga Information").
 		SetBorder(true)
 
@@ -56,8 +57,8 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 	info := tview.NewTextView()
 	// Set textview attributes
 	info.SetWrap(true).SetWordWrap(true).
-		SetBorderColor(MangaPageInfoViewBorderColor).
-		SetTitleColor(MangaPageInfoViewTitleColor).
+		SetBorderColor(utils.MangaPageInfoViewBorderColor).
+		SetTitleColor(utils.MangaPageInfoViewTitleColor).
 		SetTitle("About").
 		SetBorder(true)
 
@@ -65,19 +66,19 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 	table := tview.NewTable()
 	// Set chapter headers
 	numHeader := tview.NewTableCell("Chap").
-		SetTextColor(MangaPageChapNumColor).
+		SetTextColor(utils.MangaPageChapNumColor).
 		SetSelectable(false)
 	titleHeader := tview.NewTableCell("Name").
-		SetTextColor(MangaPageTitleColor).
+		SetTextColor(utils.MangaPageTitleColor).
 		SetSelectable(false)
 	downloadHeader := tview.NewTableCell("Download Status").
-		SetTextColor(MangaPageDownloadStatColor).
+		SetTextColor(utils.MangaPageDownloadStatColor).
 		SetSelectable(false)
 	scanGroupHeader := tview.NewTableCell("ScanGroup").
-		SetTextColor(MangaPageScanGroupColor).
+		SetTextColor(utils.MangaPageScanGroupColor).
 		SetSelectable(false)
 	readMarkerHeader := tview.NewTableCell("Read Status").
-		SetTextColor(MangaPageReadStatColor).
+		SetTextColor(utils.MangaPageReadStatColor).
 		SetSelectable(false)
 	table.SetCell(0, 0, numHeader).
 		SetCell(0, 1, titleHeader).
@@ -88,9 +89,9 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 	// Set table attributes
 	table.SetSelectable(true, false).
 		SetSeparator('|').
-		SetBordersColor(MangaPageTableBorderColor).
+		SetBordersColor(utils.MangaPageTableBorderColor).
 		SetTitle("Chapters").
-		SetTitleColor(MangaPageTableTitleColor).
+		SetTitleColor(utils.MangaPageTableTitleColor).
 		SetBorder(true)
 
 	// Add info and table to the grid. Set the focus to the chapter table.
@@ -105,12 +106,12 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		Grid:  grid,
 		Info:  info,
 		Table: table,
-		sWrap: &SelectorWrapper{
-			selection: map[int]struct{}{},
+		sWrap: &utils.SelectorWrapper{
+			Selection: map[int]struct{}{},
 		},
-		cWrap: &ContextWrapper{
-			ctx:    ctx,
-			cancel: cancel,
+		cWrap: &utils.ContextWrapper{
+			Ctx:    ctx,
+			Cancel: cancel,
 		},
 	}
 
@@ -157,7 +158,7 @@ func (p *MangaPage) setMangaInfo() {
 // setChapterTable : Fill up the chapter table.
 func (p *MangaPage) setChapterTable() {
 	log.Println("Setting up manga page chapter table...")
-	ctx, cancel := p.cWrap.resetContext()
+	ctx, cancel := p.cWrap.ResetContext()
 	// Set handlers.
 	p.setHandlers(cancel)
 
@@ -170,8 +171,8 @@ func (p *MangaPage) setChapterTable() {
 		p.Table.SetCell(1, 1, loadingCell)
 	})
 
-	// Get all chapters
-	if p.cWrap.toCancel(ctx) {
+	// Get All chapters
+	if p.cWrap.ToCancel(ctx) {
 		return
 	}
 	chapters, err := p.getAllChapters(ctx)
@@ -181,8 +182,8 @@ func (p *MangaPage) setChapterTable() {
 		}
 		log.Println(fmt.Sprintf("Error getting manga chapters: %s", err.Error()))
 		core.App.TView.QueueUpdateDraw(func() {
-			modal := okModal(GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
-			ShowModal(GenericAPIErrorModalID, modal)
+			modal := okModal(utils.GenericAPIErrorModalID, "Error getting manga chapters.\nCheck log for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
 		})
 		return
 	} else if len(chapters) == 0 { // If there are no chapters.
@@ -196,15 +197,15 @@ func (p *MangaPage) setChapterTable() {
 	// Get the chapter read markers.
 	markers := map[string]struct{}{}
 	if core.App.Client.Auth.IsLoggedIn() {
-		if p.cWrap.toCancel(ctx) {
+		if p.cWrap.ToCancel(ctx) {
 			return
 		}
 		markerResponse, err := core.App.Client.Chapter.GetReadMangaChapters(p.Manga.ID)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error getting chapter read markers: %s", err.Error()))
 			core.App.TView.QueueUpdateDraw(func() {
-				modal := okModal(GenericAPIErrorModalID, "Error getting chapter read markers.\nCheck log for details.")
-				ShowModal(GenericAPIErrorModalID, modal)
+				modal := okModal(utils.GenericAPIErrorModalID, "Error getting chapter read markers.\nCheck log for details.")
+				ShowModal(utils.GenericAPIErrorModalID, modal)
 			})
 			return
 		}
@@ -215,18 +216,18 @@ func (p *MangaPage) setChapterTable() {
 
 	// Fill in the chapters
 	for index := 0; index < len(chapters); index++ {
-		if p.cWrap.toCancel(ctx) {
+		if p.cWrap.ToCancel(ctx) {
 			return
 		}
 		chapter := chapters[index]
 		// Chapter Number
 		chapterNumCell := tview.NewTableCell(
 			fmt.Sprintf("%-6s %s", chapter.GetChapterNum(), chapter.Attributes.TranslatedLanguage)).
-			SetMaxWidth(10).SetTextColor(MangaPageChapNumColor).SetReference(&chapter)
+			SetMaxWidth(10).SetTextColor(utils.MangaPageChapNumColor).SetReference(&chapter)
 
 		// Chapter title
 		titleCell := tview.NewTableCell(fmt.Sprintf("%-30s", chapter.GetTitle())).SetMaxWidth(30).
-			SetTextColor(MangaPageTitleColor)
+			SetTextColor(utils.MangaPageTitleColor)
 
 		// Chapter download status
 		var downloadStatus string
@@ -234,7 +235,7 @@ func (p *MangaPage) setChapterTable() {
 		if _, err = os.Stat(p.getDownloadFolder(&chapter)); err == nil {
 			downloadStatus = "Y"
 		}
-		downloadCell := tview.NewTableCell(downloadStatus).SetTextColor(MangaPageDownloadStatColor)
+		downloadCell := tview.NewTableCell(downloadStatus).SetTextColor(utils.MangaPageDownloadStatColor)
 
 		// Scanlation group
 		var scanGroup string
@@ -245,7 +246,7 @@ func (p *MangaPage) setChapterTable() {
 			}
 		}
 		scanGroupCell := tview.NewTableCell(fmt.Sprintf("%-15s", scanGroup)).SetMaxWidth(15).
-			SetTextColor(MangaPageScanGroupColor)
+			SetTextColor(utils.MangaPageScanGroupColor)
 
 		// Read marker
 		var read string
@@ -254,7 +255,7 @@ func (p *MangaPage) setChapterTable() {
 		} else if _, ok := markers[chapter.ID]; ok {
 			read = "Y"
 		}
-		readCell := tview.NewTableCell(read).SetTextColor(MangaPageReadStatColor)
+		readCell := tview.NewTableCell(read).SetTextColor(utils.MangaPageReadStatColor)
 
 		p.Table.SetCell(index+1, 0, chapterNumCell).
 			SetCell(index+1, 1, titleCell).
@@ -274,7 +275,7 @@ func (p *MangaPage) setChapterTable() {
 	})
 }
 
-// getAllChapters : Get all chapters for the manga.
+// getAllChapters : Get All chapters for the manga.
 func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, error) {
 	var (
 		params     = p.setGetChaptersParams()
@@ -282,7 +283,7 @@ func (p *MangaPage) getAllChapters(ctx context.Context) ([]mangodex.Chapter, err
 		currOffset = 0
 	)
 	for {
-		if p.cWrap.toCancel(ctx) {
+		if p.cWrap.ToCancel(ctx) {
 			return []mangodex.Chapter{}, fmt.Errorf(contextCancelledError)
 		}
 		params.Set("offset", strconv.Itoa(currOffset))
@@ -308,7 +309,7 @@ func (p *MangaPage) setGetChaptersParams() *url.Values {
 	// Set limits
 	params.Set("limit", strconv.Itoa(chapterOffsetRange))
 
-	// Set all chapters with user's specified languages
+	// Set All chapters with user's specified languages
 	for _, lang := range core.App.Config.Languages {
 		params.Add("translatedLanguage[]", lang)
 	}
@@ -334,24 +335,24 @@ func (p *MangaPage) setGetChaptersParams() *url.Values {
 // markSelected : Mark a chapter as being selected by the user on the main page table.
 func (p *MangaPage) markSelected(row int) {
 	chapterCell := p.Table.GetCell(row, 0)
-	chapterCell.SetTextColor(tcell.ColorBlack).SetBackgroundColor(MangaPageHighlightColor)
+	chapterCell.SetTextColor(tcell.ColorBlack).SetBackgroundColor(utils.MangaPageHighlightColor)
 
-	// Add to the selection wrapper
-	p.sWrap.addSelection(row)
+	// Add to the Selection wrapper
+	p.sWrap.AddSelection(row)
 }
 
 // markUnselected : Mark a chapter as being unselected by the user on the main page table.
 func (p *MangaPage) markUnselected(row int) {
 	chapterCell := p.Table.GetCell(row, 0)
-	chapterCell.SetTextColor(MangaPageChapNumColor).SetBackgroundColor(tcell.ColorBlack)
+	chapterCell.SetTextColor(utils.MangaPageChapNumColor).SetBackgroundColor(tcell.ColorBlack)
 
-	// Remove from the selection wrapper
-	p.sWrap.removeSelection(row)
+	// Remove from the Selection wrapper
+	p.sWrap.RemoveSelection(row)
 }
 
-// markAll : Marks all rows as selected or unselected.
-func (p *MangaPage) markAll(selected bool) {
-	if selected {
+// markAll : Marks All rows as selected or unselected.
+func (p *MangaPage) markAll() {
+	if p.sWrap.All {
 		for row := 1; row < p.Table.GetRowCount(); row++ {
 			p.markSelected(row)
 		}
@@ -360,4 +361,5 @@ func (p *MangaPage) markAll(selected bool) {
 			p.markUnselected(row)
 		}
 	}
+	p.sWrap.All = !p.sWrap.All
 }

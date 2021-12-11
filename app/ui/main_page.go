@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
 	"log"
@@ -29,7 +30,7 @@ type MainPage struct {
 	CurrentOffset int
 	MaxOffset     int
 
-	cWrap *ContextWrapper // For context cancellation.
+	cWrap *utils.ContextWrapper // For context cancellation.
 }
 
 // ShowMainPage : Make the app show the main page.
@@ -39,7 +40,7 @@ func ShowMainPage() {
 	mainPage := newMainPage()
 
 	core.App.TView.SetFocus(mainPage.Grid)
-	core.App.PageHolder.AddAndSwitchToPage(MainPageID, mainPage.Grid, true)
+	core.App.PageHolder.AddAndSwitchToPage(utils.MainPageID, mainPage.Grid, true)
 }
 
 // newMainPage : Creates a new main page.
@@ -48,10 +49,10 @@ func newMainPage() *MainPage {
 	for i := 0; i < 15; i++ {
 		dimensions = append(dimensions, -1)
 	}
-	grid := newGrid(dimensions, dimensions)
+	grid := utils.NewGrid(dimensions, dimensions)
 	// Set grid attributes.
-	grid.SetTitleColor(MainPageGridTitleColor).
-		SetBorderColor(MainPageGridBorderColor).
+	grid.SetTitleColor(utils.MainPageGridTitleColor).
+		SetBorderColor(utils.MainPageGridBorderColor).
 		SetBorder(true)
 
 	// Create the base main table.
@@ -59,8 +60,8 @@ func newMainPage() *MainPage {
 	// Set table attributes
 	table.SetSelectable(true, false).
 		SetSeparator('|').
-		SetBordersColor(MainPageTableBorderColor).
-		SetTitleColor(MainPageTableTitleColor).
+		SetBordersColor(utils.MainPageTableBorderColor).
+		SetTitleColor(utils.MainPageTableTitleColor).
 		SetBorder(true)
 
 	// Add the table to the grid. Table spans the whole page.
@@ -70,9 +71,9 @@ func newMainPage() *MainPage {
 	mainPage := &MainPage{
 		Grid:  grid,
 		Table: table,
-		cWrap: &ContextWrapper{
-			ctx:    ctx,
-			cancel: cancel,
+		cWrap: &utils.ContextWrapper{
+			Ctx:    ctx,
+			Cancel: cancel,
 		},
 	}
 
@@ -111,7 +112,7 @@ func (p *MainPage) setLoggedGrid() {
 // setLoggedTable : Show logged table items and title.
 func (p *MainPage) setLoggedTable() {
 	log.Println("Setting logged table...")
-	ctx, cancel := p.cWrap.resetContext()
+	ctx, cancel := p.cWrap.ResetContext()
 	// Set handlers
 	p.setHandlers(cancel, nil)
 
@@ -125,11 +126,11 @@ func (p *MainPage) setLoggedTable() {
 		// Set headers.
 		titleHeader := tview.NewTableCell("Title").
 			SetAlign(tview.AlignCenter).
-			SetTextColor(LoggedMainPageTitleColor).
+			SetTextColor(utils.LoggedMainPageTitleColor).
 			SetSelectable(false)
 		pubStatusHeader := tview.NewTableCell("Pub. Status").
 			SetAlign(tview.AlignLeft).
-			SetTextColor(LoggedMainPagePubStatusColor).
+			SetTextColor(utils.LoggedMainPagePubStatusColor).
 			SetSelectable(false)
 		p.Table.SetCell(0, 0, titleHeader).
 			SetCell(0, 1, pubStatusHeader).
@@ -141,7 +142,7 @@ func (p *MainPage) setLoggedTable() {
 	})
 
 	// Get the list of the user's followed manga.
-	if p.cWrap.toCancel(ctx) {
+	if p.cWrap.ToCancel(ctx) {
 		return
 	}
 	followed, err := core.App.Client.User.GetUserFollowedMangaList(
@@ -149,8 +150,8 @@ func (p *MainPage) setLoggedTable() {
 	if err != nil {
 		log.Printf("Error getting followed manga: %s\n", err.Error())
 		core.App.TView.QueueUpdateDraw(func() {
-			modal := okModal(GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
-			ShowModal(GenericAPIErrorModalID, modal)
+			modal := okModal(utils.GenericAPIErrorModalID, "Error getting followed manga.\nCheck logs for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
 		})
 		return
 	}
@@ -175,18 +176,18 @@ func (p *MainPage) setLoggedTable() {
 
 	// Fill in the details
 	for index := 0; index < len(followed.Data); index++ {
-		if p.cWrap.toCancel(ctx) {
+		if p.cWrap.ToCancel(ctx) {
 			return
 		}
 		manga := followed.Data[index]
 		// Set title and publishing status cells.
 		// Title
 		mtCell := tview.NewTableCell(fmt.Sprintf("%-50s", manga.GetTitle("en"))).
-			SetMaxWidth(50).SetTextColor(LoggedMainPageTitleColor).SetReference(&manga)
+			SetMaxWidth(50).SetTextColor(utils.LoggedMainPageTitleColor).SetReference(&manga)
 
 		// Publishing Status.
 		sCell := tview.NewTableCell(strings.Title(fmt.Sprintf("%-15s", *manga.Attributes.Status))).
-			SetMaxWidth(15).SetTextColor(LoggedMainPagePubStatusColor)
+			SetMaxWidth(15).SetTextColor(utils.LoggedMainPagePubStatusColor)
 
 		p.Table.SetCell(index+1, 0, mtCell).SetCell(index+1, 1, sCell)
 	}
@@ -218,7 +219,7 @@ func (p *MainPage) setGuestGrid() {
 // searchParams is nil. If it is nil, then it is not a search, otherwise we are searching.
 func (p *MainPage) setGuestTable(searchParams *SearchParams) {
 	log.Println("Setting guest table...")
-	ctx, cancel := p.cWrap.resetContext()
+	ctx, cancel := p.cWrap.ResetContext()
 	// Set the handlers
 	p.setHandlers(cancel, searchParams)
 
@@ -237,15 +238,15 @@ func (p *MainPage) setGuestTable(searchParams *SearchParams) {
 		// Set headers.
 		titleHeader := tview.NewTableCell("Manga").
 			SetAlign(tview.AlignCenter).
-			SetTextColor(GuestMainPageTitleColor).
+			SetTextColor(utils.GuestMainPageTitleColor).
 			SetSelectable(false)
 		descHeader := tview.NewTableCell("Description").
 			SetAlign(tview.AlignCenter).
-			SetTextColor(GuestMainPageDescColor).
+			SetTextColor(utils.GuestMainPageDescColor).
 			SetSelectable(false)
 		tagHeader := tview.NewTableCell("Tags").
 			SetAlign(tview.AlignCenter).
-			SetTextColor(GuestMainPageTagColor).
+			SetTextColor(utils.GuestMainPageTagColor).
 			SetSelectable(false)
 		p.Table.SetCell(0, 0, titleHeader).
 			SetCell(0, 1, descHeader).
@@ -259,15 +260,15 @@ func (p *MainPage) setGuestTable(searchParams *SearchParams) {
 
 	// Get list of manga.
 	params := p.setGuestSearchParams(searchParams)
-	if p.cWrap.toCancel(ctx) {
+	if p.cWrap.ToCancel(ctx) {
 		return
 	}
 	list, err := core.App.Client.Manga.GetMangaList(*params)
 	if err != nil {
 		log.Println(err.Error())
 		core.App.TView.QueueUpdateDraw(func() {
-			modal := okModal(GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
-			ShowModal(GenericAPIErrorModalID, modal)
+			modal := okModal(utils.GenericAPIErrorModalID, "Error getting manga list.\nCheck logs for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
 		})
 		return
 	}
@@ -292,25 +293,25 @@ func (p *MainPage) setGuestTable(searchParams *SearchParams) {
 
 	// Fill in the details
 	for index := 0; index < len(list.Data); index++ {
-		if p.cWrap.toCancel(ctx) {
+		if p.cWrap.ToCancel(ctx) {
 			return
 		}
 		manga := list.Data[index]
 		// Manga title cell.
 		mtCell := tview.NewTableCell(fmt.Sprintf("%-40s", manga.GetTitle("en"))).
-			SetMaxWidth(40).SetTextColor(GuestMainPageTitleColor).SetReference(&manga)
+			SetMaxWidth(40).SetTextColor(utils.GuestMainPageTitleColor).SetReference(&manga)
 
 		// Description cell. Truncate description to improve loading times.
 		desc := tview.Escape(fmt.Sprintf("%-60s",
 			strings.SplitN(tview.Escape(manga.GetDescription("en")), "\n", 2)[0]))
-		descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(GuestMainPageDescColor)
+		descCell := tview.NewTableCell(desc).SetMaxWidth(60).SetTextColor(utils.GuestMainPageDescColor)
 
 		// Tag cell.
 		tags := make([]string, len(manga.Attributes.Tags))
 		for i, tag := range manga.Attributes.Tags {
 			tags[i] = tag.GetName("en")
 		}
-		tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(GuestMainPageTagColor)
+		tagCell := tview.NewTableCell(strings.Join(tags, ", ")).SetTextColor(utils.GuestMainPageTagColor)
 
 		p.Table.SetCell(index+1, 0, mtCell).
 			SetCell(index+1, 1, descCell).

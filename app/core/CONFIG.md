@@ -34,10 +34,10 @@ to `data`.
 
 Valid options are `true` or `false`. It is `false` by default.
 
-Set to `true` if you want to see questionable content in your feeds.
+Set to `true` if you want to see explicit content in your feeds.
 
-Note that search results follow search-specific settings. If you do not check the `Explicit Content` checkbox,
-you will not see explicit results regardless of your configuration settings.
+Note that search results follow search-specific settings. If you do not check the `Explicit Content` checkbox, you will
+not see explicit results regardless of your configuration settings.
 
 ### Force Port 443
 

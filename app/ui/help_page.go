@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
 )
 
@@ -16,7 +17,7 @@ func ShowHelpPage() {
 	helpPage := newHelpPage()
 
 	core.App.TView.SetFocus(helpPage.Grid)
-	core.App.PageHolder.AddPage(HelpPageID, helpPage.Grid, true, true)
+	core.App.PageHolder.AddPage(utils.HelpPageID, helpPage.Grid, true, true)
 }
 
 // newHelpPage : Creates a new help page.
@@ -41,7 +42,7 @@ func newHelpPage() *HelpPage {
 	// Set TextView attributes.
 	help.SetText(helpText).
 		SetTextAlign(tview.AlignCenter).
-		SetBorderColor(HelpPageBorderColor).
+		SetBorderColor(utils.HelpPageBorderColor).
 		SetBorder(true)
 
 	// Create a new grid for the text view, so we can align it to the center.
