@@ -235,7 +235,7 @@ func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
 func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 	// Check if the user is logged in. If they are not, we tell them that they cannot toggle without logging in.
 	if !core.App.Client.Auth.IsLoggedIn() {
-		log.Printf("Attmpted toggling read marker while not logged in. Informing user...")
+		log.Printf("Attempted toggling read marker while not logged in. Informing user...")
 		core.App.TView.QueueUpdateDraw(func() {
 			modal := okModal(utils.NotLoggedInErrorModalID, "You need to log in to toggle read status!")
 			ShowModal(utils.NotLoggedInErrorModalID, modal)
@@ -244,7 +244,10 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 	}
 
 	// For each selection, we separate into make-read, make-unread bins.
-	var read, unRead []string
+	var (
+		readMap   = map[int]string{}
+		unReadMap = map[int]string{}
+	)
 	for row := range selection {
 		var (
 			chapter *mangodex.Chapter
@@ -255,18 +258,27 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 			return
 		}
 
-		// Get the read/unread status, and split accordingly.
+		// Get the readMap/unread status, and split accordingly.
 		statusCell := p.Table.GetCell(row, 4)
-		if statusCell.Text == readStatus { // If it was originally read, we toggle to unread.
-			unRead = append(unRead, chapter.ID)
-			statusCell.SetText("")
+		if statusCell.Text == readStatus { // If it was originally readMap, we toggle to unread.
+			unReadMap[row] = chapter.ID
 		} else {
-			read = append(read, chapter.ID)
-			statusCell.SetText(readStatus)
+			readMap[row] = chapter.ID
 		}
 	}
 
-	// TODO : Wait for API fix.
+	// Get the read and unread IDs.
+	var (
+		read   = make([]string, len(readMap))
+		unRead = make([]string, len(unReadMap))
+	)
+	for _, readID := range readMap {
+		read = append(read, readID)
+	}
+	for _, unReadID := range unReadMap {
+		unRead = append(unRead, unReadID)
+	}
+
 	// Send the request.
 	if _, err := core.App.Client.Chapter.SetReadUnreadMangaChapters(p.Manga.ID, read, unRead); err != nil {
 		// Error sending request, tell the user.
@@ -276,6 +288,15 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 				"Error updating read markers.\n\nCheck log for details.")
 			ShowModal(utils.GenericAPIErrorModalID, modal)
 		})
+		return
+	}
+
+	// Update the table
+	for row := range readMap {
+		p.Table.GetCell(row, 4).SetText("")
+	}
+	for row := range unReadMap {
+		p.Table.GetCell(row, 4).SetText(readStatus)
 	}
 }
 
