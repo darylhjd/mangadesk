@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -23,11 +24,6 @@ const (
 
 // downloadChapters : Download current chapters specified by the user.
 func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) {
-	// Unmark the chapters
-	for index := range selection {
-		p.markChapterUnselected(index)
-	}
-
 	// Download the selected chapters.
 	errored := map[int]struct{}{}
 	for index := range selection {
@@ -52,7 +48,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		}
 
 		core.App.TView.QueueUpdateDraw(func() {
-			downloadCell := tview.NewTableCell("Y").SetTextColor(MangaPageDownloadStatColor)
+			downloadCell := tview.NewTableCell(readStatus).SetTextColor(utils.MangaPageDownloadStatColor)
 			p.Table.SetCell(index, 2, downloadCell)
 		})
 	}
@@ -63,7 +59,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 		modalID string
 	)
 	// Use unique ID for this particular download.
-	modalID = fmt.Sprintf("%s - %s - %v", DownloadFinishedModalID, p.Manga.GetTitle("en"), selection)
+	modalID = fmt.Sprintf("%s - %s - %v", utils.DownloadFinishedModalID, p.Manga.GetTitle("en"), selection)
 
 	msg.WriteString("Last Download Queue finished.\n")
 	msg.WriteString(fmt.Sprintf("Manga: %s\n", p.Manga.GetTitle("en")))
@@ -233,4 +229,144 @@ func (p *MangaPage) getDownloadFolder(chapter *mangodex.Chapter) string {
 		folder = fmt.Sprintf("%s.%s", folder, core.App.Config.ZipType)
 	}
 	return folder
+}
+
+// toggleReadMarkers : Toggle read status for selected chapters.
+func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
+	// Check if the user is logged in. If they are not, we tell them that they cannot toggle without logging in.
+	if !core.App.Client.Auth.IsLoggedIn() {
+		log.Printf("Attempted toggling read marker while not logged in. Informing user...")
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.NotLoggedInErrorModalID, "You need to log in to toggle read status!")
+			ShowModal(utils.NotLoggedInErrorModalID, modal)
+		})
+		return
+	}
+
+	// For each selection, we separate into make-read, make-unread bins.
+	var (
+		readMap   = map[int]string{}
+		unReadMap = map[int]string{}
+	)
+	for row := range selection {
+		var (
+			chapter *mangodex.Chapter
+			ok      bool
+		)
+		// Get the chapter for this row.
+		if chapter, ok = p.Table.GetCell(row, 0).GetReference().(*mangodex.Chapter); !ok {
+			return
+		}
+
+		// Get the readMap/unread status, and split accordingly.
+		statusCell := p.Table.GetCell(row, 4)
+		if statusCell.Text == readStatus { // If it was originally readMap, we toggle to unread.
+			unReadMap[row] = chapter.ID
+		} else {
+			readMap[row] = chapter.ID
+		}
+	}
+
+	// Get the read and unread IDs.
+	var (
+		read   = make([]string, 0, len(readMap))
+		unRead = make([]string, 0, len(unReadMap))
+	)
+	for _, readID := range readMap {
+		read = append(read, readID)
+	}
+	for _, unReadID := range unReadMap {
+		unRead = append(unRead, unReadID)
+	}
+
+	// Send the request.
+	if _, err := core.App.Client.Chapter.SetReadUnreadMangaChapters(p.Manga.ID, read, unRead); err != nil {
+		// Error sending request, tell the user.
+		log.Printf("Unable to update read markers: %s\n", err.Error())
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.GenericAPIErrorModalID,
+				"Error updating read markers.\n\nCheck log for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
+		})
+		return
+	}
+
+	// Update the table
+	for row := range readMap {
+		p.Table.GetCell(row, 4).SetText("")
+	}
+	for row := range unReadMap {
+		p.Table.GetCell(row, 4).SetText(readStatus)
+	}
+}
+
+// toggleFollowManga : Toggle follow/unfollow of a manga.
+func (p *MangaPage) toggleFollowManga() {
+	// Check if the user is logged in. If they are not, we tell them that they cannot toggle without logging in.
+	if !core.App.Client.Auth.IsLoggedIn() {
+		log.Printf("Attmpted toggling follow while not logged in. Informing user...")
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.NotLoggedInErrorModalID, "You need to log in to follow/unfollow a manga!")
+			ShowModal(utils.NotLoggedInErrorModalID, modal)
+		})
+		return
+	}
+
+	// Check whether the manga is currently being followed or not.
+	log.Println("Checking manga follow status...")
+	following, err := core.App.Client.Manga.CheckIfMangaFollowed(p.Manga.ID)
+	if err != nil {
+		log.Printf("Error getting manga follow status: %s\n", err.Error())
+		core.App.TView.QueueUpdateDraw(func() {
+			modal := okModal(utils.GenericAPIErrorModalID,
+				"Error checking manga follow status.\nCheck log for details.")
+			ShowModal(utils.GenericAPIErrorModalID, modal)
+		})
+		return
+	}
+
+	// Show a follow/unfollow modal based on current follow status
+	var (
+		text          string
+		confirmButton string
+		fn            func()
+	)
+	if following {
+		log.Println("Manga was followed.")
+		text = "You are already following this manga.\n\nUnfollow manga?"
+		confirmButton = "Unfollow"
+	} else {
+		log.Println("Manga was not followed.")
+		text = "You are not currently following this manga.\n\nFollow manga?"
+		confirmButton = "Follow"
+	}
+
+	// Set up the function to do.
+	fn = func() {
+		var (
+			id    string
+			modal *tview.Modal
+		)
+		// Toggle follow and set up the result modal.
+		if _, err = core.App.Client.Manga.ToggleMangaFollowStatus(p.Manga.ID, !following); err != nil {
+			id = utils.GenericAPIErrorModalID
+			modal = okModal(utils.GenericAPIErrorModalID,
+				"Error following/unfollowing manga.\nCheck log for details.")
+		} else {
+			log.Println("Successfully toggled following of manga.")
+			id = utils.ToggleFollowMangaDoneModalID
+			msg := "Successfully followed manga."
+			if following {
+				msg = "Successfully unfollowed manga."
+			}
+			modal = okModal(utils.ToggleFollowMangaDoneModalID, msg)
+		}
+		ShowModal(id, modal)
+	}
+
+	// Show the modal to confirm toggling of follow.
+	core.App.TView.QueueUpdateDraw(func() {
+		modal := confirmModal(utils.ToggleFollowMangaModalID, text, confirmButton, fn)
+		ShowModal(utils.ToggleFollowMangaModalID, modal)
+	})
 }

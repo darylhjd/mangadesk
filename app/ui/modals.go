@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
 	"log"
 )
@@ -18,7 +19,7 @@ func okModal(id, text string) *tview.Modal {
 
 	// Set modal attributes
 	modal.SetText(text).
-		SetBackgroundColor(ModalColor).
+		SetBackgroundColor(utils.ModalColor).
 		AddButtons([]string{"OK"}).
 		SetFocus(0).
 		SetDoneFunc(func(_ int, _ string) {
@@ -36,10 +37,10 @@ func confirmModal(id, text, confirmButton string, f func()) *tview.Modal {
 
 	// Set modal attributes
 	modal.SetText(text).
-		SetBackgroundColor(ModalColor).
+		SetBackgroundColor(utils.ModalColor).
 		AddButtons([]string{confirmButton, "Cancel"}).
 		SetFocus(0).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		SetDoneFunc(func(buttonIndex int, _ string) {
 			if buttonIndex == 0 {
 				f()
 			}

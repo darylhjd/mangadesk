@@ -28,6 +28,17 @@ comma-separated [ISO language codes](https://www.andiamo.co.uk/resources/iso-lan
 Valid options are `data` (high quality) or `data-saver` (lower quality). Any other empty/invalid option will default
 to `data`.
 
+### Explicit Content
+
+- `explicitContent`
+
+Valid options are `true` or `false`. It is `false` by default.
+
+Set to `true` if you want to see explicit content in your feeds.
+
+Note that search results follow search-specific settings. If you do not check the `Explicit Content` checkbox, you will
+not see explicit results regardless of your configuration settings.
+
 ### Force Port 443
 
 - `forcePort443`

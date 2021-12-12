@@ -46,7 +46,7 @@ func (m *MangaDesk) setUpLogging() error {
 	}
 	log.SetOutput(m.LogFile)
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
-	log.Printf("Sessions started at %s\n", formattedDate)
+	log.Printf("Session started at %s\n", formattedDate)
 
 	return nil
 }

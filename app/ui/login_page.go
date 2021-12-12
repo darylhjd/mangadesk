@@ -1,8 +1,8 @@
 package ui
 
 import (
-	"fmt"
 	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
 	"log"
 )
@@ -19,7 +19,7 @@ func ShowLoginPage() {
 	loginPage := newLoginPage()
 
 	core.App.TView.SetFocus(loginPage.Grid)
-	core.App.PageHolder.AddAndSwitchToPage(LoginPageID, loginPage.Grid, true)
+	core.App.PageHolder.AddAndSwitchToPage(utils.LoginPageID, loginPage.Grid, true)
 }
 
 // newLoginPage : Creates a new login page.
@@ -31,11 +31,11 @@ func newLoginPage() *LoginPage {
 
 	// Set form attributes.
 	form.SetButtonsAlign(tview.AlignCenter).
-		SetLabelColor(LoginFormLabelColor).
+		SetLabelColor(utils.LoginFormLabelColor).
 		SetTitle("Login to MangaDex").
-		SetTitleColor(LoginPageTitleColor).
+		SetTitleColor(utils.LoginPageTitleColor).
 		SetBorder(true).
-		SetBorderColor(LoginFormBorderColor)
+		SetBorderColor(utils.LoginFormBorderColor)
 
 	// Add form fields.
 	form.AddInputField("Username", "", 0, nil, nil).
@@ -45,12 +45,12 @@ func newLoginPage() *LoginPage {
 			loginPage.attemptLogin()
 		}).
 		AddButton("Guest", func() { // Guest button
-			core.App.PageHolder.RemovePage(LoginPageID)
+			core.App.PageHolder.RemovePage(utils.LoginPageID)
 			ShowMainPage()
 		})
 
 	dimension := []int{0, 0, 0}
-	grid := newGrid(dimension, dimension)
+	grid := utils.NewGrid(dimension, dimension)
 
 	grid.AddItem(form, 0, 0, 3, 3, 0, 0, true).
 		AddItem(form, 1, 1, 1, 1, 32, 70, true)
@@ -71,21 +71,22 @@ func (p *LoginPage) attemptLogin() {
 
 	// Attempt to log in to MangaDex API.
 	if err := core.App.Client.Auth.Login(user, pwd); err != nil {
-		log.Printf("Error trying to login: %ss\n", err.Error())
-		modal := okModal(LoginLogoutFailureModalID, "Authentication failed.\nTry again!")
-		ShowModal(LoginLogoutFailureModalID, modal)
+		log.Printf("Error trying to login: %s\n", err.Error())
+		modal := okModal(utils.GenericAPIErrorModalID, "Authentication failed.\nTry again!")
+		ShowModal(utils.GenericAPIErrorModalID, modal)
 		return
 	}
 
 	// Remember the user's login credentials if user wants it.
 	if remember {
 		if err := core.App.StoreCredentials(); err != nil {
-			log.Println(fmt.Sprintf("Error storing credentials: %s", err.Error()))
-			modal := okModal(StoreCredentialErrorModalID, "Failed to store login token.\nCheck logs for details.")
-			ShowModal(StoreCredentialErrorModalID, modal)
+			log.Printf("Error storing credentials: %s\n", err.Error())
+			modal := okModal(utils.StoreCredentialErrorModalID,
+				"Failed to store login token.\nCheck logs for details.")
+			ShowModal(utils.StoreCredentialErrorModalID, modal)
 		}
 	}
 
-	core.App.PageHolder.RemovePage(LoginPageID) // Remove the login page as we no longer need it.
+	core.App.PageHolder.RemovePage(utils.LoginPageID) // Remove the login page as we no longer need it.
 	ShowMainPage()
 }
