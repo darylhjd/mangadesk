@@ -269,8 +269,8 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 
 	// Get the read and unread IDs.
 	var (
-		read   = make([]string, len(readMap))
-		unRead = make([]string, len(unReadMap))
+		read   = make([]string, 0, len(readMap))
+		unRead = make([]string, 0, len(unReadMap))
 	)
 	for _, readID := range readMap {
 		read = append(read, readID)
