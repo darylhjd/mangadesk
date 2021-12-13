@@ -74,17 +74,17 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 
 ### Keybindings ⌨
 
-| Operation                 | Binding                          | 
-|---------------------------|----------------------------------|
-| Login/Logout              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
-| Keybindings/Help          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
-| Search                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
-| Next/Prev Page            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
-| Escape                    | <kbd>Esc</kbd>                   |
-| Select multiple chapters  | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
-| Toggle select all         | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
-| Toggle chapter read mark  | <kbd>Ctrl</kbd> + <kbd>R</kbd>   |
-| Toggle manga following    | <kbd>Ctrl</kbd> + <kbd>Q</kbd>   |
+| Operation                                                                                 | Binding                          | 
+|-------------------------------------------------------------------------------------------|----------------------------------|
+| Login/Logout                                                                              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
+| Keybindings/Help                                                                          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
+| Search                                                                                    | <kbd>Ctrl</kbd> + <kbd>S</kbd>   |
+| Next/Prev Page                                                                            | <kbd>Ctrl</kbd> + <kbd>F/B</kbd> |
+| Escape                                                                                    | <kbd>Esc</kbd>                   |
+| Select a chapter                                                                          | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
+| Toggle select all chapters                                                                | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
+| Toggle chapter(s) read status<br/><br/>*Note: You can select multiple chapters to toggle! | <kbd>Ctrl</kbd> + <kbd>R</kbd>   |
+| Toggle manga following                                                                    | <kbd>Ctrl</kbd> + <kbd>Q</kbd>   |
 
 ## Settings ⚙
 
