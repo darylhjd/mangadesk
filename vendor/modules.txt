@@ -1,4 +1,4 @@
-# github.com/darylhjd/mangodex v0.0.0-20211211122551-1fc99cf5388b
+# github.com/darylhjd/mangodex v0.0.0-20211224142032-6fd9fa02d329
 ## explicit
 github.com/darylhjd/mangodex
 # github.com/gdamore/encoding v1.0.0
@@ -53,7 +53,7 @@ github.com/mattn/go-runewidth
 github.com/rivo/tview
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# golang.org/x/sys v0.0.0-20211210111614-af8b64212486
+# golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9

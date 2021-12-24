@@ -88,7 +88,7 @@ func (p *MangaPage) downloadChapters(selection map[int]struct{}, attemptNo int) 
 // saveChapter : Save a chapter.
 func (p *MangaPage) saveChapter(chapter *mangodex.Chapter) error {
 	downloader, err := core.App.Client.AtHome.NewMDHomeClient(
-		chapter, core.App.Config.DownloadQuality, core.App.Config.ForcePort443)
+		chapter.ID, core.App.Config.DownloadQuality, core.App.Config.ForcePort443)
 	if err != nil {
 		return err
 	}
@@ -99,14 +99,8 @@ func (p *MangaPage) saveChapter(chapter *mangodex.Chapter) error {
 		return err
 	}
 
-	// Get the pages to download
-	pages := chapter.Attributes.Data
-	if core.App.Config.DownloadQuality == "data-saver" {
-		pages = chapter.Attributes.DataSaver
-	}
-
 	// Save each page.
-	for num, page := range pages {
+	for num, page := range downloader.Pages {
 		// Get image data.
 		image, err := downloader.GetChapterPage(page)
 		if err != nil {

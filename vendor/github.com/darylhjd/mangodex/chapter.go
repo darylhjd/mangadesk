@@ -54,19 +54,16 @@ func (c *Chapter) GetChapterNum() string {
 
 // ChapterAttributes : Attributes for a Chapter.
 type ChapterAttributes struct {
-	Title              string   `json:"title"`
-	Volume             *string  `json:"volume"`
-	Chapter            *string  `json:"chapter"`
-	TranslatedLanguage string   `json:"translatedLanguage"`
-	Hash               string   `json:"hash"`
-	Data               []string `json:"data"`
-	DataSaver          []string `json:"dataSaver"`
-	Uploader           string   `json:"uploader"`
-	ExternalURL        *string  `json:"externalUrl"`
-	Version            int      `json:"version"`
-	CreatedAt          string   `json:"createdAt"`
-	UpdatedAt          string   `json:"updatedAt"`
-	PublishAt          string   `json:"publishAt"`
+	Title              string  `json:"title"`
+	Volume             *string `json:"volume"`
+	Chapter            *string `json:"chapter"`
+	TranslatedLanguage string  `json:"translatedLanguage"`
+	Uploader           string  `json:"uploader"`
+	ExternalURL        *string `json:"externalUrl"`
+	Version            int     `json:"version"`
+	CreatedAt          string  `json:"createdAt"`
+	UpdatedAt          string  `json:"updatedAt"`
+	PublishAt          string  `json:"publishAt"`
 }
 
 // GetMangaChapters : Get a list of chapters for a manga.

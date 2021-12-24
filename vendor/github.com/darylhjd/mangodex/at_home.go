@@ -24,24 +24,41 @@ type AtHomeService service
 
 // MDHomeServerResponse : A response for getting a server URL to get chapters.
 type MDHomeServerResponse struct {
-	Result  string `json:"result"`
-	BaseURL string `json:"baseUrl"`
+	Result  string       `json:"result"`
+	BaseURL string       `json:"baseUrl"`
+	Chapter ChaptersData `json:"chapter"`
 }
 
 func (r *MDHomeServerResponse) GetResult() string {
 	return r.Result
 }
 
+// ChaptersData : Struct containing data for the chapter's pages.
+type ChaptersData struct {
+	Hash      string   `json:"hash"`
+	Data      []string `json:"data"`
+	DataSaver []string `json:"dataSaver"`
+}
+
+// MDHomeClient : Client for interfacing with MangaDex@Home.
+type MDHomeClient struct {
+	client  *http.Client
+	baseURL string
+	quality string
+	hash    string
+	Pages   []string
+}
+
 // NewMDHomeClient : Get MangaDex@Home client for a chapter.
 // https://api.mangadex.org/docs.html#operation/get-at-home-server-chapterId
-func (s *AtHomeService) NewMDHomeClient(c *Chapter, quality string, forcePort443 bool) (*MDHomeClient, error) {
-	return s.NewMDHomeClientContext(context.Background(), c, quality, forcePort443)
+func (s *AtHomeService) NewMDHomeClient(chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
+	return s.NewMDHomeClientContext(context.Background(), chapterID, quality, forcePort443)
 }
 
 // NewMDHomeClientContext : NewMDHomeClient with custom context.
-func (s *AtHomeService) NewMDHomeClientContext(ctx context.Context, c *Chapter, quality string, forcePort443 bool) (*MDHomeClient, error) {
+func (s *AtHomeService) NewMDHomeClientContext(ctx context.Context, chapterID string, quality string, forcePort443 bool) (*MDHomeClient, error) {
 	u, _ := url.Parse(BaseAPI)
-	u.Path = fmt.Sprintf(GetMDHomeURLPath, c.ID)
+	u.Path = fmt.Sprintf(GetMDHomeURLPath, chapterID)
 
 	// Set query parameters
 	q := u.Query()
@@ -54,20 +71,19 @@ func (s *AtHomeService) NewMDHomeClientContext(ctx context.Context, c *Chapter, 
 		return nil, err
 	}
 
+	// Set the required pages data for required quality.
+	pages := r.Chapter.Data
+	if quality == "data-saver" {
+		pages = r.Chapter.DataSaver
+	}
+
 	return &MDHomeClient{
 		client:  &http.Client{},
 		baseURL: r.BaseURL,
 		quality: quality,
-		hash:    c.Attributes.Hash,
+		hash:    r.Chapter.Hash,
+		Pages:   pages,
 	}, nil
-}
-
-// MDHomeClient : Client for interfacing with MangaDex@Home.
-type MDHomeClient struct {
-	client  *http.Client
-	baseURL string
-	quality string
-	hash    string
 }
 
 // GetChapterPage : Return page data for a chapter with the filename of that page.
