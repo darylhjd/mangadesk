@@ -9,7 +9,7 @@ assignees: ''
 
 **Describe the bug**
 A clear and concise description of what the bug is. 
-If in doubt, you may copy the log of the latest run (logs are stored in the `log` folder of the configuration folder.)
+If in doubt, you may copy the log of the latest run (logs are stored in the `log` folder in mngadesk's configuration folder).
 
 **To Reproduce**
 Steps to reproduce the behavior:
