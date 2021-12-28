@@ -190,7 +190,7 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 	// Set table selected function.
 	p.Table.SetSelectedFunc(func(row, _ int) {
-		// We add the current Selection if the there are no selected rows currently.
+		// We add the current selection if the there are no selected rows currently.
 		if !p.sWrap.HasSelections() {
 			p.sWrap.AddSelection(row)
 		}
@@ -241,6 +241,11 @@ func (p *MangaPage) ctrlAInput() {
 func (p *MangaPage) ctrlRInput() {
 	modal := confirmModal(utils.ToggleReadChapterModalID,
 		"Toggle read status for selected chapter(s)?", "Toggle", func() {
+			// If no selected chapters, we add the current highlighted chapter.
+			if !p.sWrap.HasSelections() {
+				row, _ := p.Table.GetSelection()
+				p.sWrap.AddSelection(row)
+			}
 			selected := p.sWrap.CopySelection()
 			// Toggle read markers
 			go p.toggleReadMarkers(selected)
