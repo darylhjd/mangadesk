@@ -286,12 +286,14 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 	}
 
 	// Update the table
-	for row := range readMap {
-		p.Table.GetCell(row, 4).SetText("")
-	}
-	for row := range unReadMap {
-		p.Table.GetCell(row, 4).SetText(readStatus)
-	}
+	core.App.TView.QueueUpdateDraw(func() {
+		for row := range readMap {
+			p.Table.GetCell(row, 4).SetText("")
+		}
+		for row := range unReadMap {
+			p.Table.GetCell(row, 4).SetText(readStatus)
+		}
+	})
 }
 
 // toggleFollowManga : Toggle follow/unfollow of a manga.
