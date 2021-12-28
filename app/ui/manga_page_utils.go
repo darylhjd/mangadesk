@@ -286,13 +286,19 @@ func (p *MangaPage) toggleReadMarkers(selection map[int]struct{}) {
 	}
 
 	// Update the table
+	for row := range readMap {
+		readCell := tview.NewTableCell(readStatus).SetTextColor(utils.MangaPageReadStatColor)
+		p.Table.SetCell(row, 4, readCell)
+	}
+	for row := range unReadMap {
+		readCell := tview.NewTableCell("").SetTextColor(utils.MangaPageReadStatColor)
+		p.Table.SetCell(row, 4, readCell)
+	}
+
+	// Show user that read status successfully toggled.
 	core.App.TView.QueueUpdateDraw(func() {
-		for row := range readMap {
-			p.Table.GetCell(row, 4).SetText("")
-		}
-		for row := range unReadMap {
-			p.Table.GetCell(row, 4).SetText(readStatus)
-		}
+		modal := okModal(utils.ToggleReadChapterModalID, "Toggled Successfully!")
+		ShowModal(utils.ToggleReadChapterModalID, modal)
 	})
 }
 
