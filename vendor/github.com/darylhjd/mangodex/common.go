@@ -53,7 +53,10 @@ func (a *Relationship) UnmarshalJSON(data []byte) error {
 	a.ID = typ.ID
 	a.Type = typ.Type
 	if typ.Attributes != nil {
-		err = json.Unmarshal(typ.Attributes, a.Attributes)
+		if err = json.Unmarshal(typ.Attributes, a.Attributes); err != nil {
+			return fmt.Errorf("error unmarshalling relationship of type %s: %s, %s", 
+				typ.Type, err.Error(), string(data))
+		}
 	}
 	return err
 }
@@ -66,11 +69,15 @@ type LocalisedStrings struct {
 func (l *LocalisedStrings) UnmarshalJSON(data []byte) error {
 	l.Values = map[string]string{}
 
-	// Check whether there is more than one localised string.
+	// First try if can unmarshal directly.
+	if err := json.Unmarshal(data, &l.Values); err == nil {
+		return nil
+	}
+
+	// If fail, try to unmarshal to array of maps.
 	var locals []map[string]string
-	// If failed, means there is only 1 string, or no string.
 	if err := json.Unmarshal(data, &locals); err != nil {
-		return json.Unmarshal(data, &l.Values)
+		return fmt.Errorf("error unmarshalling localisedstring: %s", err.Error())
 	}
 
 	// If pass, then add each item in the array to flatten to one map.
