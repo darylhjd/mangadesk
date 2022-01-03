@@ -28,7 +28,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
 
 - OS: [e.g. Windows]
-- Version: [e.g. 0.5.1]
+- Mangadesk version: [e.g. 0.5.1]
 
 **Additional context**
 Add any other context about the problem here, such as whether you have changed any default settings etc.
