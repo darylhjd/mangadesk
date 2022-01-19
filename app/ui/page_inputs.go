@@ -190,14 +190,10 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 	// Set table selected function.
 	p.Table.SetSelectedFunc(func(row, _ int) {
-		// We add the current selection if the there are no selected rows currently.
-		if !p.sWrap.HasSelections() {
-			p.sWrap.AddSelection(row)
-		}
 		log.Println("Creating and showing confirm download modal...")
 		modal := confirmModal(utils.DownloadChaptersModalID, "Download chapter(s)?", "Yes", func() {
 			// Create a copy of the Selection.
-			selected := p.sWrap.CopySelection()
+			selected := p.sWrap.CopySelection(row)
 			// Download selected chapters.
 			go p.downloadChapters(selected, 0)
 		})
@@ -241,12 +237,8 @@ func (p *MangaPage) ctrlAInput() {
 func (p *MangaPage) ctrlRInput() {
 	modal := confirmModal(utils.ToggleReadChapterModalID,
 		"Toggle read status for selected chapter(s)?", "Toggle", func() {
-			// If no selected chapters, we add the current highlighted chapter.
-			if !p.sWrap.HasSelections() {
-				row, _ := p.Table.GetSelection()
-				p.sWrap.AddSelection(row)
-			}
-			selected := p.sWrap.CopySelection()
+			row, _ := p.Table.GetSelection()
+			selected := p.sWrap.CopySelection(row)
 			// Toggle read markers
 			go p.toggleReadMarkers(selected)
 		})

@@ -43,7 +43,8 @@ func newHelpPage() *HelpPage {
 		"\nOthers\n" +
 		fmt.Sprintf(formatString, "Esc", "Go back") +
 		fmt.Sprintf(formatString, "Ctrl + F/B", "Next/Prev Page") +
-		"\n"
+		"\nApp Info\n" +
+		core.AppVersion
 
 	// Create TextView to show the help information.
 	help := tview.NewTextView()

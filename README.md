@@ -7,6 +7,7 @@
   [![Go Report](https://goreportcard.com/badge/github.com/darylhjd/mangadesk?style=flat-square)](https://goreportcard.com/report/github.com/darylhjd/mangadesk)
   [![Downloads](https://img.shields.io/github/downloads/darylhjd/mangadesk/total?style=flat-square&color=success)](https://github.com/darylhjd/mangadesk/releases)
 
+  **Note: Maintenance mode. Only severe bugs _may_ be fixed.**
   <h3>The ultimate MangaDex terminal client!</h3>
   <img src=".github/assets/demo.gif" alt="demo.gif">
 
