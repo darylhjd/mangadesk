@@ -10,7 +10,10 @@ import (
 )
 
 // App : Global App variable.
-var App *MangaDesk
+var (
+	App        *MangaDesk
+	AppVersion = "MangaDesk v0.7.6"
+)
 
 // MangaDesk : The client for this application.
 type MangaDesk struct {

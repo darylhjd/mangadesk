@@ -19,11 +19,22 @@ func (s *SelectorWrapper) HasSelection(row int) bool {
 }
 
 // CopySelection : Returns a copy of the current Selection.
-func (s *SelectorWrapper) CopySelection() map[int]struct{} {
+func (s *SelectorWrapper) CopySelection(row int) map[int]struct{} {
+	// If there are no selections currently, we add current row as a selection.
+	if !s.HasSelections() {
+		s.AddSelection(row)
+	}
+
 	selection := map[int]struct{}{}
 	for se := range s.Selection {
 		selection[se] = struct{}{}
 	}
+
+	// If there was only selection, then we treat it as a one-off transaction, and reset the current selection.
+	if len(s.Selection) == 1 {
+		s.Selection = map[int]struct{}{}
+	}
+
 	return selection
 }
 
