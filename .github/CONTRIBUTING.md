@@ -8,12 +8,12 @@ Bug reports/fixes will always take priority over feature requests.
 
 When opening a new issue, please include the following:
 
-- Start your title with either a `[BUG]` or `[Feature Request]` tag so I know how to categorise your issue.
+- Start your title with either a `[BUG]` or `[Feature Request]` tag, so I know how to categorise your issue.
 - For bug reports, include:
     - `Expected Behaviour`
     - `Actual Behaviour`
     - If possible, `Steps to Reproduce` the problem.
-- If you feel any additional information would be helpful, such as screenshots, code snippets etc.., you may include it
+- If you feel any additional information would be helpful, such as screenshots, code snippets etc..., you may include it
   as well.
 
 ## Pull Requests
