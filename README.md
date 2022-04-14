@@ -1,5 +1,5 @@
 <div align="center">
-  
+
 # mangadesk 📖
 
   [![Top Language](https://img.shields.io/github/languages/top/darylhjd/mangadesk?style=flat-square)](https://github.com/darylhjd/mangadesk/search?l=go)
@@ -42,11 +42,19 @@ $ go build
 
 ### Arch Linux
 
-Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!). 
+Mangadesk is available through the [AUR](https://aur.archlinux.org/packages/mangadesk/) and may be installed as such (thanks @AmaanHUB!).
 It may be installed manually or with your preferred AUR helper:
 
 ```cmd
 $ paru -S mangadesk
+```
+
+### Ubuntu
+
+Mangadesk is available through the [MPR](https://mpr.makedeb.org/packages/mangadesk) and can be installed manually or with your preferred MPR helper:
+
+```cmd
+$ una install mangadesk
 ```
 
 ## Uninstall ❌
@@ -63,19 +71,27 @@ Uninstall with an AUR helper or with pacman:
 $ pacman -R mangadesk
 ```
 
+### Ubuntu
+
+Uninstall with a MPR helper or with APT:
+
+```cmd
+$ una remove mangadesk
+```
+
 ## Usage ✍
 
 To run the application, navigate to the directory where you stored the executable, and run the following command:
 
 ```cmd
-$ ./mangadesk 
+$ ./mangadesk
 ```
 
 Steps may differ for different OSes. For example, in Windows, use a backslash `\` instead.
 
 ### Keybindings ⌨
 
-| Operation                                                                                 | Binding                          | 
+| Operation                                                                                 | Binding                          |
 |-------------------------------------------------------------------------------------------|----------------------------------|
 | Login/Logout                                                                              | <kbd>Ctrl</kbd> + <kbd>L</kbd>   |
 | Keybindings/Help                                                                          | <kbd>Ctrl</kbd> + <kbd>K</kbd>   |
