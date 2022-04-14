@@ -1,6 +1,6 @@
 x32 = 386
 x64 = amd64
-ver = v0-7-6
+ver = v0-7-7
 
 all: windows macos linux
 
