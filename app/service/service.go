@@ -18,12 +18,14 @@ func Start() {
 		PageHolder: tview.NewPages(),
 	}
 
-	// Show appropriate screen based on restore session result.
-	if err := core.App.Initialise(); err != nil {
+	// Show appropriate screen based on restore session result. If user has
+	// guestLogin on their config, we don't show the login page.
+	if err := core.App.Initialise(); err != nil && !core.App.Config.GuestLogin {
 		ui.ShowLoginPage()
 	} else {
 		ui.ShowMainPage()
 	}
+
 	log.Println("Initialised starting screen.")
 	ui.SetUniversalHandlers()
 

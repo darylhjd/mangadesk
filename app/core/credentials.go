@@ -42,18 +42,28 @@ func (m *MangaDesk) loadCredentials() error {
 // If they are, then read it, and attempt to refresh the token.
 // Will return error if any steps fail (no stored credentials, authentication failed).
 func (m *MangaDesk) restoreSession() error {
+	// We do not need to wait/show a session-related messages
+	// if the user logs in as guest.
+	isGuest := m.Config.GuestLogin
+
 	// Try to read stored credential file.
 	if err := m.loadCredentials(); err != nil { // If error, then user was not originally logged in.
-		fmt.Println("No past session, redirecting to login...")
-		time.Sleep(time.Millisecond * 750)
+		if !isGuest {
+			fmt.Println("No past session, redirecting to login...")
+			time.Sleep(time.Millisecond * 750)
+		}
 		return err
 	}
 
-	fmt.Println("Attempting session restore...")
+	if !isGuest {
+		fmt.Println("Attempting session restore...")
+	}
 	// Do a refresh of the token to keep it up to date. If the token has already expired, user needs to log in again.
 	if err := m.Client.Auth.RefreshSessionToken(); err != nil {
-		fmt.Println("Session expired. Please login again.")
-		time.Sleep(time.Millisecond * 750)
+		if !isGuest {
+			fmt.Println("Session expired. Please login again.")
+			time.Sleep(time.Millisecond * 750)
+		}
 		return err
 	}
 	return nil
