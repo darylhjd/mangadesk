@@ -63,3 +63,13 @@ Set to `true` if you want your chapter downloads to be compressed into a zip fol
 
 Valid options are `zip` or `cbz`. This is ignored if `asZip` is set to `false`. Any other empty/invalid option will
 default to `zip`.
+
+
+### Guest Login
+
+- `guestLogin`
+
+Valid options are `true` or `false`. It is `false` by default.
+
+Set to `true` if you want to skip the login screen and login as guest always.
+
