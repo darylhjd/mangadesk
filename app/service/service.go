@@ -20,7 +20,7 @@ func Start() {
 
 	// Show appropriate screen based on restore session result. If user has
 	// guestLogin on their config, we don't show the login page.
-	if err := core.App.Initialise(); err != nil && !core.App.Config.GuestLogin {
+	if err := core.App.Initialise(); err != nil {
 		ui.ShowLoginPage()
 	} else {
 		ui.ShowMainPage()
