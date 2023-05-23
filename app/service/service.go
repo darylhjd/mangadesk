@@ -18,12 +18,12 @@ func Start() {
 		PageHolder: tview.NewPages(),
 	}
 
+	// Show appropriate screen based on restore session result.
 	if err := core.App.Initialise(); err != nil {
 		ui.ShowLoginPage()
 	} else {
 		ui.ShowMainPage()
 	}
-
 	log.Println("Initialised starting screen.")
 	ui.SetUniversalHandlers()
 

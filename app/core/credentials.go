@@ -55,7 +55,6 @@ func (m *MangaDesk) restoreSession() error {
 	}
 
 	fmt.Println("Attempting session restore...")
-
 	// Do a refresh of the token to keep it up to date. If the token has already expired, user needs to log in again.
 	if err := m.Client.Auth.RefreshSessionToken(); err != nil {
 		fmt.Println("Session expired. Please login again.")
