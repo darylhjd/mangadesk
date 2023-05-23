@@ -44,7 +44,7 @@ func (m *MangaDesk) loadCredentials() error {
 func (m *MangaDesk) restoreSession() error {
 	// We do not need to wait/show a session-related messages
 	// if the user logs in as guest.
-	if !m.Config.GuestLogin {
+	if m.Config.GuestMode {
 		return nil
 	}
 
