@@ -108,7 +108,8 @@ func newMangaPage(manga *mangodex.Manga) *MangaPage {
 		Info:  info,
 		Table: table,
 		sWrap: &utils.SelectorWrapper{
-			Selection: map[int]struct{}{},
+			Selection:   map[int]struct{}{},
+			VisualStart: -1,
 		},
 		cWrap: &utils.ContextWrapper{
 			Ctx:    ctx,
