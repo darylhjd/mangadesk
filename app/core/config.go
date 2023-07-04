@@ -16,6 +16,7 @@ var (
 	languages       = []string{"en"}
 	downloadQuality = "data"
 	zipType         = "zip"
+	guestMode       = false
 )
 
 // UserConfig : This struct contains te user configurable settings.
@@ -27,6 +28,7 @@ type UserConfig struct {
 	ForcePort443    bool     `json:"forcePort443"`
 	AsZip           bool     `json:"asZip"`
 	ZipType         string   `json:"zipType"`
+	GuestMode       bool     `json:"guestMode"`
 }
 
 // loadConfiguration : Reads any user configuration settings and will create a default one if it does not exist.
