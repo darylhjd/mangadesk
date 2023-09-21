@@ -57,6 +57,14 @@ Mangadesk is available through the [MPR](https://mpr.makedeb.org/packages/mangad
 $ una install mangadesk
 ```
 
+### Void Linux
+
+Mangadesk is available through the official Void repositories and can be installed via XBPS:
+
+```cmd
+$ xbps-install -S mangadesk
+```
+
 ## Uninstall ❌
 
 To uninstall, simply delete the executable and its related folders and files.
@@ -77,6 +85,14 @@ Uninstall with a MPR helper or with APT:
 
 ```cmd
 $ una remove mangadesk
+```
+
+### Void Linux
+
+Uninstall with XBPS:
+
+```cmd
+$ xbps-remove -R mangadesk
 ```
 
 ## Usage ✍
