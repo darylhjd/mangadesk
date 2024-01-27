@@ -8,3 +8,6 @@
 # Testing files
 /usr/
 /downloads/
+
+# Vendor dependencies
+/vendor
