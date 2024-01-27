@@ -3,10 +3,6 @@ package ui
 import (
 	"context"
 	"fmt"
-	"github.com/darylhjd/mangadesk/app/core"
-	"github.com/darylhjd/mangadesk/app/ui/utils"
-	"github.com/darylhjd/mangodex"
-	"github.com/rivo/tview"
 	"log"
 	"math"
 	"net/url"
@@ -14,6 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
+	"github.com/darylhjd/mangodex"
+	"github.com/rivo/tview"
 )
 
 const (

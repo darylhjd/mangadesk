@@ -1,9 +1,10 @@
 package service
 
 import (
+	"log"
+
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"
-	"log"
 
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangadesk/app/ui"
