@@ -3,8 +3,6 @@ package ui
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/darylhjd/mangadesk/app/core"
-	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -13,6 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/rivo/tview"

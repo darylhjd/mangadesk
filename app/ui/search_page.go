@@ -2,10 +2,11 @@ package ui
 
 import (
 	"context"
+	"log"
+
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
-	"log"
 )
 
 // SearchPage : This struct contains the search bar and the table of results

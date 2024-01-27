@@ -2,9 +2,10 @@ package ui
 
 import (
 	"context"
-	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"log"
 	"math"
+
+	"github.com/darylhjd/mangadesk/app/ui/utils"
 
 	"github.com/darylhjd/mangodex"
 	"github.com/gdamore/tcell/v2"
