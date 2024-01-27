@@ -1,6 +1,6 @@
 module github.com/darylhjd/mangadesk
 
-go 1.18
+go 1.21
 
 require (
 	github.com/darylhjd/mangodex v0.0.0-20211231093527-e4a91c518fa0
