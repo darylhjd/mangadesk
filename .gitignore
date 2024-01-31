@@ -6,5 +6,7 @@
 /mangadesk_*
 
 # Testing files
-/usr/
-/downloads/
+/downloads
+
+# Vendor dependencies
+/vendor

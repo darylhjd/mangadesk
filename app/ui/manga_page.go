@@ -3,17 +3,18 @@ package ui
 import (
 	"context"
 	"fmt"
-	"github.com/darylhjd/mangadesk/app/core"
-	"github.com/darylhjd/mangadesk/app/ui/utils"
-	"github.com/darylhjd/mangodex"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"log"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/darylhjd/mangadesk/app/core"
+	"github.com/darylhjd/mangadesk/app/ui/utils"
+	"github.com/darylhjd/mangodex"
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 const (

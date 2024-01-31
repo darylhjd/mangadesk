@@ -1,10 +1,11 @@
 package ui
 
 import (
+	"log"
+
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
-	"log"
 )
 
 // ShowModal : Make the app show a modal.

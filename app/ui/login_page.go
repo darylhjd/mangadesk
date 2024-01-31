@@ -1,10 +1,11 @@
 package ui
 
 import (
+	"log"
+
 	"github.com/darylhjd/mangadesk/app/core"
 	"github.com/darylhjd/mangadesk/app/ui/utils"
 	"github.com/rivo/tview"
-	"log"
 )
 
 // LoginPage : This struct contains the grid and form for the login page.
