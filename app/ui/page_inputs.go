@@ -209,26 +209,18 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 	// Set table input captures.
 	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-
-		switch event.Key() {
-		case tcell.KeyCtrlE: // User selects this manga row.
+		switch {
+		case event.Key() == tcell.KeyCtrlE: // User selects this manga row.
 			p.ctrlEInput()
-			return event
-		case tcell.KeyCtrlA: // User wants to toggle select All.
+		case event.Key() == tcell.KeyCtrlA: // User wants to toggle select All.
 			p.ctrlAInput()
-			return event
-		case tcell.KeyCtrlR: // User wants to toggle read status for Selection.
+		case event.Key() == tcell.KeyCtrlR: // User wants to toggle read status for Selection.
 			p.ctrlRInput()
-			return event
-		case tcell.KeyCtrlQ:
+		case event.Key() == tcell.KeyCtrlQ: // User toggles manga following.
 			p.ctrlQInput()
-			return event
-		}
-
-		if event.Rune() == 'v' || event.Rune() == 'V' {
+		case event.Rune() == 'v' || event.Rune() == 'V':
 			p.shiftVInput()
 		}
-
 		return event
 	})
 }
