@@ -3,8 +3,9 @@ package utils
 // SelectorWrapper : A wrapper to store selections. Used by the manga page to
 // keep track of selections.
 type SelectorWrapper struct {
-	Selection map[int]struct{} // Keep track of which chapters have been selected by user.
-	All       bool             // Keep track of whether user has selected All or not.
+	Selection   map[int]struct{} // Keep track of which chapters have been selected by user.
+	All         bool             // Keep track of whether user has selected All or not.
+	VisualStart int              // Keeps track of the start of the visual selection. -1 If none.
 }
 
 // HasSelections : Checks whether there are currently selections.
@@ -24,7 +25,6 @@ func (s *SelectorWrapper) CopySelection(row int) map[int]struct{} {
 	if !s.HasSelections() {
 		s.AddSelection(row)
 	}
-
 	selection := map[int]struct{}{}
 	for se := range s.Selection {
 		selection[se] = struct{}{}
@@ -46,4 +46,16 @@ func (s *SelectorWrapper) AddSelection(row int) {
 // RemoveSelection : Remove a row from the Selection. No-op if row is not originally in Selection.
 func (s *SelectorWrapper) RemoveSelection(row int) {
 	delete(s.Selection, row)
+}
+
+func (s *SelectorWrapper) IsInVisualMode() bool {
+	return s.VisualStart != -1
+}
+
+func (s *SelectorWrapper) StartVisualSelection(row int) {
+	s.VisualStart = row
+}
+
+func (s *SelectorWrapper) StopVisualSelection() {
+	s.VisualStart = -1
 }

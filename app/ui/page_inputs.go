@@ -189,6 +189,12 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 		return event
 	})
 
+	p.Table.SetSelectionChangedFunc(func(row, _column int) {
+		if p.sWrap.IsInVisualMode() {
+			p.selectRange(min(row, p.sWrap.VisualStart), max(row, p.sWrap.VisualStart))
+		}
+	})
+
 	// Set table selected function.
 	p.Table.SetSelectedFunc(func(row, _ int) {
 		log.Println("Creating and showing confirm download modal...")
@@ -203,15 +209,17 @@ func (p *MangaPage) setHandlers(cancel context.CancelFunc) {
 
 	// Set table input captures.
 	p.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyCtrlE: // User selects this manga row.
+		switch {
+		case event.Key() == tcell.KeyCtrlE: // User selects this manga row.
 			p.ctrlEInput()
-		case tcell.KeyCtrlA: // User wants to toggle select All.
+		case event.Key() == tcell.KeyCtrlA: // User wants to toggle select All.
 			p.ctrlAInput()
-		case tcell.KeyCtrlR: // User wants to toggle read status for Selection.
+		case event.Key() == tcell.KeyCtrlR: // User wants to toggle read status for Selection.
 			p.ctrlRInput()
-		case tcell.KeyCtrlQ:
+		case event.Key() == tcell.KeyCtrlQ: // User toggles manga following.
 			p.ctrlQInput()
+		case event.Rune() == 'v' || event.Rune() == 'V':
+			p.shiftVInput()
 		}
 		return event
 	})
@@ -232,6 +240,37 @@ func (p *MangaPage) ctrlEInput() {
 func (p *MangaPage) ctrlAInput() {
 	// Toggle Selection.
 	p.markAll()
+}
+
+func (p *MangaPage) selectRange(from, to int) {
+	start := min(from, to)
+	end := max(from, to)
+
+	for row := 1; row < p.Table.GetRowCount(); row++ {
+		if row < start || row > end {
+			if p.sWrap.HasSelection(row) {
+				p.markUnselected(row)
+			}
+		} else {
+			if !p.sWrap.HasSelection(row) {
+				p.markSelected(row)
+			}
+		}
+	}
+}
+
+func (p *MangaPage) shiftVInput() {
+	if p.sWrap.IsInVisualMode() {
+		p.sWrap.StopVisualSelection()
+		for row := 1; row < p.Table.GetRowCount(); row++ {
+			if p.sWrap.HasSelection(row) {
+				p.markUnselected(row)
+			}
+		}
+	} else {
+		row, _ := p.Table.GetSelection()
+		p.sWrap.StartVisualSelection(row)
+	}
 }
 
 // ctrlRInput : Allows user to toggle read status for a chapter.

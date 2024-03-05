@@ -116,6 +116,7 @@ Steps may differ for different OSes. For example, in Windows, use a backslash `\
 | Escape                                                                                    | <kbd>Esc</kbd>                   |
 | Select a chapter                                                                          | <kbd>Ctrl</kbd> + <kbd>E</kbd>   |
 | Toggle select all chapters                                                                | <kbd>Ctrl</kbd> + <kbd>A</kbd>   |
+| Select chapters via entering VIM visual select mode                                       | <kbd>v</kbd>  or <kbd>V</kbd>    |
 | Toggle chapter(s) read status<br/><br/>*Note: You can select multiple chapters to toggle! | <kbd>Ctrl</kbd> + <kbd>R</kbd>   |
 | Toggle manga following                                                                    | <kbd>Ctrl</kbd> + <kbd>Q</kbd>   |
 
