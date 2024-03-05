@@ -259,20 +259,6 @@ func (p *MangaPage) selectRange(from, to int) {
 	}
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func (p *MangaPage) shiftVInput() {
 	if p.sWrap.IsInVisualMode() {
 		p.sWrap.StopVisualSelection()
