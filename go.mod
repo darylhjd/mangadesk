@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/darylhjd/mangodex v0.0.0-20211231093527-e4a91c518fa0
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/rivo/tview v0.0.0-20231126123532-b11bfc7683c7
+	github.com/rivo/tview v0.0.0-20240524063012-037df494fb76
 )
 
 require (
