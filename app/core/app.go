@@ -12,7 +12,7 @@ import (
 // App : Global App variable.
 var (
 	App        *MangaDesk
-	AppVersion = "MangaDesk v0.7.8"
+	AppVersion = "MangaDesk v0.7.9"
 )
 
 // MangaDesk : The client for this application.
